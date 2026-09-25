@@ -229,3 +229,15 @@ training point count > median are "urban" (dense), count <= median are "rural"
 **Recommended default: kmeans** (highest within-200km, best cell balance).
 
 Full results in `docs/results/l4_adaptive_cells.md`.
+
+## Demo
+
+Quick interactive Gradio demo of the L2 winner (`l2_imagenet_1.0_layer4`) with L3 calibration (temperature + conformal + abstention at 0.5). Single file: `demo/app.py`.
+
+```powershell
+# Launch (no commit, demo only)
+python demo/app.py
+# or: python -m demo.app
+```
+
+Upload a photo → global + zoomed (+/-5 deg) matplotlib map of the predicted cell, plus calibrated vs raw confidence, temperature T, conformal set size, and an ACCEPT / ABSTAIN verdict. Haversine distance is only measurable on the labeled test set (no ground truth for uploads).
