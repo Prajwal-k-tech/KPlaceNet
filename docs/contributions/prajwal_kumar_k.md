@@ -29,7 +29,11 @@ real-data calibration result could be measured without large data downloads.
   1,500 rows, respectively.
 - Record exact row indices and stable sample IDs for each split, the split
   seed, CSV and checkpoint SHA-256 hashes, dependency/runtime versions, and
-  repository revision in the result artifact.
+  repository revision, working-tree state, and inference configuration in
+  the result artifact.
+- Make geodesic evaluation robust to empty retained sets, shape errors, CPU or
+  accelerator tensors, and floating-point roundoff. An empty abstention
+  subset now records missing distances as JSON `null`, not nonstandard `NaN`.
 - Add deterministic unit tests and a small synthetic exchangeable-score
   diagnostic. Update the README and annotate the historical L3 report.
 
@@ -46,7 +50,9 @@ python scripts/simulate_conformal_coverage.py --trials 20000 --seed 2026
 
 The unit tests use manually specified scores to verify the selected rank,
 ties, small calibration sets, extreme alpha, invalid inputs, and deterministic
-disjoint split membership. The synthetic diagnostic uses 20,000 iid Uniform
+disjoint split membership. Geodesic helper tests verify a one-degree
+longitude example against its known distance and the empty-abstention JSON
+case. The synthetic diagnostic uses 20,000 iid Uniform
 score trials with `n=9` and `alpha=0.01`: the valid rank is 10, so the discrete
 threshold is infinite (coverage 1.0000); the previous clamped maximum-score
 cutoff covered 0.9037 in this simulation. This checks a finite-sample

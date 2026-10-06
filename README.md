@@ -145,7 +145,9 @@ order statistic `k = ceil((n + 1) * (1 - alpha))`; when `k > n`, the
 conservative threshold is infinity. L3 now uses three disjoint seeded
 partitions: temperature fitting, conformal calibration, and evaluation. Its
 JSON artifact records split indices and sample IDs, CSV/checkpoint hashes,
-software versions, and the repository revision. These changes make the
+all inference configuration, relevant software versions, repository
+revision, and dirty-tree status. Empty abstention subsets are represented as
+missing distances rather than nonstandard JSON `NaN`. These changes make the
 protocol auditable; they do not establish exchangeability or regional
 coverage under geographic shift. The upstream L3 numbers below remain
 historical and are not measurements of this fork's changes.

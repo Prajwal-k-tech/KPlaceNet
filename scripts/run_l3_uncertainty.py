@@ -17,6 +17,7 @@ Windows-safe: pathlib, sys.executable, num_workers=0.
 from __future__ import annotations
 
 import argparse
+import importlib.metadata
 import json
 import math
 import subprocess
@@ -191,7 +192,7 @@ def eval_haversine(
     true_lats: np.ndarray,
     true_lons: np.ndarray,
     mask: torch.Tensor | None = None,
-) -> Dict[str, float]:
+) -> Dict[str, float | int | None]:
     """Compute haversine distance metrics on predicted cell centroids.
 
     Args:
@@ -205,19 +206,39 @@ def eval_haversine(
     Returns:
         dict with mean_km, median_km, within_{1,25,200}km.
     """
-    pred_ids = probs.argmax(dim=1).numpy()
+    if (
+        probs.ndim != 2
+        or probs.shape[1] == 0
+        or centroids.ndim != 2
+        or centroids.shape[1] != 2
+    ):
+        raise ValueError("probs must be (N, K) and centroids must be (K, 2)")
+    true_lats = np.asarray(true_lats, dtype=np.float64)
+    true_lons = np.asarray(true_lons, dtype=np.float64)
+    if (
+        true_lats.ndim != 1
+        or true_lons.ndim != 1
+        or len(true_lats) != len(probs)
+        or len(true_lons) != len(probs)
+    ):
+        raise ValueError("true coordinate arrays must match the number of predictions")
+    pred_ids = probs.argmax(dim=1).detach().cpu().numpy()
+    if pred_ids.size and pred_ids.max() >= len(centroids):
+        raise ValueError("predicted class index exceeds the available cell centroids")
     pred_lats = centroids[pred_ids, 0]
     pred_lons = centroids[pred_ids, 1]
 
     if mask is not None:
-        idx = mask.numpy().astype(bool)
+        idx = mask.detach().cpu().numpy().astype(bool)
+        if idx.ndim != 1 or len(idx) != len(pred_ids):
+            raise ValueError("mask must match the number of predictions")
         pred_lats = pred_lats[idx]
         pred_lons = pred_lons[idx]
         true_lats = true_lats[idx]
         true_lons = true_lons[idx]
 
     if len(pred_lats) == 0:
-        return {"mean_km": float("nan"), "median_km": float("nan"),
+        return {"mean_km": None, "median_km": None,
                 "within_1km": 0.0, "within_25km": 0.0, "within_200km": 0.0,
                 "n": 0}
 
@@ -227,6 +248,7 @@ def eval_haversine(
     dphi = np.radians(true_lats - pred_lats)
     dlam = np.radians(true_lons - pred_lons)
     a = np.sin(dphi / 2) ** 2 + np.cos(phi1) * np.cos(phi2) * np.sin(dlam / 2) ** 2
+    a = np.clip(a, 0.0, 1.0)
     dists = 6371.0 * 2 * np.arcsin(np.sqrt(a))
 
     return {
@@ -567,8 +589,11 @@ def main() -> None:
               f"(abstention rate={abstention_rate:.1%})")
         print(f"    accuracy-when-predicting = {acc_when_predicting:.4f}")
         print(f"    coverage = {coverage_thr:.4f}")
-        print(f"    mean_km = {dists_pred['mean_km']:.1f} km, "
-              f"median_km = {dists_pred['median_km']:.1f} km")
+        if dists_pred["n"]:
+            print(f"    mean_km = {dists_pred['mean_km']:.1f} km, "
+                  f"median_km = {dists_pred['median_km']:.1f} km")
+        else:
+            print("    mean_km = n/a, median_km = n/a (no predictions retained)")
         print(f"    within 1km={dists_pred['within_1km']:.1f}%, "
               f"25km={dists_pred['within_25km']:.1f}%, "
               f"200km={dists_pred['within_200km']:.1f}%")
@@ -592,6 +617,18 @@ def main() -> None:
         "n_temperature_fit": temperature_size,
         "n_calibration": cal_size,
         "n_evaluation": eval_size,
+        "configuration": {
+            "seed": args.seed,
+            "alpha": args.alpha,
+            "abstention_thresholds": args.threshold,
+            "temperature_size": temperature_size,
+            "calibration_size": cal_size,
+            "evaluation_size": eval_size,
+            "batch_size": args.batch_size,
+            "image_size": args.image_size,
+            "num_workers": args.num_workers,
+            "device": str(device),
+        },
         "calibration_note": (
             f"A seeded random sample of {temperature_size} rows fits temperature; "
             f"a separate {cal_size}-row sample fits the conformal threshold; "
@@ -603,10 +640,16 @@ def main() -> None:
             "csv_sha256": split_provenance["csv_sha256"],
             "checkpoint_sha256": split_provenance["checkpoint_sha256"],
             "split_sha256": split_provenance["split_sha256"],
-            "torch_version": torch.__version__,
-            "numpy_version": np.__version__,
-            "python_version": sys.version.split()[0],
+            "software_versions": {
+                "python": sys.version.split()[0],
+                "torch": torch.__version__,
+                "numpy": np.__version__,
+                "pandas": _distribution_version("pandas"),
+                "Pillow": _distribution_version("Pillow"),
+                "torchvision": _distribution_version("torchvision"),
+            },
             "repository_revision": _repository_revision(),
+            "working_tree_dirty": _repository_dirty(),
         },
         "num_cells": num_cells,
         "device": str(device),
@@ -696,6 +739,27 @@ def _repository_revision() -> str | None:
             stderr=subprocess.DEVNULL,
         ).strip()
     except (OSError, subprocess.CalledProcessError):
+        return None
+
+
+def _repository_dirty() -> bool | None:
+    """Report whether tracked/untracked files differ from the recorded revision."""
+    try:
+        status = subprocess.check_output(
+            ["git", "-C", str(ROOT), "status", "--porcelain"],
+            text=True,
+            stderr=subprocess.DEVNULL,
+        )
+        return bool(status.strip())
+    except (OSError, subprocess.CalledProcessError):
+        return None
+
+
+def _distribution_version(distribution: str) -> str | None:
+    """Return an installed package version without importing the package."""
+    try:
+        return importlib.metadata.version(distribution)
+    except importlib.metadata.PackageNotFoundError:
         return None
 
 
