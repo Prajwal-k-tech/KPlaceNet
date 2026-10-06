@@ -2,7 +2,7 @@
 
 **Contributor:** Prajwal Kumar K.
 
-**Scope:** `src/uncertainty.py`, L3 experiment protocol/provenance, tests, and documentation.
+**Scope:** L3 conformal correctness, split/provenance, and regional evaluation diagnostics.
 
 ## Baseline and audit
 
@@ -34,6 +34,10 @@ real-data calibration result could be measured without large data downloads.
 - Make geodesic evaluation robust to empty retained sets, shape errors, CPU or
   accelerator tensors, and floating-point roundoff. An empty abstention
   subset now records missing distances as JSON `null`, not nonstandard `NaN`.
+- Add equal-area spatial stratification to L3 output. Each occupied region
+  reports sample count, top-1 accuracy, conformal coverage and a Wilson
+  interval, mean set size, and distance-threshold metrics. Sparse regions remain
+  visible with metrics withheld below a configurable sample-count floor.
 - Add deterministic unit tests and a small synthetic exchangeable-score
   diagnostic. Update the README and annotate the historical L3 report.
 
@@ -59,10 +63,16 @@ cutoff covered 0.9037 in this simulation. This checks a finite-sample
 mathematical edge case; it is not a geolocation result.
 
 Plan-only smoke output confirms the CLI reports all three partitions without
-loading images or writing results. No training or real-data evaluation was
-run because the checkout contains neither data nor a checkpoint. No new
-claim is made about ECE, geographic accuracy, regional performance, or model
-superiority.
+loading images or writing results in the earlier fork revision. For the added
+regional evaluator, four deterministic standard-library tests and Python
+byte-compilation pass. The conformal (9 tests) and split/provenance (6 tests)
+suites also pass using the cached PyTorch install. The full test discovery and
+the updated plan-only CLI could not run in this environment because NumPy is
+missing; no dependency packages were installed for this check. No training or
+real-data evaluation was run because the checkout contains neither data nor a
+checkpoint. No new claim is made about ECE, geographic accuracy, regional
+performance, or model superiority. Regional diagnostics are implemented and
+synthetically tested, but have not been run on real OSV-5M evaluation data.
 
 ## Guarantees and limitations
 
@@ -82,7 +92,8 @@ maintainer should clarify the project's licensing before downstream reuse.
 ## Exact contribution
 
 Prajwal Kumar K. implemented the discrete conformal rank correction, the
-three-way deterministic split and provenance manifest, focused tests, the
-synthetic diagnostic, and the documentation updates in this fork. The
+three-way deterministic split and provenance manifest, spatially stratified
+evaluation diagnostics, focused tests, the synthetic diagnostic, and the
+documentation updates in this fork. The
 upstream's model, datasets, checkpoints, and published historical metrics are
 not claimed as this contributor's work.

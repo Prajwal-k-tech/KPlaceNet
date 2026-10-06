@@ -40,6 +40,7 @@ from src.reproducibility import (  # noqa: E402
     split_manifest,
     stable_sample_ids,
 )
+from src.regional_eval import spatial_stratified_metrics  # noqa: E402
 from src.uncertainty import (  # noqa: E402
     TemperatureScaler,
     abstention_mask,
@@ -61,6 +62,20 @@ DEFAULT_THRESHOLD = 0.5
 DEFAULT_BATCH_SIZE = 32
 DEFAULT_SEED = 42
 DEFAULT_IMAGE_SIZE = 224
+DEFAULT_REGION_LAT_BANDS = 6
+DEFAULT_REGION_LON_BANDS = 12
+DEFAULT_REGION_MIN_COUNT = 30
+
+
+def positive_int(value: str) -> int:
+    """Argparse type for positive integer settings."""
+    try:
+        parsed = int(value)
+    except ValueError as error:
+        raise argparse.ArgumentTypeError("must be a positive integer") from error
+    if parsed < 1:
+        raise argparse.ArgumentTypeError("must be a positive integer")
+    return parsed
 
 
 # ---------------------------------------------------------------------------
@@ -119,6 +134,24 @@ def parse_args() -> argparse.Namespace:
     p.add_argument(
         "--seed", type=int, default=DEFAULT_SEED,
         help=f"RNG seed for deterministic split (default: {DEFAULT_SEED})",
+    )
+    p.add_argument(
+        "--region-lat-bands", type=positive_int, default=DEFAULT_REGION_LAT_BANDS,
+        help=(
+            "Equal-area latitude bands for regional diagnostics "
+            f"(default: {DEFAULT_REGION_LAT_BANDS})"
+        ),
+    )
+    p.add_argument(
+        "--region-lon-bands", type=positive_int, default=DEFAULT_REGION_LON_BANDS,
+        help=f"Longitude bands for regional diagnostics (default: {DEFAULT_REGION_LON_BANDS})",
+    )
+    p.add_argument(
+        "--region-min-count", type=positive_int, default=DEFAULT_REGION_MIN_COUNT,
+        help=(
+            "Minimum evaluation samples per region for metrics "
+            f"(default: {DEFAULT_REGION_MIN_COUNT})"
+        ),
     )
     return p.parse_args()
 
@@ -286,6 +319,10 @@ def print_plan(args: argparse.Namespace) -> None:
     print(f"  Device:         {args.device}")
     print(f"  Image size:     {args.image_size}")
     print(f"  Seed:           {args.seed}")
+    print(
+        f"  Regional grid:  {args.region_lat_bands} x {args.region_lon_bands} "
+        f"(minimum n={args.region_min_count})"
+    )
     print()
     print("  Steps:")
     print("    1. Load checkpoint + cells metadata")
@@ -315,7 +352,10 @@ def print_plan(args: argparse.Namespace) -> None:
         f"--threshold {' '.join(str(t) for t in args.threshold)} "
         f"--batch-size {args.batch_size} "
         f"--device {args.device} "
-        f"--seed {args.seed}"
+        f"--seed {args.seed} "
+        f"--region-lat-bands {args.region_lat_bands} "
+        f"--region-lon-bands {args.region_lon_bands} "
+        f"--region-min-count {args.region_min_count}"
     )
     print(f"  Run command:")
     print(f"    {run_cmd}")
@@ -606,6 +646,18 @@ def main() -> None:
         eval_true_lats, eval_true_lons,
     )
 
+    regional_metrics = spatial_stratified_metrics(
+        eval_probs_scaled.detach().cpu().tolist(),
+        eval_labels.tolist(),
+        csets.detach().cpu().tolist(),
+        eval_true_lats.tolist(),
+        eval_true_lons.tolist(),
+        centroids.tolist(),
+        lat_bands=args.region_lat_bands,
+        lon_bands=args.region_lon_bands,
+        min_count=args.region_min_count,
+    )
+
     # ------------------------------------------------------------------
     # Build results dict
     # ------------------------------------------------------------------
@@ -673,6 +725,7 @@ def main() -> None:
             for thr in args.threshold
         },
         "full_eval": dists_full,
+        "regional_evaluation": regional_metrics,
         "temperature_fitted_T": T,
     }
 
@@ -695,13 +748,24 @@ def main() -> None:
     print(f"  Mean set size: {mean_set_size:.2f}")
     for thr in args.threshold:
         r = abstention_results[thr]
+        mean_km = r["distances"]["mean_km"]
+        mean_km_text = "n/a" if mean_km is None else f"{mean_km:.1f}"
         print(f"  Abstain@{thr:.2f}:  rate={r['abstention_rate']:.1%}, "
               f"acc={r['accuracy_when_predicting']:.4f}, "
-              f"mean_km={r['distances']['mean_km']:.1f}")
+              f"mean_km={mean_km_text}")
     print(f"  Full eval:     within 1km={dists_full['within_1km']:.1f}%, "
           f"25km={dists_full['within_25km']:.1f}%, "
           f"200km={dists_full['within_200km']:.1f}%")
     print(f"  Mean dist:     {dists_full['mean_km']:.1f} km")
+    reported_regions = sum(
+        region["metrics"] is not None
+        for region in regional_metrics["regions"].values()
+    )
+    print(
+        f"  Regional metrics: {reported_regions}/"
+        f"{len(regional_metrics['regions'])} occupied regions meet n="
+        f"{args.region_min_count}"
+    )
     print("=" * 72)
 
     # ------------------------------------------------------------------

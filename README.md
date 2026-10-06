@@ -186,6 +186,16 @@ python scripts/run_l3_uncertainty.py --run --alpha 0.05 --threshold 0.3 0.5 0.7
 > splitting does not establish geographic exchangeability, guarantee regional
 > coverage, or provide a guarantee under geographic distribution shift.
 
+The run also reports empirical coverage, mean prediction-set size, top-1
+accuracy, and geodesic-distance thresholds by occupied equal-area grid region.
+Latitude bands are uniform in `sin(latitude)` and longitude bands are uniform,
+so grid cells have approximately equal spherical area. Regions below the
+minimum count remain in the JSON artifact with `metrics: null`; reported
+coverage includes a 95% Wilson interval. These are descriptive diagnostics,
+not conditional coverage guarantees, and the intervals do not correct for
+spatial dependence. Configure the grid with `--region-lat-bands`,
+`--region-lon-bands`, and `--region-min-count`.
+
 ## L4 — Adaptive Cell Construction (Gap 1)
 
 L4 compares three cell construction methods at K=300 using the L2 winner backbone
