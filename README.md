@@ -132,6 +132,36 @@ Each run saves to `checkpoints/l2_<init>_<fraction>_<regime>/`:
 
 All data fractions in an L2 experiment use the same cells (built once from the full 10k CSV, saved as JSON). This ensures the classifier head has identical architecture across fractions — the only variable is training data size. Pass `--cells-json` to train.py to load fixed cells; otherwise cells are built from the CSV.
 
+### Cell-Balanced Sampling Comparison
+
+Training remains uniform by default. To compare that baseline with inverse-
+frequency cell sampling on the same data fractions, model setup, and seed:
+
+```powershell
+# Print the paired commands without downloading data or starting training
+python scripts/run_l2_experiments.py --plan-only --fractions 1.0 --inits imagenet --regimes frozen --sampling-modes uniform cell-balanced
+
+# Execute both runs once the training subset and dependencies are available
+python scripts/run_l2_experiments.py --run --fractions 1.0 --inits imagenet --regimes frozen --sampling-modes uniform cell-balanced --epochs 10
+
+# Evaluate both checkpoints on the same untouched OSV-5M test subset
+python -m src.eval --csv data/osv5m_test/metadata.csv --checkpoint checkpoints/l2_imagenet_1.0_frozen/last.pt
+python -m src.eval --csv data/osv5m_test/metadata.csv --checkpoint checkpoints/l2_imagenet_1.0_frozen_cell-balanced/last.pt
+
+# Repeat the paired experiment with three training seeds (separate checkpoint dirs)
+python scripts/run_l2_experiments.py --run --fractions 1.0 --inits imagenet --regimes frozen --sampling-modes uniform cell-balanced --seeds 42 43 44 --epochs 10
+```
+
+`--sampling-power` controls the inverse-frequency exponent: 0 gives each
+example equal probability under replacement, while 1 gives each observed
+training cell equal expected sampling mass. Both weighted modes sample with
+replacement, so some examples repeat and others may be skipped within an
+epoch for any weighted-sampling power, including 0. Use `--sampling-mode
+uniform` for the original shuffled, no-replacement baseline. This intentionally
+changes the training distribution; compare the
+untouched test set and report both overall and geographic-stratum metrics.
+Use multiple seeds before treating a difference as a robust performance claim.
+
 ## L3 — Uncertainty-Aware Geolocation (Gap 3)
 
 L3 adds post-hoc uncertainty calibration to the L2 winner (`l2_imagenet_1.0_layer4`):

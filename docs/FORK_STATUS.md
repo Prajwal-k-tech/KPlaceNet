@@ -3,7 +3,7 @@
 **Checked:** 2026-10-07 (Asia/Kolkata)  
 **Fork:** [Prajwal-k-tech/KPlaceNet](https://github.com/Prajwal-k-tech/KPlaceNet)  
 **Work branch:** `prajwal/eval-integrity`  
-**Evaluator change:** `d3b3dd6` (`fix(eval): require trained checkpoint metadata`)
+**Work:** evaluation-contract guard, cell-balanced sampling, and paired L2 runner mode
 
 ## What this project implements
 
@@ -32,6 +32,16 @@ loads the model state strictly. This prevents evaluation labels from defining
 the model's output classes and prevents invalid scores from being reported as
 model results.
 
+Cell-balanced training is an explicit optional mode. It uses seeded
+inverse-frequency weights over the active training subset, leaves the default
+uniform baseline unchanged, and records the mode in checkpoint arguments and
+metrics. The L2 runner can plan or execute paired uniform/cell-balanced runs
+across explicit seeds, with separate checkpoint directories for non-default
+seeds.
+The Gradio demo now shares the evaluator's checkpoint contract and loads model
+weights strictly, so a missing or incompatible checkpoint cannot silently
+produce demo predictions.
+
 ## Validation and limitations
 
 - `python -m unittest discover -s tests -p 'test_eval_contract.py' -v`: 5 tests
@@ -39,23 +49,33 @@ model results.
 - `python -m py_compile src/eval.py src/eval_contract.py tests/test_eval_contract.py`:
   passed.
 - `git diff --check`: passed.
-- Full test discovery ran 12 tests: 8 passed; the L3 metrics, reproducibility,
-  and uncertainty suites could not import because NumPy and `typing_extensions`
-  are absent in the current Python 3.14 environment. No dependencies were
-  installed for this check.
+- `python -m unittest discover -s tests -p 'test_sampling.py' -v`: 3
+  dependency-free tests passed for uniform, softened, and fully balanced
+  inverse-frequency weights plus invalid inputs.
+- The paired-runner tests also pass for unchanged uniform paths, distinct
+  balanced paths, command arguments, and seed-isolated checkpoints.
+- Python byte-compilation passed for the sampler, dataset, trainer, L2 runner,
+  demo, and new sampler tests.
+- Full test discovery enumerated 18 tests: 15 passed; three modules could not
+  import because NumPy and `typing_extensions` are absent in the current Python
+  3.14 environment. No dependencies were installed for this check.
 - No training or real-data evaluation was run. The required OSV-5M subset,
   evaluation images, and trained checkpoint are absent. No real-data accuracy,
-  calibration, or regional result is claimed for this change.
+  calibration, or regional result is claimed for this change. PyTorch import
+  fails because `typing_extensions` is missing; torchvision, NumPy, and pandas
+  are also unavailable, so the PyTorch sampler and training path could not be
+  executed here.
 
 ## Next steps
 
-1. Keep this evaluation guard on the fork branch and validate it in a supported
-   project environment with the declared ML dependencies.
-2. Inspect the dataset downloader's plan and required storage before fetching
-   any OSV-5M shards. Then run the recorded baseline with its exact checkpoint
-   and split, if the data and compute requirements are practical.
-3. Choose any further modeling or calibration work only after that baseline is
-   verified. Report real-data results separately from synthetic tests and
-   preserve the geographic-shift limitations of split conformal prediction.
+1. In a supported project environment, install the declared ML dependencies
+   and run the full test suite plus a tiny generated-image training smoke test.
+2. Inspect the downloader plan and storage before fetching data. Run paired
+   uniform and cell-balanced experiments on the same fixed train subset and
+   untouched spatially separated test set; repeat seeds before claiming a
+   performance change.
+3. Package the verified checkpoint and calibration artifact for the Gradio
+   demo, record hashes and setup instructions, and capture a short demo only
+   after inference is checked against the evaluator.
 
 No upstream pull request is being opened or updated as part of this work.

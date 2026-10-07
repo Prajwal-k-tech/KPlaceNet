@@ -47,11 +47,16 @@ def _load_resources():
         return _CACHE
     import torch
     from src.cells import Cell
+    from src.eval_contract import validate_eval_checkpoint
     from src.model import build_model
 
+    if not CHECKPOINT.is_file():
+        raise FileNotFoundError(
+            f"Demo checkpoint not found: {CHECKPOINT}. Train a model first; "
+            "the demo will not run with random weights."
+        )
     ckpt = torch.load(str(CHECKPOINT), map_location="cpu")
-    cells_raw = ckpt.get("cells", [])
-    num_cells = int(ckpt.get("num_cells", len(cells_raw)))
+    num_cells, cells_raw = validate_eval_checkpoint(ckpt)
     # Same pattern as scripts/run_l3_uncertainty.py (ckpt cells carry centroids only).
     cells = [
         Cell(
@@ -80,7 +85,7 @@ def _load_resources():
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = build_model(num_cells=num_cells, pretrained=False, freeze_backbone=False)
-    model.load_state_dict(ckpt["model_state"], strict=False)
+    model.load_state_dict(ckpt["model_state"], strict=True)
     model.to(device)
     model.eval()
 

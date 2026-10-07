@@ -89,11 +89,33 @@ The upstream repository has no license file at the audited revision. This
 contribution preserves its history and attribution and adds no license; the
 maintainer should clarify the project's licensing before downstream reuse.
 
+## Additional fork work: evaluation integrity and sampling comparison
+
+- Make standard evaluation reject absent or incompatible checkpoints rather
+  than score random weights, infer classes from evaluation labels, or silently
+  load a mismatched classifier head.
+- Add optional seeded inverse-frequency cell sampling to training while
+  preserving uniform sampling as the default. Add paired L2 experiment plans,
+  multiple-seed run isolation, tests for the weighting rule, and instructions
+  for evaluating both modes on the same untouched test data.
+- Apply the same checkpoint validation to the Gradio demo and require strict
+  model-weight loading.
+
+This follow-on code is unit-tested and byte-compiled, but no image training or
+real-data evaluation was possible in the checkout: its dataset and model
+artifacts are absent and this Python environment lacks the ML dependencies.
+Therefore the sampling change is an implemented, testable experiment, not an
+established model-accuracy improvement. Resume claims should remain limited to
+correctness, reproducibility, and evaluation tooling until controlled runs are
+completed.
+
 ## Exact contribution
 
 Prajwal Kumar K. implemented the discrete conformal rank correction, the
 three-way deterministic split and provenance manifest, spatially stratified
-evaluation diagnostics, focused tests, the synthetic diagnostic, and the
-documentation updates in this fork. The
+evaluation diagnostics, fail-closed checkpoint validation for the evaluator
+and demo, optional cell-balanced training with a paired multi-seed experiment
+runner, focused tests, the synthetic diagnostic, and the documentation
+updates in this fork. The
 upstream's model, datasets, checkpoints, and published historical metrics are
 not claimed as this contributor's work.

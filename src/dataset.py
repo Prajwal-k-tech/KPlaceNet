@@ -141,7 +141,7 @@ class GeoDataset(Dataset):
 
 
 # ---------------------------------------------------------------------------
-# Helpers — subset loader + stratified sampler stub
+# Helpers — subset loader + cell-balanced sampler
 # ---------------------------------------------------------------------------
 
 
@@ -154,8 +154,8 @@ def load_subset(
 ) -> GeoDataset | Subset:
     """Load dataset and optionally return a random subset.
 
-    For stratified sampling by country/region, see `get_stratified_sampler`
-    (stub in L0, implemented when cell labels exist).
+    Cell-balanced sampling can be enabled in `src.train` after geographic
+    cell labels have been assigned.
 
     Args:
         csv_path: path to metadata.csv
@@ -179,31 +179,40 @@ def load_subset(
 
 
 def get_stratified_sampler(
-    dataset: GeoDataset,
+    dataset: GeoDataset | Subset,
     cell_ids: Optional[List[int]] = None,
+    *,
+    power: float = 1.0,
+    seed: int = 42,
 ) -> WeightedRandomSampler | None:
-    """Stratified sampler stub — Section 8 mitigation (stratified by country).
-
-    TODO L1/L2: implement true stratification by country or by cell.
-    For now returns None (uniform sampling) so training runs without error.
-
-    When cell_ids are available, compute per-class weights = 1 / count
-    and return WeightedRandomSampler. Placeholder keeps import working.
+    """Return a seeded cell-balanced sampler, or ``None`` without labels.
 
     Args:
         dataset: GeoDataset (or Subset wrapping one)
-        cell_ids: optional cell assignments aligned to dataset order
+        cell_ids: labels aligned to the dataset (or active subset) order
+        power: inverse-frequency exponent; 1 balances cells, 0 is uniform
+        seed: sampler RNG seed
 
     Returns:
         WeightedRandomSampler or None (fallback to shuffle=True).
     """
-    # TODO: L1 — compute weights from cell distribution or country metadata
-    # Example (when ready):
-    #   from collections import Counter
-    #   counts = Counter(cell_ids)
-    #   weights = [1.0 / counts[c] for c in cell_ids]
-    #   return WeightedRandomSampler(weights, num_samples=len(weights), replacement=True)
-    return None
+    if cell_ids is None:
+        if isinstance(dataset, Subset):
+            base = dataset.dataset
+            base_cell_ids = getattr(base, "cell_ids", None)
+            if base_cell_ids is not None:
+                cell_ids = [base_cell_ids[index] for index in dataset.indices]
+        else:
+            cell_ids = dataset.cell_ids
+    if cell_ids is None:
+        return None
+    if len(cell_ids) != len(dataset):
+        raise ValueError("cell_ids must align with the dataset passed to the sampler")
+    try:
+        from src.sampling import make_cell_weighted_sampler
+    except ImportError:
+        from sampling import make_cell_weighted_sampler
+    return make_cell_weighted_sampler(cell_ids, power=power, seed=seed)
 
 
 def build_dataloader(

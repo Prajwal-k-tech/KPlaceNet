@@ -22,13 +22,13 @@ from tqdm import tqdm
 
 # Allow `python -m src.train` and `python src/train.py`
 try:
-    from src.dataset import GeoDataset, get_transforms
+    from src.dataset import GeoDataset, get_stratified_sampler
     from src.model import build_model, load_places365_checkpoint
     from src.cells import build_cells, assign_cells, save_cells_json, load_cells_json
 except ImportError:
     # Fallback when running as script without package context
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-    from src.dataset import GeoDataset, get_transforms
+    from src.dataset import GeoDataset, get_stratified_sampler
     from src.model import build_model, load_places365_checkpoint
     from src.cells import build_cells, assign_cells, save_cells_json, load_cells_json
 
@@ -51,6 +51,10 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--num-workers", type=int, default=0, help="DataLoader workers (0 for Windows safety)")
     p.add_argument("--checkpoint-dir", type=str, default="checkpoints", help="Where to save checkpoints")
     p.add_argument("--seed", type=int, default=42, help="RNG seed")
+    p.add_argument("--sampling-mode", choices=["uniform", "cell-balanced"], default="uniform",
+                   help="Training example sampling; uniform preserves the L1/L2 baseline")
+    p.add_argument("--sampling-power", type=float, default=1.0,
+                   help="Inverse-cell-frequency exponent for cell-balanced sampling (0..1)")
     p.add_argument("--device", type=str, default="auto", help="auto|cuda|cpu")
     # L2 additions
     p.add_argument("--cells-json", type=str, default=None,
@@ -158,11 +162,30 @@ def main() -> None:
     else:
         ds_for_loader = ds
 
-    # DataLoader — Windows-safe num_workers=0
+    # DataLoader — preserve uniform sampling by default; balancing is an explicit
+    # training-only intervention and never changes validation/test distributions.
+    sampler = None
+    shuffle = True
+    if args.sampling_mode == "cell-balanced":
+        active_cell_ids = cell_ids if subset_indices is None else [cell_ids[i] for i in subset_indices]
+        sampler = get_stratified_sampler(
+            ds_for_loader, active_cell_ids, power=args.sampling_power, seed=args.seed
+        )
+        shuffle = False
+        from collections import Counter
+        counts = Counter(active_cell_ids)
+        print(
+            f"[train] cell-balanced sampling: {len(counts)} observed cells, "
+            f"{min(counts.values())}-{max(counts.values())} examples/cell, "
+            f"power={args.sampling_power}, replacement=True"
+        )
+
+    # Windows-safe num_workers=0
     loader = DataLoader(
         ds_for_loader,
         batch_size=args.batch_size,
-        shuffle=True,
+        shuffle=shuffle,
+        sampler=sampler,
         num_workers=args.num_workers,
         pin_memory=torch.cuda.is_available(),
     )
@@ -344,6 +367,8 @@ def main() -> None:
         "csv": str(args.csv),
         "checkpoint_dir": str(ckpt_dir),
         "seed": args.seed,
+        "sampling_mode": args.sampling_mode,
+        "sampling_power": args.sampling_power,
         "epochs": args.epochs,
         "batch_size": args.batch_size,
         "image_size": args.image_size,
