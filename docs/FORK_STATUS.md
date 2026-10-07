@@ -3,7 +3,7 @@
 **Checked:** 2026-10-07 (Asia/Kolkata)  
 **Fork:** [Prajwal-k-tech/KPlaceNet](https://github.com/Prajwal-k-tech/KPlaceNet)  
 **Work branch:** `prajwal/eval-integrity`  
-**Latest implementation:** `21a9cbe` (`feat: report paired geolocation sampling results`)
+**Latest implementation:** demo artifacts are configurable and calibration provenance is checked
 **Work:** evaluation-contract guard, cell-balanced sampling, and paired L2 runner mode
 
 ## What this project implements
@@ -41,9 +41,11 @@ across explicit seeds, with separate checkpoint directories for non-default
 seeds. A companion evaluator runs every selected checkpoint against one fixed
 test CSV, then saves sample metrics, per-seed paired deltas, and dataset and
 checkpoint hashes in a JSON report.
-The Gradio demo now shares the evaluator's checkpoint contract and loads model
-weights strictly, so a missing or incompatible checkpoint cannot silently
-produce demo predictions.
+The Gradio demo now shares the evaluator's checkpoint contract, loads model
+weights strictly, and rejects a calibration artifact whose recorded checkpoint
+hash differs from the selected model. Checkpoint and calibration paths are
+configurable; missing calibration is labeled as raw softmax/top-1 mode rather
+than silently implying a calibrated prediction.
 
 ## Validation and limitations
 
@@ -59,9 +61,11 @@ produce demo predictions.
   balanced paths, command arguments, and seed-isolated checkpoints.
 - The comparison-report tests pass for JSON metric parsing, mode summaries,
   paired deltas, and unpaired seeds.
+- The demo calibration tests pass for missing files, valid/infinite cutoffs,
+  malformed values, and checkpoint-hash matches, mismatches, or missing hashes.
 - Python byte-compilation passed for the sampler, dataset, trainer, L2 runner,
-  comparison evaluator, demo, and new tests.
-- Full test discovery enumerated 21 tests: 18 passed; three modules could not
+  comparison evaluator, demo configuration, demo, and new tests.
+- Full test discovery enumerated 27 tests: 24 passed; three modules could not
   import because NumPy and `typing_extensions` are absent in the current Python
   3.14 environment. A temporary install attempt selected large CUDA packages,
   so it was canceled before installation and its temporary environment removed.

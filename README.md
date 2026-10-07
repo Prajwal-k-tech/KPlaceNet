@@ -306,10 +306,26 @@ Full results in `docs/results/l4_adaptive_cells.md`.
 
 ## Demo
 
-Quick interactive Gradio demo of the L2 winner (`l2_imagenet_1.0_layer4`) with L3 calibration (temperature + conformal + abstention at 0.5). Single file: `demo/app.py`.
+The Gradio demo accepts an image and displays the checkpoint's coarse cell
+centroid on a map. It uses the default L2 checkpoint path unless overridden;
+the optional calibration artifact is shown as absent when it is missing, and
+invalid calibration files fail clearly instead of silently reverting to
+uncalibrated predictions. When the calibration artifact includes a checkpoint
+SHA-256 (as the L3 runner does), the demo checks it against the selected model
+and rejects a mismatch.
+
+```sh
+# Optional: point the demo at any trained checkpoint and matching L3 artifact
+export KPLACENET_CHECKPOINT=checkpoints/l2_imagenet_1.0_frozen_cell-balanced/last.pt
+export KPLACENET_CALIBRATION=checkpoints/l3_uncertainty_results.json
+python demo/app.py
+```
+
+If no calibration file is available, the UI labels the output as uncalibrated
+softmax confidence with top-1 only; it does not imply a conformal guarantee.
 
 ```powershell
-# Launch (no commit, demo only)
+# Launch from the repository root
 python demo/app.py
 # or: python -m demo.app
 ```

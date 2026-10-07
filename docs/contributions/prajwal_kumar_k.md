@@ -100,7 +100,9 @@ maintainer should clarify the project's licensing before downstream reuse.
   checkpoints on a fixed test CSV and records sample metrics plus CSV and
   checkpoint hashes.
 - Apply the same checkpoint validation to the Gradio demo and require strict
-  model-weight loading.
+  model-weight loading. Make checkpoint and calibration artifact paths
+  configurable, report uncalibrated fallbacks explicitly, and reject
+  calibration artifacts that identify a different checkpoint hash.
 
 This follow-on code is unit-tested and byte-compiled, but no image training or
 real-data evaluation was possible in the checkout: its dataset and model

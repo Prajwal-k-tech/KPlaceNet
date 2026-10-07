@@ -1,12 +1,13 @@
 """KPlaceNet interactive demo (single file).
 
-L2 winner (l2_imagenet_1.0_layer4) + L3 calibration (temperature + conformal).
-Lazy model load, one-image inference, matplotlib global + zoom map.
+Set KPLACENET_CHECKPOINT and optionally KPLACENET_CALIBRATION to select
+artifacts. Model loading is lazy; inference returns a coarse cell estimate.
 """
 
 from __future__ import annotations
 
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -19,8 +20,14 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-CHECKPOINT = ROOT / "checkpoints" / "l2_imagenet_1.0_layer4" / "last.pt"
-CALIB_JSON = ROOT / "checkpoints" / "l3_uncertainty_results.json"
+CHECKPOINT = Path(os.environ.get(
+    "KPLACENET_CHECKPOINT",
+    str(ROOT / "checkpoints" / "l2_imagenet_1.0_layer4" / "last.pt"),
+)).expanduser()
+CALIB_JSON = Path(os.environ.get(
+    "KPLACENET_CALIBRATION",
+    str(ROOT / "checkpoints" / "l3_uncertainty_results.json"),
+)).expanduser()
 SIDECAR_CELLS = ROOT / "checkpoints" / "l2_cells_full.json"  # full boxes (same centroids)
 ABSTAIN_THRESHOLD = 0.5
 IMAGE_SIZE = 224
@@ -28,17 +35,11 @@ IMAGE_SIZE = 224
 _CACHE: dict = {}
 
 
-def _load_calibration() -> tuple[float, float | None]:
-    """Return (temperature, conformal_quantile or None). Fallbacks: 1.0 / None."""
-    T, q = 1.0, None
-    try:
-        data = json.loads(CALIB_JSON.read_text(encoding="utf-8"))
-        T = float(data.get("temperature", 1.0))
-        q_raw = data.get("conformal_quantile", None)
-        q = float(q_raw) if q_raw is not None else None
-    except Exception:
-        pass
-    return T, q
+def _load_calibration():
+    """Load calibration explicitly; a missing file means uncalibrated mode."""
+    from src.demo_config import load_calibration
+
+    return load_calibration(CALIB_JSON)
 
 
 def _load_resources():
@@ -89,8 +90,17 @@ def _load_resources():
     model.to(device)
     model.eval()
 
-    T, q = _load_calibration()
-    _CACHE.update(model=model, cells=cells, T=T, quantile=q,
+    from src.demo_config import sha256_file, verify_calibration_checkpoint
+
+    calibration = _load_calibration()
+    checkpoint_matches = verify_calibration_checkpoint(
+        calibration, sha256_file(CHECKPOINT)
+    )
+    _CACHE.update(model=model, cells=cells,
+                  T=calibration.temperature,
+                  temperature_fitted=calibration.temperature_fitted,
+                  quantile=calibration.conformal_quantile,
+                  calibration_matches_checkpoint=checkpoint_matches,
                   device=device, K=num_cells)
     return _CACHE
 
@@ -167,6 +177,9 @@ def predict_one(image):
         "cal_conf": cal_conf, "raw_conf": raw_conf, "T": float(T),
         "set_size": set_size, "K": int(K),
         "verdict": "ACCEPT" if accept else "ABSTAIN",
+        "temperature_fitted": res["temperature_fitted"],
+        "conformal_fitted": q is not None,
+        "calibration_matches_checkpoint": res["calibration_matches_checkpoint"],
         "box": (cell.lat_min, cell.lat_max, cell.lon_min, cell.lon_max),
         "quantile": q, "figure": fig,
         "finite": math.isfinite(lat) and math.isfinite(lon),
@@ -176,17 +189,30 @@ def predict_one(image):
 def _format_markdown(d: dict) -> str:
     verdict = d["verdict"]
     badge = "**ACCEPT**" if verdict == "ACCEPT" else "**ABSTAIN**"
-    q_txt = f"{d['quantile']:.4f}" if d["quantile"] is not None else "n/a (top-1 only)"
+    q_txt = f"{d['quantile']:.4f}" if d["quantile"] is not None else "not fitted"
     lat0, lat1, lon0, lon1 = d["box"]
+    confidence_label = "Uncalibrated softmax confidence"
+    if d["temperature_fitted"]:
+        confidence_label = (
+            "Temperature-scaled confidence (checkpoint verified)"
+            if d["calibration_matches_checkpoint"]
+            else "Temperature-scaled confidence (artifact match unverified)"
+        )
+    set_label = (
+        f"Conformal set size: **{d['set_size']} of {d['K']}**"
+        if d["conformal_fitted"]
+        else "Prediction set: top-1 only (no conformal guarantee)"
+    )
     return (
         f"### Prediction: {badge}\n\n"
         f"- Predicted lat/lon: **{d['lat']:.4f}, {d['lon']:.4f}**\n"
         f"- Cell id: **{d['cell_id']}** (box lat [{lat0:.2f}, {lat1:.2f}], "
         f"lon [{lon0:.2f}, {lon1:.2f}])\n"
-        f"- Calibrated confidence: **{d['cal_conf'] * 100:.2f}%**\n"
+        f"- {confidence_label}: **{d['cal_conf'] * 100:.2f}%**\n"
         f"- Raw (unscaled) confidence: {d['raw_conf'] * 100:.2f}%\n"
         f"- Temperature T: {d['T']:.4f} | conformal quantile: {q_txt}\n"
-        f"- Conformal set size: **{d['set_size']} of {d['K']}**\n\n"
+        f"- {set_label}\n"
+        f"- Threshold decision at max probability 0.5: **{verdict}**\n\n"
         f"_Note: haversine distance cannot be known for an uploaded photo "
         f"(no ground truth) — distance is only measurable on the labeled test set._"
     )
@@ -209,10 +235,26 @@ def build_ui():
     with gr.Blocks(title="KPlaceNet demo") as demo:
         gr.Markdown("# KPlaceNet demo — coarse photo geolocation")
         gr.Markdown(
-            "This is a **300-cell coarse model trained on 10k images**: it classifies "
-            "a photo into one of 300 geographic cells and reports the winning cell's "
-            "centroid. Expect broad regions, not street-level pins — **low confidence "
-            "or ABSTAIN is the model being honest**, not a bug."
+            "This classifier maps an image to one of the checkpoint's saved "
+            "geographic cells and reports the winning cell centroid. Treat it as "
+            "a coarse estimate, not an exact GPS location. Confidence and the "
+            "0.5 threshold are only as meaningful as the supplied calibration "
+            "artifact and evaluation protocol."
+        )
+        calibration = _load_calibration()
+        calibration_state = (
+            "temperature scaling and conformal threshold loaded; "
+            "checkpoint hash checked on first inference"
+            if calibration.temperature_fitted and calibration.conformal_fitted
+            else "temperature scaling loaded; no conformal threshold"
+            if calibration.temperature_fitted
+            else "conformal threshold loaded without temperature scaling"
+            if calibration.conformal_fitted
+            else "no calibration artifact; raw softmax and top-1 only"
+        )
+        gr.Markdown(
+            f"Checkpoint: `{CHECKPOINT}`  \n"
+            f"Calibration: `{CALIB_JSON}` ({calibration_state})"
         )
         with gr.Row():
             img_in = gr.Image(type="pil", label="Upload photo")
