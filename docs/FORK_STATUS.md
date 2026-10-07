@@ -3,6 +3,7 @@
 **Checked:** 2026-10-07 (Asia/Kolkata)  
 **Fork:** [Prajwal-k-tech/KPlaceNet](https://github.com/Prajwal-k-tech/KPlaceNet)  
 **Work branch:** `prajwal/eval-integrity`  
+**Latest implementation:** `21a9cbe` (`feat: report paired geolocation sampling results`)
 **Work:** evaluation-contract guard, cell-balanced sampling, and paired L2 runner mode
 
 ## What this project implements
@@ -62,7 +63,8 @@ produce demo predictions.
   comparison evaluator, demo, and new tests.
 - Full test discovery enumerated 21 tests: 18 passed; three modules could not
   import because NumPy and `typing_extensions` are absent in the current Python
-  3.14 environment. No dependencies were installed for this check.
+  3.14 environment. A temporary install attempt selected large CUDA packages,
+  so it was canceled before installation and its temporary environment removed.
 - No training or real-data evaluation was run. The required OSV-5M subset,
   evaluation images, and trained checkpoint are absent. No real-data accuracy,
   calibration, or regional result is claimed for this change. PyTorch import
