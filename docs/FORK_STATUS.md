@@ -3,7 +3,7 @@
 **Checked:** 2026-10-07 (Asia/Kolkata)  
 **Fork:** [Prajwal-k-tech/KPlaceNet](https://github.com/Prajwal-k-tech/KPlaceNet)  
 **Work branch:** `prajwal/eval-integrity`  
-**Latest implementation:** demo artifacts are configurable and calibration provenance is checked
+**Latest code commit:** `66309fb` (`fix(eval): reject boolean sample counts`)
 **Work:** evaluation-contract guard, cell-balanced sampling, and paired L2 runner mode
 
 ## What this project implements
