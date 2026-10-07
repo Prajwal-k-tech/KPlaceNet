@@ -37,7 +37,9 @@ inverse-frequency weights over the active training subset, leaves the default
 uniform baseline unchanged, and records the mode in checkpoint arguments and
 metrics. The L2 runner can plan or execute paired uniform/cell-balanced runs
 across explicit seeds, with separate checkpoint directories for non-default
-seeds.
+seeds. A companion evaluator runs every selected checkpoint against one fixed
+test CSV, then saves sample metrics, per-seed paired deltas, and dataset and
+checkpoint hashes in a JSON report.
 The Gradio demo now shares the evaluator's checkpoint contract and loads model
 weights strictly, so a missing or incompatible checkpoint cannot silently
 produce demo predictions.
@@ -54,9 +56,11 @@ produce demo predictions.
   inverse-frequency weights plus invalid inputs.
 - The paired-runner tests also pass for unchanged uniform paths, distinct
   balanced paths, command arguments, and seed-isolated checkpoints.
+- The comparison-report tests pass for JSON metric parsing, mode summaries,
+  paired deltas, and unpaired seeds.
 - Python byte-compilation passed for the sampler, dataset, trainer, L2 runner,
-  demo, and new sampler tests.
-- Full test discovery enumerated 18 tests: 15 passed; three modules could not
+  comparison evaluator, demo, and new tests.
+- Full test discovery enumerated 21 tests: 18 passed; three modules could not
   import because NumPy and `typing_extensions` are absent in the current Python
   3.14 environment. No dependencies were installed for this check.
 - No training or real-data evaluation was run. The required OSV-5M subset,

@@ -96,8 +96,9 @@ maintainer should clarify the project's licensing before downstream reuse.
   load a mismatched classifier head.
 - Add optional seeded inverse-frequency cell sampling to training while
   preserving uniform sampling as the default. Add paired L2 experiment plans,
-  multiple-seed run isolation, tests for the weighting rule, and instructions
-  for evaluating both modes on the same untouched test data.
+  multiple-seed run isolation, and a report command that evaluates paired
+  checkpoints on a fixed test CSV and records sample metrics plus CSV and
+  checkpoint hashes.
 - Apply the same checkpoint validation to the Gradio demo and require strict
   model-weight loading.
 

@@ -150,6 +150,9 @@ python -m src.eval --csv data/osv5m_test/metadata.csv --checkpoint checkpoints/l
 
 # Repeat the paired experiment with three training seeds (separate checkpoint dirs)
 python scripts/run_l2_experiments.py --run --fractions 1.0 --inits imagenet --regimes frozen --sampling-modes uniform cell-balanced --seeds 42 43 44 --epochs 10
+
+# Evaluate every paired checkpoint and write a hash/provenance-bearing JSON report
+python scripts/evaluate_sampling_comparison.py --csv data/osv5m_test/metadata.csv --seeds 42 43 44
 ```
 
 `--sampling-power` controls the inverse-frequency exponent: 0 gives each
@@ -161,6 +164,8 @@ uniform` for the original shuffled, no-replacement baseline. This intentionally
 changes the training distribution; compare the
 untouched test set and report both overall and geographic-stratum metrics.
 Use multiple seeds before treating a difference as a robust performance claim.
+The comparison script records per-checkpoint metrics and hashes, test-CSV hash,
+runtime versions, and balanced-minus-uniform deltas for each shared seed.
 
 ## L3 — Uncertainty-Aware Geolocation (Gap 3)
 
