@@ -152,6 +152,15 @@ protocol auditable; they do not establish exchangeability or regional
 coverage under geographic shift. The upstream L3 numbers below remain
 historical and are not measurements of this fork's changes.
 
+### Evaluation integrity
+
+`src.eval` requires a trained checkpoint containing both `model_state` and the
+cell centroids used by its classifier. It rejects missing or inconsistent
+checkpoint metadata, loads weights strictly, and never builds classes from the
+evaluation CSV or reports scores from random weights. This keeps evaluation
+labels out of model/class construction; use a training checkpoint produced by
+`src.train`.
+
 ### Quick Start — Plan-Only (no GPU, no images loaded)
 
 ```powershell

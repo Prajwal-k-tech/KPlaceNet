@@ -18,10 +18,12 @@ from tqdm import tqdm
 
 try:
     from src.dataset import GeoDataset
+    from src.eval_contract import validate_eval_checkpoint
     from src.model import build_model
 except ImportError:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
     from src.dataset import GeoDataset
+    from src.eval_contract import validate_eval_checkpoint
     from src.model import build_model
 
 
@@ -106,60 +108,33 @@ def main() -> None:
     device = resolve_device(args.device)
     print(f"[eval] device={device} | csv={args.csv} | ckpt={args.checkpoint}")
 
+    ckpt_path = Path(args.checkpoint)
+    if not ckpt_path.is_file():
+        raise FileNotFoundError(
+            f"Evaluation checkpoint not found: {ckpt_path}. "
+            "Train a model first; evaluation will not use random weights."
+        )
+    ckpt = torch.load(str(ckpt_path), map_location="cpu")
+    num_cells, cells = validate_eval_checkpoint(ckpt)
+    print(f"[eval] loaded checkpoint epoch={ckpt.get('epoch', '?')} loss={ckpt.get('loss', '?')}")
+    if num_cells != args.num_cells:
+        print(f"[eval] using checkpoint num_cells={num_cells} (CLI was {args.num_cells})")
+
     # Load eval dataset (no cell_ids — we predict them)
     ds = GeoDataset(args.csv, image_size=args.image_size, train=False)
     loader = DataLoader(ds, batch_size=args.batch_size, shuffle=False, num_workers=args.num_workers)
 
-    # Load checkpoint if exists; otherwise run with random weights (for L0 smoke)
-    ckpt = None
-    cells = None
-    ckpt_path = Path(args.checkpoint)
-    if ckpt_path.exists():
-        ckpt = torch.load(str(ckpt_path), map_location="cpu")
-        cells = ckpt.get("cells", None)
-        print(f"[eval] loaded checkpoint epoch={ckpt.get('epoch', '?')} loss={ckpt.get('loss', '?')}")
-    else:
-        print(f"[warn] checkpoint not found: {ckpt_path} — evaluating with random weights (L0 smoke only)")
-
-    # Build model and load weights if available
-    # If ckpt has args, prefer its num_cells; CLI --num-cells is fallback.
-    # If ckpt cell metadata exists, its length wins (head must match cells).
-    num_cells = args.num_cells
-    if ckpt is not None and "args" in ckpt and "num_cells" in ckpt["args"]:
-        num_cells = int(ckpt["args"]["num_cells"])
-        if num_cells != args.num_cells:
-            print(f"[eval] using ckpt num_cells={num_cells} (CLI was {args.num_cells})")
-
     model = build_model(num_cells=num_cells, pretrained=False, freeze_backbone=False)
-    if ckpt is not None and "model_state" in ckpt:
-        # strict=False allows partial load if head size mismatched (warn)
-        missing, unexpected = model.load_state_dict(ckpt["model_state"], strict=False)
-        if missing:
-            print(f"[warn] missing keys on load: {missing}")
-        if unexpected:
-            print(f"[warn] unexpected keys on load: {unexpected}")
+    model.load_state_dict(ckpt["model_state"], strict=True)
 
     model.to(device)
     model.eval()
 
-    # Cell centroids — from checkpoint if available, else quad-tree from dataset
-    if cells is not None:
-        # cells is list of dicts {cell_id, centroid_lat, centroid_lon}
-        centroids = np.array([[c["centroid_lat"], c["centroid_lon"]] for c in sorted(cells, key=lambda x: x["cell_id"])], dtype=np.float64)
-        if len(centroids) != num_cells:
-            print(f"[eval] ckpt cells ({len(centroids)}) != num_cells ({num_cells}); using head dim = {len(centroids)}")
-            num_cells = len(centroids)
-    else:
-        # Fallback: build quad-tree cells from dataset coords (ensures eval runs even before L1)
-        from src.cells import build_cells
-
-        coords = ds.get_coords()
-        stub_cells = build_cells(coords, K=num_cells, method="quad_tree")
-        centroids = np.array([[c.centroid_lat, c.centroid_lon] for c in stub_cells], dtype=np.float64)
-        print(f"[eval] no cell metadata in ckpt — built {len(stub_cells)} quad-tree centroids from eval coords (fallback)")
-        if len(centroids) != num_cells:
-            print(f"[eval] fallback cells ({len(centroids)}) != num_cells ({num_cells}); using head dim = {len(centroids)}")
-            num_cells = len(centroids)
+    # Class ids and geographic centroids must come from the same checkpoint.
+    centroids = np.array(
+        [[cell["centroid_lat"], cell["centroid_lon"]] for cell in cells],
+        dtype=np.float64,
+    )
 
     # Inference
     all_pred_lats: List[float] = []
@@ -171,10 +146,6 @@ def main() -> None:
         images = images.to(device, non_blocking=True)
         logits = model(images)
         pred_ids = logits.argmax(dim=1).cpu().numpy()
-        # Guard against stale checkpoints whose head is wider than centroids
-        if pred_ids.max(initial=0) >= len(centroids):
-            print(f"[warn] pred id >= {len(centroids)} — clipping (stale ckpt head?)")
-            pred_ids = np.clip(pred_ids, 0, len(centroids) - 1)
 
         # Map cell id → centroid lat/lon
         pred_lats = centroids[pred_ids, 0]
