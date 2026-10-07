@@ -39,7 +39,8 @@ def parse_eval_metrics(stdout: str) -> dict[str, float | int]:
     for line in reversed(stdout.splitlines()):
         if line.startswith("[json]"):
             metrics = json.loads(line[len("[json]"):])
-            if not isinstance(metrics, dict) or not isinstance(metrics.get("n"), int) or metrics["n"] < 1:
+            if (not isinstance(metrics, dict) or isinstance(metrics.get("n"), bool)
+                    or not isinstance(metrics.get("n"), int) or metrics["n"] < 1):
                 raise ValueError("evaluator returned invalid or empty metrics")
             for key in METRIC_KEYS:
                 value = metrics.get(key)
