@@ -138,6 +138,15 @@ L3 adds post-hoc uncertainty calibration to the L2 winner (`l2_imagenet_1.0_laye
 temperature scaling (Guo et al. 2017), split-conformal prediction sets, and
 confidence-based abstention.
 
+### Evaluation integrity
+
+`src.eval` requires a trained checkpoint containing both `model_state` and the
+cell centroids used by its classifier. It rejects missing or inconsistent
+checkpoint metadata, loads weights strictly, and never builds classes from the
+evaluation CSV or reports scores from random weights. This keeps evaluation
+labels out of model/class construction; use a training checkpoint produced by
+`src.train`.
+
 ### Quick Start — Plan-Only (no GPU, no images loaded)
 
 ```powershell
