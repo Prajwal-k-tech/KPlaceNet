@@ -324,6 +324,18 @@ python demo/app.py
 If no calibration file is available, the UI labels the output as uncalibrated
 softmax confidence with top-1 only; it does not imply a conformal guarantee.
 
+The dependency-free checks run with Python 3.11 and the standard library:
+
+```sh
+python -m unittest discover -s tests -p 'test_eval_contract.py' -v
+python -m unittest discover -s tests -p 'test_regional_eval.py' -v
+python -m unittest discover -s tests -p 'test_demo_config.py' -v
+python -m unittest discover -s tests -p 'test_sampling*.py' -v
+```
+
+GitHub Actions runs these checks on pushes and pull requests. The full test
+suite still needs the ML dependencies listed in `requirements.txt`.
+
 ```powershell
 # Launch from the repository root
 python demo/app.py

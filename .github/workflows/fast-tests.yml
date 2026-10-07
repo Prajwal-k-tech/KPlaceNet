@@ -1,0 +1,31 @@
+name: Dependency-free tests
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  standard-library-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Check evaluation contract
+        run: python -m unittest discover -s tests -p 'test_eval_contract.py' -v
+      - name: Check spatial diagnostics
+        run: python -m unittest discover -s tests -p 'test_regional_eval.py' -v
+      - name: Check demo calibration handling
+        run: python -m unittest discover -s tests -p 'test_demo_config.py' -v
+      - name: Check sampling and comparison reports
+        run: python -m unittest discover -s tests -p 'test_sampling*.py' -v
+      - name: Compile changed Python modules
+        run: >-
+          python -m py_compile src/demo_config.py src/eval_contract.py
+          src/regional_eval.py src/sampling.py scripts/run_l2_experiments.py
+          scripts/evaluate_sampling_comparison.py

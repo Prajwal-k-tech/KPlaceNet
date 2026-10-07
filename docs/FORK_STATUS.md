@@ -46,6 +46,8 @@ weights strictly, and rejects a calibration artifact whose recorded checkpoint
 hash differs from the selected model. Checkpoint and calibration paths are
 configurable; missing calibration is labeled as raw softmax/top-1 mode rather
 than silently implying a calibrated prediction.
+The fork also runs its dependency-free correctness and reporting tests in
+GitHub Actions, so these checks do not depend on installing the ML stack.
 
 ## Validation and limitations
 
