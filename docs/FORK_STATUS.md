@@ -4,6 +4,7 @@
 **Fork:** [Prajwal-k-tech/KPlaceNet](https://github.com/Prajwal-k-tech/KPlaceNet)  
 **Work branch:** `prajwal/eval-integrity`  
 **Latest code commit:** `66309fb` (`fix(eval): reject boolean sample counts`)
+**Latest branch commit:** `ea7870f` (`ci: run dependency-free correctness tests`)
 **Work:** evaluation-contract guard, cell-balanced sampling, and paired L2 runner mode
 
 ## What this project implements
@@ -71,6 +72,7 @@ GitHub Actions, so these checks do not depend on installing the ML stack.
   import because NumPy and `typing_extensions` are absent in the current Python
   3.14 environment. A temporary install attempt selected large CUDA packages,
   so it was canceled before installation and its temporary environment removed.
+- The new GitHub Actions run passed: [run 37627733126](https://github.com/Prajwal-k-tech/KPlaceNet/actions/runs/37627733126).
 - No training or real-data evaluation was run. The required OSV-5M subset,
   evaluation images, and trained checkpoint are absent. No real-data accuracy,
   calibration, or regional result is claimed for this change. PyTorch import
