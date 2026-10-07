@@ -161,6 +161,9 @@ evaluation CSV or reports scores from random weights. This keeps evaluation
 labels out of model/class construction; use a training checkpoint produced by
 `src.train`.
 
+See [`docs/FORK_STATUS.md`](docs/FORK_STATUS.md) for the fork's current
+contribution scope, validation evidence, and real-data reproduction status.
+
 ### Quick Start — Plan-Only (no GPU, no images loaded)
 
 ```powershell
