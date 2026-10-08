@@ -97,6 +97,8 @@ def parse_args() -> argparse.Namespace:
                    help="Actually execute the runs (overrides --plan-only)")
     p.add_argument("--skip-existing", action="store_true",
                    help="Skip runs whose checkpoint dir already has a best.pt")
+    p.add_argument("--checkpoint-root", type=Path, default=CHECKPOINTS_DIR,
+                   help=f"Root for run checkpoints and experiment manifest (default: {CHECKPOINTS_DIR})")
     p.add_argument("--cells-json", type=str, default=str(CELLS_JSON),
                    help=f"Path for the fixed cells JSON (default: {CELLS_JSON})")
     p.add_argument("--places365-checkpoint", type=str, default=str(PLACES365_CKPT),
@@ -112,6 +114,12 @@ def checkpoint_dir_name(init: str, fraction: float, regime: str,
     sampling_suffix = "" if sampling_mode == "uniform" else f"_{sampling_mode}"
     suffix = seed_suffix + sampling_suffix
     return f"l2_{init}_{frac_str}_{regime}{suffix}"
+
+
+def checkpoint_dir(root: Path, init: str, fraction: float, regime: str,
+                   sampling_mode: str = "uniform", seed: int = 42) -> Path:
+    """Return an isolated run directory under the selected experiment root."""
+    return root / checkpoint_dir_name(init, fraction, regime, sampling_mode, seed)
 
 
 def subset_csv_path(full_csv: Path, fraction: float, seed: int) -> Path:
@@ -420,7 +428,8 @@ def main() -> None:
                     for sampling_mode in args.sampling_modes:
                         run_idx += 1
                         ckpt_name = checkpoint_dir_name(init, frac, regime, sampling_mode, run_seed)
-                        ckpt_dir = CHECKPOINTS_DIR / ckpt_name
+                        ckpt_dir = checkpoint_dir(args.checkpoint_root, init, frac, regime,
+                                                  sampling_mode, run_seed)
                         sub_csv = subset_csv_path(full_csv, frac, run_seed)
                         batch_size = BATCH_FROZEN if regime == "frozen" else BATCH_FINETUNE
 
@@ -528,7 +537,7 @@ def main() -> None:
             print(f"  {name}: {status}")
 
     # Save plan/manifest
-    manifest_path = CHECKPOINTS_DIR / "l2_experiment_manifest.json"
+    manifest_path = args.checkpoint_root / "l2_experiment_manifest.json"
     manifest_path.parent.mkdir(parents=True, exist_ok=True)
     with open(manifest_path, "w", encoding="utf-8") as f:
         json.dump({

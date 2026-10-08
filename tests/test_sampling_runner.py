@@ -16,6 +16,7 @@ from unittest.mock import patch
 
 from scripts import run_l2_experiments
 from scripts.run_l2_experiments import (
+    checkpoint_dir,
     checkpoint_dir_name,
     make_subset_csv,
     make_train_cmd,
@@ -23,6 +24,13 @@ from scripts.run_l2_experiments import (
 
 
 class SamplingRunnerTests(unittest.TestCase):
+    def test_checkpoint_root_isolates_experiment_artifacts(self):
+        root = Path("checkpoints") / "data_scale_20k"
+        self.assertEqual(
+            checkpoint_dir(root, "imagenet", 1.0, "layer4", "uniform", 42),
+            root / "l2_imagenet_1.0_layer4",
+        )
+
     def test_uniform_checkpoint_name_preserves_existing_l2_path(self):
         self.assertEqual(
             checkpoint_dir_name("imagenet", 1.0, "frozen", "uniform"),
