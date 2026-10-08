@@ -3,13 +3,18 @@
 from __future__ import annotations
 
 import csv
+import contextlib
+import io
 import importlib.util
 import json
+import sys
 import tempfile
 import unittest
 from argparse import Namespace
 from pathlib import Path
+from unittest.mock import patch
 
+from scripts import run_l2_experiments
 from scripts.run_l2_experiments import (
     checkpoint_dir_name,
     make_subset_csv,
@@ -27,17 +32,47 @@ class SamplingRunnerTests(unittest.TestCase):
     def test_balanced_run_uses_separate_checkpoint_and_records_mode(self):
         args = Namespace(epochs=2, image_size=224, lr=0.001, seed=42,
                          device="cpu", sampling_power=0.75,
-                         places365_checkpoint="places.pt")
+                         places365_checkpoint="places.pt", num_workers=4)
         cmd = make_train_cmd(args, Path("train.csv"), Path("balanced"),
                              "imagenet", 1.0, "frozen", "cell-balanced",
                              32, "cells.json", 300, 1000)
         self.assertIn("l2_imagenet_1.0_frozen_cell-balanced", cmd)
         self.assertEqual(cmd[cmd.index("--sampling-mode") + 1], "cell-balanced")
         self.assertEqual(cmd[cmd.index("--sampling-power") + 1], "0.75")
+        self.assertEqual(cmd[cmd.index("--num-workers") + 1], "4")
 
     def test_non_default_seed_gets_an_isolated_checkpoint_directory(self):
         name = checkpoint_dir_name("imagenet", 1.0, "frozen", "cell-balanced", 43)
         self.assertEqual(name, "l2_imagenet_1.0_frozen_s43_cell-balanced")
+
+    def test_plan_only_creates_manifest_directory_on_clean_checkout(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source = root / "train.csv"
+            with source.open("w", newline="", encoding="utf-8") as stream:
+                writer = csv.DictWriter(stream, fieldnames=["image_path", "lat", "lon"])
+                writer.writeheader()
+                writer.writerow({"image_path": "one.jpg", "lat": 1, "lon": 2})
+
+            checkpoints = root / "missing" / "checkpoints"
+            cells = checkpoints / "cells.json"
+            argv = [
+                "run_l2_experiments.py", "--csv", str(source),
+                "--fractions", "1.0", "--inits", "imagenet",
+                "--regimes", "frozen", "--sampling-modes", "uniform",
+                "--epochs", "1", "--plan-only",
+            ]
+            with patch.object(run_l2_experiments, "CHECKPOINTS_DIR", checkpoints), \
+                    patch.object(run_l2_experiments, "CELLS_JSON", cells), \
+                    patch.object(sys, "argv", argv), \
+                    contextlib.redirect_stdout(io.StringIO()):
+                run_l2_experiments.main()
+
+            manifest = json.loads(
+                (checkpoints / "l2_experiment_manifest.json").read_text(encoding="utf-8")
+            )
+            self.assertTrue(manifest["plan_only"])
+            self.assertEqual(manifest["results"][0]["sampling_mode"], "uniform")
 
     def test_subset_generation_rejects_invalid_fraction(self):
         with tempfile.TemporaryDirectory() as temporary:

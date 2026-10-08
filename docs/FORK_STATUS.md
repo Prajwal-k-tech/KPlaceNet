@@ -16,11 +16,11 @@ and post-hoc uncertainty tools. This differs materially from the original
 an Inception model, and a 126-million-photo corpus. KPlaceNet is not a faithful
 reproduction of PlaNet's model, scale, or reported benchmark results.
 
-The repository has L0-L4 code and historical result reports. That makes it a
-substantial prototype, but its reported experiments are not reproducible from
-this checkout alone: `data/` contains only tracked placeholders/documentation,
-and there is no `checkpoints/` directory. The reports are recorded results;
-they have not been independently rerun for this fork contribution.
+The repository has L0-L4 code and historical result reports. At the start of
+this fork work, the data and checkpoints needed to reproduce them were absent.
+Those historical results are not results of this contribution. A bounded
+OSV-5M training and held-out evaluation is now running locally; see the
+validation section for its status.
 
 ## Fork change in progress
 
@@ -63,13 +63,14 @@ Temperature fitting now moves the trainable temperature parameter along with
 calibration logits to the selected device, so CUDA-backed fitting does not mix
 CPU parameters with GPU tensors. A CUDA-conditional regression test checks
 both fitting and scaled-logit placement; this checkout has CPU-only PyTorch, so
-that branch is delegated to CI.
+the test is skipped locally. The configured CI also uses CPU-only PyTorch, so
+CUDA execution remains unverified.
 
 ## Validation and limitations
 
 - Full `python -m unittest discover -s tests -v` in an isolated Python 3.12
-  CPU environment: all 48 tests passed, including the synthetic pipeline and
-  stale-cache tests.
+  CPU environment: 49 tests ran, 48 passed, and the CUDA-only device-placement
+  test was skipped. This includes the synthetic pipeline and stale-cache tests.
 - The synthetic integration test generated 8 training and 4 evaluation images,
   trained one CPU epoch with random initialization, loaded the saved checkpoint,
   and emitted valid evaluator JSON for all 4 held-out synthetic images. Its
@@ -80,16 +81,22 @@ that branch is delegated to CI.
   its temporary training artifacts were removed automatically. No dataset or
   pretrained weights were downloaded.
 - GitHub Actions passed on commit `a692d88`: [run 37746197271](https://github.com/Prajwal-k-tech/KPlaceNet/actions/runs/37746197271), including both the standard-library and CPU model-test jobs.
+- GitHub Actions passed on commit `ae25b44`: [run 37782064966](https://github.com/Prajwal-k-tech/KPlaceNet/actions/runs/37782064966). The full suite ran 49 tests, with 48 passing and the CUDA-only test skipped.
 - The L2 cache-integrity changes passed locally (48 tests) and in GitHub Actions on `bbb1362`: [run 37749946875](https://github.com/Prajwal-k-tech/KPlaceNet/actions/runs/37749946875), including both workflow jobs.
-- No real-data evaluation was run. `data/` contains no required OSV-5M test
-  subset or evaluation images, and the repository contains no trained checkpoint.
-  No real-data accuracy, calibration, or regional result is claimed.
+- A verified local data subset contains 10,000 official OSV-5M train images and
+  3,000 sampled official test images. Sample IDs are unique within each split,
+  there is no train/test ID overlap, every image decodes, and the official
+  train/test split labels are preserved. The source metadata hashes are recorded
+  with the experiment artifacts; image data and checkpoints are not committed.
+- A paired three-seed comparison of uniform and inverse-cell-frequency
+  cell-balanced sampling is in progress (ImageNet initialization, ResNet-50
+  layer4 fine-tuning, 10 epochs, 300 fixed geographic cells). No real-data
+  evaluation result or performance claim is available until all six runs finish
+  and are evaluated on the untouched test subset.
 
 ## Next steps
 
-1. Before running a real experiment, confirm dataset and checkpoint download
-   sizes and available storage. Then run paired uniform and cell-balanced
-   experiments on a fixed training subset and untouched spatially separated
-   test set; repeat seeds before making any performance claim.
+1. Finish the six-run matrix and evaluate all checkpoints on the fixed,
+   untouched official test subset; report paired seed deltas and limitations.
 2. Package a verified checkpoint and matching calibration artifact for the
    Gradio demo only after real-data inference is checked against the evaluator.

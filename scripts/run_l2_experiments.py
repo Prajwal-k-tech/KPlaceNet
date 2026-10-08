@@ -81,6 +81,8 @@ def parse_args() -> argparse.Namespace:
                    help="Epochs per run (default: 10)")
     p.add_argument("--image-size", type=int, default=224,
                    help="Image size (default: 224)")
+    p.add_argument("--num-workers", type=int, default=0,
+                   help="Training DataLoader workers (default: 0 for portability)")
     p.add_argument("--lr", type=float, default=1e-3,
                    help="Learning rate (default: 1e-3)")
     p.add_argument("--seed", type=int, default=42,
@@ -300,6 +302,7 @@ def make_train_cmd(args: argparse.Namespace, csv_path: Path, ckpt_dir: Path,
         "--epochs", str(args.epochs),
         "--batch-size", str(batch_size),
         "--image-size", str(args.image_size),
+        "--num-workers", str(args.num_workers),
         "--lr", str(args.lr),
         "--seed", str(seed),
         "--device", str(args.device),
@@ -526,6 +529,7 @@ def main() -> None:
 
     # Save plan/manifest
     manifest_path = CHECKPOINTS_DIR / "l2_experiment_manifest.json"
+    manifest_path.parent.mkdir(parents=True, exist_ok=True)
     with open(manifest_path, "w", encoding="utf-8") as f:
         json.dump({
             "plan_only": plan_only,
