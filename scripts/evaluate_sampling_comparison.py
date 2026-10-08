@@ -146,7 +146,7 @@ def validate_training_comparison(runs: list[dict[str, Any]]) -> None:
             raise ValueError(f"paired sampling runs for seed={seed} used different training samples")
 
 
-def parse_eval_metrics(stdout: str) -> dict[str, float | int]:
+def parse_eval_metrics(stdout: str) -> dict[str, Any]:
     """Extract and validate the evaluator's machine-readable final metrics."""
     for line in reversed(stdout.splitlines()):
         if line.startswith("[json]"):
@@ -158,6 +158,9 @@ def parse_eval_metrics(stdout: str) -> dict[str, float | int]:
                 value = metrics.get(key)
                 if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
                     raise ValueError(f"evaluator returned invalid metric {key!r}")
+            regional = metrics.get("regional_distance")
+            if not isinstance(regional, dict) or not isinstance(regional.get("regions"), dict):
+                raise ValueError("evaluator returned no geographic-strata metrics")
             return metrics
     raise ValueError("evaluator output did not contain a [json] metrics record")
 

@@ -9,6 +9,7 @@ import unittest
 from pathlib import Path
 
 from scripts.evaluate_sampling_comparison import (
+    ROOT,
     load_training_provenance,
     parse_checkpoint_manifest_hash,
     parse_eval_metrics,
@@ -59,19 +60,23 @@ class SamplingEvaluationTests(unittest.TestCase):
     def test_portable_paths_omit_host_absolute_prefixes(self):
         self.assertEqual(portable_path("data/osv5m_test/metadata.csv"), "data/osv5m_test/metadata.csv")
         self.assertEqual(
-            portable_path("/home/prajwal-k/Projects/osource/kplacenet/checkpoints/model/last.pt"),
+            portable_path(ROOT / "checkpoints/model/last.pt"),
             "checkpoints/model/last.pt",
         )
         self.assertEqual(portable_path("/tmp/external/model.pt"), "model.pt")
 
     def test_parses_json_line_and_rejects_empty_or_missing_metrics(self):
         metrics = {"within_1km": 1.0, "within_25km": 10.0, "within_200km": 30.0,
-                   "mean_km": 1000.0, "median_km": 900.0, "n": 5}
+                   "mean_km": 1000.0, "median_km": 900.0, "n": 5,
+                   "regional_distance": {"regions": {}}}
         self.assertEqual(parse_eval_metrics("progress\n[json]" + json.dumps(metrics)), metrics)
         with self.assertRaises(ValueError):
             parse_eval_metrics("no metrics")
         with self.assertRaises(ValueError):
             parse_eval_metrics('[json]{"n": 0}')
+        missing_regions = {key: value for key, value in metrics.items() if key != "regional_distance"}
+        with self.assertRaisesRegex(ValueError, "no geographic-strata"):
+            parse_eval_metrics("[json]" + json.dumps(missing_regions))
 
     def test_parses_and_validates_embedded_checkpoint_manifest_hash(self):
         digest = "a" * 64

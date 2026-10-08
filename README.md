@@ -1,10 +1,10 @@
 # KPlaceNet / GeoNet
 
-Evolutionary, layer-by-layer — PlaNet-style coarse geolocation on RTX 4050 (6GB VRAM).
+PlaNet-inspired coarse image geolocation with a ResNet-50 classifier over geographic cells. This fork's bounded CUDA experiments run on an RTX 3050 laptop GPU (6GB VRAM); KPlaceNet is not a reproduction of PlaNet's model, data scale, or benchmark results.
 
 > Locked plan: `docs/implementation_plan.md` — L0→L4, solo + 4050 constraints. Do not add new datasets/backbones without re-plan.
 
-## Setup (RTX 4050, Windows + Python 3.10+, torch 2.x)
+## Setup (Windows or Linux, Python 3.10+, PyTorch 2.x)
 
 ```powershell
 # 1. Create env (example with venv)
