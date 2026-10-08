@@ -34,6 +34,43 @@ def sha256_file(path: Path) -> str:
     return digest.hexdigest()
 
 
+def load_training_provenance(checkpoint: Path) -> dict[str, Any]:
+    """Load and verify the manifest paired with a training checkpoint."""
+    manifest_path = checkpoint.parent / "run_manifest.json"
+    if not manifest_path.is_file():
+        raise FileNotFoundError(f"Missing training manifest for checkpoint: {manifest_path}")
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    if not isinstance(manifest, dict):
+        raise ValueError(f"Invalid training manifest: {manifest_path}")
+    declared_hash = manifest.get("manifest_sha256")
+    unsigned_manifest = {key: value for key, value in manifest.items() if key != "manifest_sha256"}
+    canonical = json.dumps(unsigned_manifest, sort_keys=True, separators=(",", ":"))
+    if not isinstance(declared_hash, str) or hashlib.sha256(canonical.encode("utf-8")).hexdigest() != declared_hash:
+        raise ValueError(f"Training manifest hash mismatch: {manifest_path}")
+    required = ("dataset_csv_sha256", "dataset_sample_count", "selected_sample_ids",
+                "cells_sha256", "seed", "config", "initialization", "software")
+    if any(key not in manifest for key in required):
+        raise ValueError(f"Training manifest is missing required provenance: {manifest_path}")
+    sample_ids = manifest["selected_sample_ids"]
+    if not isinstance(sample_ids, list) or not all(isinstance(value, str) for value in sample_ids):
+        raise ValueError(f"Training manifest has invalid selected sample IDs: {manifest_path}")
+    sample_ids_payload = json.dumps(sample_ids, separators=(",", ":"))
+    return {
+        "manifest_path": str(manifest_path.relative_to(ROOT)) if manifest_path.is_relative_to(ROOT) else str(manifest_path),
+        "manifest_file_sha256": sha256_file(manifest_path),
+        "manifest_sha256": declared_hash,
+        "training_csv_sha256": manifest["dataset_csv_sha256"],
+        "training_dataset_sample_count": manifest["dataset_sample_count"],
+        "selected_sample_count": len(sample_ids),
+        "selected_sample_ids_sha256": hashlib.sha256(sample_ids_payload.encode("utf-8")).hexdigest(),
+        "cells_sha256": manifest["cells_sha256"],
+        "seed": manifest["seed"],
+        "config": manifest["config"],
+        "initialization": manifest["initialization"],
+        "software": manifest["software"],
+    }
+
+
 def parse_eval_metrics(stdout: str) -> dict[str, float | int]:
     """Extract and validate the evaluator's machine-readable final metrics."""
     for line in reversed(stdout.splitlines()):
@@ -129,6 +166,11 @@ def main() -> None:
             checkpoint = args.checkpoint_root / name / "last.pt"
             if not checkpoint.is_file():
                 raise FileNotFoundError(f"Missing checkpoint for seed={seed}, mode={mode}: {checkpoint}")
+            training = load_training_provenance(checkpoint)
+            if training["seed"] != seed or training["config"].get("seed") != seed:
+                raise ValueError(f"Training manifest seed does not match requested seed={seed}: {checkpoint}")
+            if training["config"].get("sampling_mode") != mode:
+                raise ValueError(f"Training manifest sampling mode does not match {mode}: {checkpoint}")
             command = [
                 sys.executable, "-m", "src.eval", "--csv", str(args.csv),
                 "--checkpoint", str(checkpoint), "--batch-size", str(args.batch_size),
@@ -146,6 +188,7 @@ def main() -> None:
                 "sampling_mode": mode,
                 "checkpoint": str(checkpoint.relative_to(ROOT)) if checkpoint.is_relative_to(ROOT) else str(checkpoint),
                 "checkpoint_sha256": sha256_file(checkpoint),
+                "training": training,
                 "metrics": parse_eval_metrics(result.stdout),
             })
 
