@@ -1,10 +1,10 @@
-# KPlaceNet / GeoNet
+# KPlaceNet: Image Geolocation Research Prototype
 
-Evolutionary, layer-by-layer — PlaNet-style coarse geolocation on RTX 4050 (6GB VRAM).
+KPlaceNet explores image-based geolocation by classifying photos into geographic cells. It is inspired by PlaNet, but uses a smaller ResNet-based setup and does not reproduce PlaNet's model, training scale, or benchmark results.
 
-> Locked plan: `docs/implementation_plan.md` — L0→L4, solo + 4050 constraints. Do not add new datasets/backbones without re-plan.
+**Reproduction status:** this repository does not include datasets or trained checkpoints. The reported experiment results are historical records, not results reproduced from a clean clone. The Gradio demo requires a trained checkpoint and matching cell metadata; it cannot produce a real prediction from a fresh checkout alone.
 
-## Setup (RTX 4050, Windows + Python 3.10+, torch 2.x)
+## Setup (Python 3.10+, PyTorch 2.x)
 
 ```powershell
 # 1. Create env (example with venv)
@@ -19,43 +19,48 @@ pip install -r requirements.txt
 python -c "import src.dataset, src.cells, src.model, src.train, src.eval, src.uncertainty; print('imports ok')"
 ```
 
-> No `pip install` is run by the scaffold — install manually when ready.
+> No `pip install` is run by the scaffold : install manually when ready.
 
 ## Data Layout (gitignored subsets)
 
 ```
 data/
   README.md          # explains gitignored subsets
-  flickr_geo_tiny/   # 5-10k debug — via scripts/download_subset.py --dataset flickr_geo_tiny
-  osv5m_subset_10k/  # train-split subset — via --dataset osv5m --split train (plan first, then --yes)
-  osv5m_test/        # official OSV test, eval-only — via --split test (never train)
-  im2gps3k/          # 3k eval only — never train — via --dataset im2gps3k
+  flickr_geo_tiny/   # 5-10k debug : via scripts/download_subset.py --dataset flickr_geo_tiny
+  osv5m_subset_10k/  # train-split subset : via --dataset osv5m --split train (plan first, then --yes)
+  osv5m_test/        # official OSV test, eval-only : via --split test (never train)
+  im2gps3k/          # 3k eval only : never train : via --dataset im2gps3k
   .gitkeep
 ```
 
 - CSV format expected by `src/dataset.py`: `image_path,lat,lon` (header required). Paths may be absolute or relative to CSV location.
 - OSV-5M spatial separation (1km) is respected by not mixing splits; IM2GPS3k is eval-only.
-- Large datasets are **not** committed — see `data/README.md`.
+- Large datasets are **not** committed : see `data/README.md`.
 
-## How to Run — Smoke Test (L0 exit gate)
+## Smoke test and experiments
+
+The following commands are entry points for data preparation and training. The
+dataset scripts may download large files, so inspect their plan output before
+confirming any download. A smoke test checks that the software path runs; it is
+not evidence of geolocation accuracy.
 
 ```powershell
 # 1) Create a tiny dummy CSV (50 rows) for overfit check
 python scripts/download_subset.py --dataset flickr_geo_tiny --output-dir data/flickr_geo_tiny --max-samples 50 --dry-run
 
-# 2) Real OSV-5M subset — SAFE downloader (never fetches the ~259GB repo).
+# 2) Real OSV-5M subset : SAFE downloader (never fetches the ~259GB repo).
 #    WARNING: osv5m/osv5m is about 259GB in full and the selected shards are multi-GB.
 #    Always inspect the plan first (no network, no files), then re-run with --yes.
 python scripts/download_subset.py --dataset osv5m --split train --output-dir data/osv5m_subset_10k --max-samples 10000 --plan-only
 python scripts/download_subset.py --dataset osv5m --split train --output-dir data/osv5m_subset_10k --max-samples 10000 --yes
-#    Official OSV test (eval-only, separate dir — never train on it):
+#    Official OSV test (eval-only, separate dir : never train on it):
 python scripts/download_subset.py --dataset osv5m --split test --output-dir data/osv5m_test --max-samples 3000 --plan-only
-#    IM2GPS3k is manual-only (authors' download) — the script prints instructions.
+#    IM2GPS3k is manual-only (authors' download) : the script prints instructions.
 
-# 3) Train smoke — overfit 50 images, 224px, AMP, batch 32->16 fallback note
+# 3) Train smoke : overfit 50 images, 224px, AMP, batch 32->16 fallback note
 python -m src.train --csv data/flickr_geo_tiny/metadata.csv --num-cells 300 --epochs 2 --batch-size 32 --image-size 224 --amp
 
-# 4) Eval — within 1/25/200 km via haversine
+# 4) Eval : within 1/25/200 km via haversine
 python -m src.eval --csv data/im2gps3k/metadata.csv --checkpoint checkpoints/last.pt --num-cells 300
 ```
 
@@ -78,15 +83,15 @@ KPlaceNet/
 
 ## Notes
 
-- Windows paths safe — uses `pathlib.Path`, no hardcoded absolute paths.
+- Windows paths safe : uses `pathlib.Path`, no hardcoded absolute paths.
 - Imports use `src.*` absolute form; `src` is a package (`src/__init__.py`).
 - L0, L1, and the full L2 matrix are complete. Results are recorded in `docs/results/l1_baseline.md` and `docs/results/l2_data_efficiency.md`; generated datasets/checkpoints remain gitignored.
 
-## L2 — Data-Efficient Training (Gap 4)
+## L2 : Data-Efficient Training (Gap 4)
 
 L2 varies data fraction (1% / 10% / 100%), transfer init (ImageNet vs Places365), and training regime (frozen vs layer4 fine-tune) to test the 10x data-saving hypothesis.
 
-### Quick Start — Plan-Only (no downloads, no GPU)
+### Quick Start : Plan-Only (no downloads, no GPU)
 
 ```powershell
 # Print the full 12-run matrix plan (no execution)
@@ -99,7 +104,7 @@ python scripts/run_l2_experiments.py --plan-only --fractions 0.01 --inits imagen
 ### One-Run Smoke Test (ImageNet only, no Places365 download needed)
 
 ```powershell
-# 1% fraction, ImageNet init, frozen backbone, 1 epoch — fast smoke check
+# 1% fraction, ImageNet init, frozen backbone, 1 epoch : fast smoke check
 python scripts/run_l2_experiments.py --run --fractions 0.01 --inits imagenet --regimes frozen --epochs 1
 
 # Or run train.py directly with fixed cells
@@ -125,20 +130,20 @@ python scripts/run_l2_experiments.py --run --fractions 0.01 0.10 --inits imagene
 ### L2 Checkpoint Structure
 
 Each run saves to `checkpoints/l2_<init>_<fraction>_<regime>/`:
-- `last.pt` / `best.pt` — model + optimizer + cells + `num_cells` (effective)
-- `metrics_<run_tag>.json` — per-epoch loss, cell accuracy, trainable params, device, elapsed time, args
+- `last.pt` / `best.pt` : model + optimizer + cells + `num_cells` (effective)
+- `metrics_<run_tag>.json` : per-epoch loss, cell accuracy, trainable params, device, elapsed time, args
 
 ### Fixed-Cell Fairness
 
-All data fractions in an L2 experiment use the same cells (built once from the full 10k CSV, saved as JSON). This ensures the classifier head has identical architecture across fractions — the only variable is training data size. Pass `--cells-json` to train.py to load fixed cells; otherwise cells are built from the CSV.
+All data fractions in an L2 experiment use the same cells (built once from the full 10k CSV, saved as JSON). This ensures the classifier head has identical architecture across fractions : the only variable is training data size. Pass `--cells-json` to train.py to load fixed cells; otherwise cells are built from the CSV.
 
-## L3 — Uncertainty-Aware Geolocation (Gap 3)
+## L3 : Uncertainty-Aware Geolocation (Gap 3)
 
 L3 adds post-hoc uncertainty calibration to the L2 winner (`l2_imagenet_1.0_layer4`):
 temperature scaling (Guo et al. 2017), split-conformal prediction sets, and
 confidence-based abstention.
 
-### Quick Start — Plan-Only (no GPU, no images loaded)
+### Quick Start : Plan-Only (no GPU, no images loaded)
 
 ```powershell
 # Print the full L3 experiment plan (default: plan-only)
@@ -169,17 +174,17 @@ python scripts/run_l3_uncertainty.py --run --alpha 0.05 --threshold 0.3 0.5 0.7
 > This is a deterministic split (rows 0–999 = calibration, 1000–2999 = eval)
 > controlled by `--seed`.
 
-## L4 — Adaptive Cell Construction (Gap 1)
+## L4 : Adaptive Cell Construction (Gap 1)
 
 L4 compares three cell construction methods at K=300 using the L2 winner backbone
 (ResNet-50, ImageNet init, layer4 fine-tune, 100% data, 10 epochs):
 
-- **quad-tree** — density-driven recursive spatial bisection (axis-aligned boxes)
-- **kmeans** — MiniBatchKMeans on (lat, lon) with cos-mean-lon equal-area scaling
-- **dbscan** — DBSCAN density clustering with eps binary search to hit ~K clusters,
+- **quad-tree** : density-driven recursive spatial bisection (axis-aligned boxes)
+- **kmeans** : MiniBatchKMeans on (lat, lon) with cos-mean-lon equal-area scaling
+- **dbscan** : DBSCAN density clustering with eps binary search to hit ~K clusters,
   noise reassignment to nearest centroid, merge/split normalization to exactly K
 
-### Quick Start — Plan-Only (no GPU, no images loaded)
+### Quick Start : Plan-Only (no GPU, no images loaded)
 
 ```powershell
 # Print the full L4 experiment plan (default: plan-only)
@@ -215,7 +220,7 @@ This resolves ambiguity when k-means/DBSCAN clusters overlap spatially.
 
 OSV-5M has no urban/rural labels.  L4 uses a **cell-count proxy**: cells with
 training point count > median are "urban" (dense), count <= median are "rural"
-(sparse).  This is reported transparently as an approximation — see
+(sparse).  This is reported transparently as an approximation : see
 `docs/results/l4_adaptive_cells.md` for caveats.
 
 ### Results
@@ -230,9 +235,14 @@ training point count > median are "urban" (dense), count <= median are "rural"
 
 Full results in `docs/results/l4_adaptive_cells.md`.
 
-## Demo
+## Optional Gradio demo
 
-Quick interactive Gradio demo of the L2 winner (`l2_imagenet_1.0_layer4`) with L3 calibration (temperature + conformal + abstention at 0.5). Single file: `demo/app.py`.
+The demo accepts an image and displays the model's predicted geographic cell
+and confidence information. It needs a trained checkpoint and cell metadata
+that are not included here. On this default branch, the loader does not validate
+the checkpoint contract and uses a non-strict state-dict load. Do not treat an
+upload as meaningful geolocation unless you supply and independently validate
+the expected trained artifacts.
 
 ```powershell
 # Launch (no commit, demo only)
@@ -240,4 +250,4 @@ python demo/app.py
 # or: python -m demo.app
 ```
 
-Upload a photo → global + zoomed (+/-5 deg) matplotlib map of the predicted cell, plus calibrated vs raw confidence, temperature T, conformal set size, and an ACCEPT / ABSTAIN verdict. Haversine distance is only measurable on the labeled test set (no ground truth for uploads).
+For this personal fork, the separate [`prajwal/eval-integrity` branch](https://github.com/Prajwal-k-tech/KPlaceNet/tree/prajwal/eval-integrity) contains checkpoint validation and synthetic CPU tests. Those changes are not on the default branch. Its fork status document describes what has and has not been verified.
