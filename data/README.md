@@ -14,6 +14,9 @@ data/
   osv5m_subset_10k/
     metadata.csv      # image_path,lat,lon,id,split(+country/region if present) — OSV TRAIN split
     images/
+  osv5m_subset_20k/
+    metadata.csv      # bounded 20k train pool from shards 00–03
+    images/
   osv5m_test/
     metadata.csv      # official OSV TEST split — eval-only, never train
     images/
@@ -37,6 +40,13 @@ python scripts/download_subset.py --dataset osv5m --split train --output-dir dat
 python scripts/download_subset.py --dataset osv5m --split train --output-dir data/osv5m_subset_10k --max-samples 10000 --yes
 # Pin shards explicitly (otherwise sequential discovery from 00, up to --max-shards):
 python scripts/download_subset.py --dataset osv5m --split train --output-dir data/osv5m_subset_10k --shards 00,01 --yes
+
+# Bounded 20k train pool for the data-scale experiment (5k rows per shard).
+# Plan the four selected archive shards first; this does not fetch the full corpus.
+python scripts/download_subset.py --dataset osv5m --split train --output-dir data/osv5m_subset_20k --max-samples 20000 --shards 00,01,02,03 --max-shards 4 --seed 42 --plan-only
+python scripts/download_subset.py --dataset osv5m --split train --output-dir data/osv5m_subset_20k --max-samples 20000 --shards 00,01,02,03 --max-shards 4 --seed 42 --yes
+# The experiment runner uses this explicit source-CSV name:
+python -c "from pathlib import Path; p=Path('data/osv5m_subset_20k/metadata.csv'); p.rename(p.with_name('metadata_20k.csv'))"
 
 # Official OSV test (eval-only, separate dir — never train on it):
 python scripts/download_subset.py --dataset osv5m --split test --output-dir data/osv5m_test --max-samples 3000 --plan-only

@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "small_fraction": 0.5,
+  "large_fraction": 1.0,
+  "evaluation_csv_sha256": "92753639fa943c6f76ad2331651dabd593e80faf0714c3b66b450a3a2e5f2934",
+  "training_source_csv_sha256": "3db0b1c9d6819beb4ee07f26895620c71b0cbf237e4df23b042c762cccb3d5fa",
+  "training_source_sample_count": 20000,
+  "cells_sha256": "b7996803500db566101be14b3cc898b672faeb1d93255bf8a220b0a50fcd48f5",
+  "delta_direction": "larger data fraction minus smaller data fraction",
+  "per_seed": [
+    {
+      "seed": 42,
+      "small_sample_count": 10000,
+      "large_sample_count": 20000,
+      "delta_within_1km": 0.0,
+      "delta_within_25km": -0.03333333333333333,
+      "delta_within_200km": 1.9333333333333336,
+      "delta_mean_km": -393.6675521837569,
+      "delta_median_km": -1362.665192033699
+    },
+    {
+      "seed": 43,
+      "small_sample_count": 10000,
+      "large_sample_count": 20000,
+      "delta_within_1km": 0.0,
+      "delta_within_25km": 0.1,
+      "delta_within_200km": 1.1666666666666665,
+      "delta_mean_km": -390.01777507519364,
+      "delta_median_km": -880.5673313603547
+    },
+    {
+      "seed": 44,
+      "small_sample_count": 10000,
+      "large_sample_count": 20000,
+      "delta_within_1km": 0.0,
+      "delta_within_25km": 0.0,
+      "delta_within_200km": 1.5333333333333337,
+      "delta_mean_km": -583.5188070921295,
+      "delta_median_km": -1351.7372695226222
+    }
+  ],
+  "summary": {
+    "within_1km": {
+      "mean": 0.0,
+      "sample_sd": 0.0
+    },
+    "within_25km": {
+      "mean": 0.022222222222222223,
+      "sample_sd": 0.06938886664887109
+    },
+    "within_200km": {
+      "mean": 1.5444444444444445,
+      "sample_sd": 0.38345408726083124
+    },
+    "mean_km": {
+      "mean": -455.73471145036,
+      "sample_sd": 110.67931849480377
+    },
+    "median_km": {
+      "mean": -1198.3232643055587,
+      "sample_sd": 275.2389499398835
+    }
+  },
+  "interpretation": "Exploratory paired results: the data-scale question followed inspection of an earlier test sample. This sample is ID-disjoint but comes from the same official OSV-5M test split; three seeds do not establish statistical significance or generalization beyond these rows."
+}

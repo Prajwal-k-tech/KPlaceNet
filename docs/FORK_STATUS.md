@@ -1,10 +1,10 @@
 # Fork work status
 
-**Checked:** 2026-10-08 (Asia/Kolkata)
+**Checked:** 2026-10-09 (Asia/Kolkata)
 **Fork:** [Prajwal-k-tech/KPlaceNet](https://github.com/Prajwal-k-tech/KPlaceNet)  
 **Work branch:** `prajwal/eval-integrity`  
-**Work:** evaluation-integrity guard, cell-balanced sampling, paired L2 evaluation,
-CPU-tested synthetic train/evaluate smoke, and per-run training provenance
+**Work:** evaluation integrity and provenance, controlled OSV-5M data-scale and
+sampling studies, split-conformal calibration evaluation, and a runnable demo
 
 ## What this project implements
 
@@ -19,12 +19,12 @@ reproduction of PlaNet's model, scale, or reported benchmark results.
 The repository has L0-L4 code and historical result reports. At the start of
 this fork work, the data and checkpoints needed to reproduce them were absent.
 Those historical results are not results of this contribution. A bounded
-10k OSV-5M comparison of uniform and cell-balanced sampling is complete; a
-paired 10k-versus-20k follow-up is currently training. The first experiment's
-own data, code revision, and evaluation artifacts are recorded under
-`docs/results/`; the follow-up will use a second, disjoint test sample.
+10k comparison of uniform and cell-balanced sampling and a paired
+10k-versus-20k follow-up are complete. Their code, sample manifests, and
+evaluation artifacts are recorded under `docs/results/`. The measured results
+are limited to one held-out OSV-5M test sample and are reported as exploratory.
 
-## Fork change in progress
+## Fork contributions
 
 The standard evaluator previously allowed three invalid evaluation paths: it
 could run with random weights when the checkpoint was absent, reconstruct
@@ -103,22 +103,45 @@ CUDA execution remains unverified.
   its absolute localization performance remains weak; the sampler showed no
   consistent gain. Since this test sample has been inspected, those results and
   the data-scale follow-up on it are exploratory.
-- A second bounded train pool contains 20,000 official images from shards 00–03;
-  10,000 new IDs from shards 02–03 do not overlap the original train subset.
-  Every image decodes. The 10k/20k comparison uses one shared 300-cell map,
-  uniform sampling, paired seeds 42/43/44, and ten epochs. Four of six runs
-  have completed; the 10k seed-44 run is training. The six models will be scored
-  on a fresh 3,000-row sample from the same official test split, with zero
-  overlap against either the 20k training IDs or original test IDs. This is a
-  disjoint row sample, not an independent data source or geography. Its IDs,
-  metadata hash, split, and replacement sampling details are
-  checked in `docs/results/osv5m_test_confirmatory_sample_20261008.json`.
+- The paired data-scale study completed six uniform-sampling runs: 10k vs 20k
+  train rows, one shared 300-cell map, seeds 42/43/44, and ten epochs. On the
+  fresh 3,000-row test sample, mean geodesic distance was 5,977.3 km (seed SD
+  77.0) at 10k and 5,521.6 km (SD 129.7) at 20k. The paired 20k-minus-10k
+  change was −455.7 km (SD 110.7); within-200-km accuracy increased from
+  3.756% to 5.300%, a paired +1.544 percentage points (SD 0.383). All three
+  seeds improved both metrics. This is exploratory, not statistically
+  conclusive; absolute error remains high and the pool covers only four of 98
+  train archives. See `docs/results/l2_data_scale_osv_test_20261009.md` and
+  its per-run JSON reports.
+- The L3 analysis used the seed-42 20k checkpoint with disjoint temperature-fit
+  (500), conformal-calibration (1,000), and evaluation (1,500) partitions from
+  that fresh sample. ECE fell from 0.4171 to 0.0453 after temperature scaling;
+  the empirical 90% conformal target had 90.8% evaluation coverage but mean
+  set size 159.7 of 300 cells. Thresholds 0.5 and 0.7 abstained on every row;
+  threshold 0.3 retained only 12 rows. This improves confidence calibration,
+  not geolocation accuracy, and does not establish coverage under geographic
+  shift. Details and the exact splits are in the L3 JSON/Markdown report.
+- The test sample IDs, metadata hash, split, and replacement sampling details
+  are in `docs/results/osv5m_test_confirmatory_sample_20261008.json`. The
+  training pool's opaque IDs and each 10k subset's source indices are in
+  `docs/results/osv5m_train_pool_20k_manifest_20261008.json`; both manifests
+  contain identifiers only, not image data or paths.
+- The Gradio prediction function loaded the seed-42 20k checkpoint on CPU and
+  rendered a finite-coordinate prediction for a synthetic image. This confirms
+  the inference/rendering path only; it is not geolocation evidence.
+- Source-manifest validation now binds each generated fraction CSV to its
+  shared source dataset and recognizes that per-seed CSV hashes differ. A real
+  CLI run caught and fixed this assumption; the data-scale comparator also now
+  works when invoked as a script. Twenty focused evaluation/comparator tests
+  pass.
 
 ## Next steps
 
-1. Finish the six-run matrix and evaluate every checkpoint on the fresh test
-   sample; report paired seed deltas, limits, and the prior sample's exploratory
-   results separately.
-2. Update the README and status report, validate a chosen checkpoint through
-   local inference/demo, run final tests, and push the completed artifacts to the
-   fork branch.
+1. Re-run the fixed L3 calibration evaluation after the L2 reports and docs are
+   committed, so its provenance snapshot is clean and verifiable.
+2. Run the complete local unittest suite, validate the demo with the generated
+   calibration artifact, update final CI/status receipts, and push the reports
+   directly to the fork branch.
+3. Remove only the task-specific virtualenv and package cache after validation;
+   retain the bounded dataset and checkpoints needed to reproduce and demo the
+   contribution.

@@ -4,6 +4,10 @@ PlaNet-inspired coarse image geolocation with a ResNet-50 classifier over geogra
 
 > Locked plan: `docs/implementation_plan.md` — L0→L4, solo + 4050 constraints. Do not add new datasets/backbones without re-plan.
 
+## Fork contribution and measured results
+
+This fork adds strict checkpoint/evaluation validation, hash-bound training and evaluation manifests, paired geographic metrics, and a finite-sample conformal order-statistic correction. Its real-data evidence is deliberately bounded: on one exploratory OSV-5M test sample, training with 20k rather than 10k images reduced mean geodesic error by 456 km and increased within-200-km accuracy by 1.54 percentage points across three paired seeds. The 20k model still averages 5,522 km error, and the training pool uses only four of 98 train archives. The [data-scale report](docs/results/l2_data_scale_osv_test_20261009.md) and [L3 calibration report](docs/results/l3_uncertainty_osv_test_20261009.md) separate these measured results from inherited upstream results and document their limits. See [fork status](docs/FORK_STATUS.md) for the exact scope and validation.
+
 ## Setup (Windows or Linux, Python 3.10+, PyTorch 2.x)
 
 ```powershell
@@ -40,6 +44,8 @@ data/
 - Large datasets are **not** committed — see `data/README.md`.
 - The exact IDs and metadata hash of the confirmatory test sample are recorded
   in [`docs/results/osv5m_test_confirmatory_sample_20261008.json`](docs/results/osv5m_test_confirmatory_sample_20261008.json).
+- The bounded training pool's opaque row IDs and paired 10k subset indices are
+  recorded in [`docs/results/osv5m_train_pool_20k_manifest_20261008.json`](docs/results/osv5m_train_pool_20k_manifest_20261008.json).
 - OSV-5M data is available under [CC BY-SA 4.0](https://huggingface.co/datasets/osv5m/osv5m);
   cite the [dataset paper](https://arxiv.org/abs/2404.18873) and credit the
   [official dataset repository](https://github.com/gastruc/osv5m). Downloaded
@@ -103,7 +109,7 @@ KPlaceNet/
 
 - Windows paths safe — uses `pathlib.Path`, no hardcoded absolute paths.
 - Imports use `src.*` absolute form; `src` is a package (`src/__init__.py`).
-- L0, L1, and the full L2 matrix are complete. Results are recorded in `docs/results/l1_baseline.md` and `docs/results/l2_data_efficiency.md`; generated datasets/checkpoints remain gitignored.
+- Historical upstream L0–L4 results are not results of this fork's changes. Fork-specific real-data reports and their sample manifests are linked above; generated datasets/checkpoints remain gitignored.
 
 ## L2 — Data-Efficient Training (Gap 4)
 
@@ -256,8 +262,8 @@ python scripts/run_l3_uncertainty.py --calibration-size 500 --alpha 0.05
 #   - Temperature scaling + conformal + abstention analysis
 python scripts/run_l3_uncertainty.py --run
 
-# Custom settings
-python scripts/run_l3_uncertainty.py --run --alpha 0.05 --threshold 0.3 0.5 0.7
+# Custom settings and a separate results artifact
+python scripts/run_l3_uncertainty.py --run --alpha 0.05 --threshold 0.3 0.5 0.7 --output docs/results/l3-custom.json
 ```
 
 > **Calibration caveat:** The L3 run uses three disjoint seeded partitions of
@@ -353,8 +359,8 @@ and rejects a mismatch.
 
 ```sh
 # Optional: point the demo at any trained checkpoint and matching L3 artifact
-export KPLACENET_CHECKPOINT=checkpoints/l2_imagenet_1.0_frozen_cell-balanced/last.pt
-export KPLACENET_CALIBRATION=checkpoints/l3_uncertainty_results.json
+export KPLACENET_CHECKPOINT=checkpoints/data_scale_20k/l2_imagenet_1.0_layer4/last.pt
+export KPLACENET_CALIBRATION=docs/results/l3_uncertainty_osv_test_20261009.json
 python demo/app.py
 ```
 
