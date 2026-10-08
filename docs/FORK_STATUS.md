@@ -1,11 +1,10 @@
 # Fork work status
 
-**Checked:** 2026-10-07 (Asia/Kolkata)  
+**Checked:** 2026-10-08 (Asia/Kolkata)
 **Fork:** [Prajwal-k-tech/KPlaceNet](https://github.com/Prajwal-k-tech/KPlaceNet)  
 **Work branch:** `prajwal/eval-integrity`  
-**Latest code commit:** `66309fb` (`fix(eval): reject boolean sample counts`)
-**Latest branch commit:** `ea7870f` (`ci: run dependency-free correctness tests`)
-**Work:** evaluation-contract guard, cell-balanced sampling, and paired L2 runner mode
+**Work:** evaluation-integrity guard, cell-balanced sampling, paired L2 evaluation,
+and CPU-tested synthetic train/evaluate smoke
 
 ## What this project implements
 
@@ -47,49 +46,35 @@ weights strictly, and rejects a calibration artifact whose recorded checkpoint
 hash differs from the selected model. Checkpoint and calibration paths are
 configurable; missing calibration is labeled as raw softmax/top-1 mode rather
 than silently implying a calibrated prediction.
-The fork also runs its dependency-free correctness and reporting tests in
-GitHub Actions, so these checks do not depend on installing the ML stack.
+The fork runs dependency-free contract/reporting checks and a separate CPU
+model-test job in GitHub Actions. The CPU job runs the full unittest suite,
+including a generated-image training/evaluation smoke; it downloads no dataset
+or pretrained model.
 
 ## Validation and limitations
 
-- `python -m unittest discover -s tests -p 'test_eval_contract.py' -v`: 5 tests
+- Full `python -m unittest discover -s tests -v` in an isolated Python 3.12
+  CPU environment: all 43 tests passed, including the synthetic pipeline test.
+- The synthetic integration test generated 8 training and 4 evaluation images,
+  trained one CPU epoch with random initialization, loaded the saved checkpoint,
+  and emitted valid evaluator JSON for all 4 held-out synthetic images. Its
+  accuracy and distance values are not geolocation evidence.
+- `python -m py_compile tests/test_synthetic_pipeline.py` and `git diff --check`
   passed.
-- `python -m py_compile src/eval.py src/eval_contract.py tests/test_eval_contract.py`:
-  passed.
-- `git diff --check`: passed.
-- `python -m unittest discover -s tests -p 'test_sampling.py' -v`: 3
-  dependency-free tests passed for uniform, softened, and fully balanced
-  inverse-frequency weights plus invalid inputs.
-- The paired-runner tests also pass for unchanged uniform paths, distinct
-  balanced paths, command arguments, and seed-isolated checkpoints.
-- The comparison-report tests pass for JSON metric parsing, mode summaries,
-  paired deltas, and unpaired seeds.
-- The demo calibration tests pass for missing files, valid/infinite cutoffs,
-  malformed values, and checkpoint-hash matches, mismatches, or missing hashes.
-- Python byte-compilation passed for the sampler, dataset, trainer, L2 runner,
-  comparison evaluator, demo configuration, demo, and new tests.
-- Full test discovery enumerated 27 tests: 24 passed; three modules could not
-  import because NumPy and `typing_extensions` are absent in the current Python
-  3.14 environment. A temporary install attempt selected large CUDA packages,
-  so it was canceled before installation and its temporary environment removed.
-- The new GitHub Actions run passed: [run 37627733126](https://github.com/Prajwal-k-tech/KPlaceNet/actions/runs/37627733126).
-- No training or real-data evaluation was run. The required OSV-5M subset,
-  evaluation images, and trained checkpoint are absent. No real-data accuracy,
-  calibration, or regional result is claimed for this change. PyTorch import
-  fails because `typing_extensions` is missing; torchvision, NumPy, and pandas
-  are also unavailable, so the PyTorch sampler and training path could not be
-  executed here.
+- The isolated test environment used CPU PyTorch 2.14.1 and torchvision 0.29.1;
+  its temporary training artifacts were removed automatically. No dataset or
+  pretrained weights were downloaded.
+- The new CPU GitHub Actions job has been added but has not run remotely yet.
+- No real-data evaluation was run. `data/` contains no required OSV-5M test
+  subset or evaluation images, and the repository contains no trained checkpoint.
+  No real-data accuracy, calibration, or regional result is claimed.
 
 ## Next steps
 
-1. In a supported project environment, install the declared ML dependencies
-   and run the full test suite plus a tiny generated-image training smoke test.
-2. Inspect the downloader plan and storage before fetching data. Run paired
-   uniform and cell-balanced experiments on the same fixed train subset and
-   untouched spatially separated test set; repeat seeds before claiming a
-   performance change.
-3. Package the verified checkpoint and calibration artifact for the Gradio
-   demo, record hashes and setup instructions, and capture a short demo only
-   after inference is checked against the evaluator.
-
-No upstream pull request is being opened or updated as part of this work.
+1. Verify the new CPU model-test job on the fork after pushing this branch.
+2. Only after confirming the dataset/checkpoint download sizes and storage
+   budget, run paired uniform and cell-balanced experiments on a fixed train
+   subset and untouched spatially separated test set; repeat seeds before
+   making any performance claim.
+3. Package a verified checkpoint and matching calibration artifact for the
+   Gradio demo only after real-data inference is checked against the evaluator.

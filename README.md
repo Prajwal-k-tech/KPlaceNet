@@ -64,6 +64,14 @@ python -m src.eval --csv data/im2gps3k/metadata.csv --checkpoint checkpoints/las
 - `src/cells.py` provides `build_cells` / `assign_cells` (quad-tree K~300 in L1; k-means/DBSCAN in L4).
 - `src/uncertainty.py` provides L3 uncertainty: `TemperatureScaler`, `expected_calibration_error`, `conformal_prediction_set`, `abstention_mask`.
 
+### Local Tests
+
+Run `python -m unittest discover -s tests -v` in an environment with the project
+dependencies installed. The CPU-only pipeline test trains for one epoch on
+generated images, loads the resulting checkpoint, and evaluates it on a
+separate generated fixture. It verifies the software path only; synthetic
+coordinates and random initialization are not geolocation results.
+
 ## Repo Layout
 
 ```

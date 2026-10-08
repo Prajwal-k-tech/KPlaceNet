@@ -1,4 +1,4 @@
-name: Dependency-free tests
+name: KPlaceNet tests
 
 on:
   push:
@@ -29,3 +29,18 @@ jobs:
           python -m py_compile src/demo_config.py src/eval_contract.py
           src/regional_eval.py src/sampling.py scripts/run_l2_experiments.py
           scripts/evaluate_sampling_comparison.py
+
+  cpu-model-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install CPU model-test dependencies
+        run: |
+          python -m pip install numpy pandas pillow tqdm
+          python -m pip install torch==2.14.1+cpu torchvision==0.29.1+cpu \
+            --extra-index-url https://download.pytorch.org/whl/cpu
+      - name: Run full test suite, including synthetic train/evaluate smoke
+        run: python -m unittest discover -s tests -v
