@@ -100,6 +100,11 @@ def parse_args() -> argparse.Namespace:
         help=f"Official OSV test CSV (default: {DEFAULT_CSV})",
     )
     p.add_argument(
+        "--output", type=str,
+        default=str(ROOT / "checkpoints" / "l3_uncertainty_results.json"),
+        help="Path for the JSON results artifact (default: checkpoints/l3_uncertainty_results.json)",
+    )
+    p.add_argument(
         "--calibration-size", type=int, default=DEFAULT_CALIBRATION_SIZE,
         help=f"Number of samples for conformal calibration (default: {DEFAULT_CALIBRATION_SIZE})",
     )
@@ -771,7 +776,7 @@ def main() -> None:
     # ------------------------------------------------------------------
     # Write results JSON
     # ------------------------------------------------------------------
-    results_path = ROOT / "checkpoints" / "l3_uncertainty_results.json"
+    results_path = Path(args.output).expanduser()
     results_path.parent.mkdir(parents=True, exist_ok=True)
     with open(results_path, "w", encoding="utf-8") as f:
         json.dump(results, f, indent=2, default=_json_default)
