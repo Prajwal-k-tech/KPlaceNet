@@ -70,8 +70,7 @@ record the manifest hash for cross-artifact verification.
   its temporary training artifacts were removed automatically. No dataset or
   pretrained weights were downloaded.
 - GitHub Actions passed on commit `4f0de05`: [run 37735120091](https://github.com/Prajwal-k-tech/KPlaceNet/actions/runs/37735120091), including both the standard-library and CPU model-test jobs.
-- The later provenance-manifest change is being tested locally and in Actions;
-  its run result will be recorded after the workflow completes.
+- The training-provenance change passed on commit `a692d88`: [run 37746197271](https://github.com/Prajwal-k-tech/KPlaceNet/actions/runs/37746197271), including both workflow jobs.
 - No real-data evaluation was run. `data/` contains no required OSV-5M test
   subset or evaluation images, and the repository contains no trained checkpoint.
   No real-data accuracy, calibration, or regional result is claimed.
