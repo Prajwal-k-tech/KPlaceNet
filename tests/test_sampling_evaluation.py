@@ -11,6 +11,7 @@ from pathlib import Path
 from scripts.evaluate_sampling_comparison import (
     ROOT,
     load_training_provenance,
+    load_training_metrics,
     parse_checkpoint_manifest_hash,
     parse_eval_metrics,
     portable_path,
@@ -164,6 +165,42 @@ class SamplingEvaluationTests(unittest.TestCase):
             )
             with self.assertRaisesRegex(ValueError, "hash mismatch"):
                 load_training_provenance(checkpoint)
+
+    def test_training_metrics_are_bound_to_the_manifest(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            checkpoint = Path(temporary) / "run" / "last.pt"
+            checkpoint.parent.mkdir()
+            manifest_hash = "a" * 64
+            training_provenance = {
+                "manifest_sha256": manifest_hash,
+                "seed": 42,
+                "config": {"run_tag": "demo", "sampling_mode": "uniform", "epochs": 2},
+            }
+            metrics = {
+                "run": {
+                    "run_manifest_sha256": manifest_hash,
+                    "seed": 42,
+                    "sampling_mode": "uniform",
+                    "epochs": 2,
+                    "total_elapsed_sec": 12.0,
+                },
+                "epochs": [
+                    {"epoch": 1, "loss": 1.0, "cell_accuracy_pct": 50.0, "elapsed_sec": 6.0},
+                    {"epoch": 2, "loss": 0.5, "cell_accuracy_pct": 75.0, "elapsed_sec": 6.0},
+                ],
+            }
+            path = checkpoint.parent / "metrics_demo.json"
+            path.write_text(json.dumps(metrics))
+
+            result = load_training_metrics(checkpoint, training_provenance)
+
+            self.assertEqual(result["final_epoch"], 2)
+            self.assertEqual(result["final_training_cell_accuracy_pct"], 75.0)
+            self.assertEqual(len(result["sha256"]), 64)
+            metrics["run"]["run_manifest_sha256"] = "b" * 64
+            path.write_text(json.dumps(metrics))
+            with self.assertRaisesRegex(ValueError, "disagree"):
+                load_training_metrics(checkpoint, training_provenance)
 
     def test_training_comparison_requires_paired_samples_and_shared_setup(self):
         validate_training_comparison([

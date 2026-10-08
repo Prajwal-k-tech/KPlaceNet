@@ -102,6 +102,49 @@ def load_training_provenance(checkpoint: Path) -> dict[str, Any]:
     }
 
 
+def load_training_metrics(checkpoint: Path, training: dict[str, Any]) -> dict[str, Any]:
+    """Verify and summarize the training metrics paired with a checkpoint."""
+    run_tag = training["config"].get("run_tag")
+    if not isinstance(run_tag, str) or not run_tag:
+        raise ValueError(f"Training manifest has no run tag for checkpoint: {checkpoint}")
+    metrics_path = checkpoint.parent / f"metrics_{run_tag}.json"
+    if not metrics_path.is_file():
+        raise FileNotFoundError(f"Missing training metrics for checkpoint: {metrics_path}")
+    metrics = json.loads(metrics_path.read_text(encoding="utf-8"))
+    run_meta = metrics.get("run") if isinstance(metrics, dict) else None
+    epochs = metrics.get("epochs") if isinstance(metrics, dict) else None
+    if not isinstance(run_meta, dict) or not isinstance(epochs, list) or not epochs:
+        raise ValueError(f"Invalid training metrics artifact: {metrics_path}")
+    if (
+        run_meta.get("run_manifest_sha256") != training["manifest_sha256"]
+        or run_meta.get("seed") != training["seed"]
+        or run_meta.get("sampling_mode") != training["config"].get("sampling_mode")
+        or run_meta.get("epochs") != training["config"].get("epochs")
+    ):
+        raise ValueError(f"Training metrics and manifest disagree: {metrics_path}")
+    final_epoch = epochs[-1]
+    if (
+        not isinstance(final_epoch, dict)
+        or final_epoch.get("epoch") != run_meta["epochs"]
+        or any(
+            isinstance(final_epoch.get(key), bool)
+            or not isinstance(final_epoch.get(key), (int, float))
+            or not math.isfinite(final_epoch[key])
+            for key in ("loss", "cell_accuracy_pct", "elapsed_sec")
+        )
+    ):
+        raise ValueError(f"Training metrics have an invalid final epoch: {metrics_path}")
+    return {
+        "path": portable_path(metrics_path),
+        "sha256": sha256_file(metrics_path),
+        "final_epoch": final_epoch["epoch"],
+        "final_training_loss": final_epoch["loss"],
+        "final_training_cell_accuracy_pct": final_epoch["cell_accuracy_pct"],
+        "final_epoch_elapsed_sec": final_epoch["elapsed_sec"],
+        "run_elapsed_sec": run_meta.get("total_elapsed_sec"),
+    }
+
+
 def validate_training_comparison(runs: list[dict[str, Any]]) -> None:
     """Reject comparisons whose checkpoints do not share a controlled setup."""
     if not runs:
@@ -312,6 +355,7 @@ def main() -> None:
                 "checkpoint_path": checkpoint,
                 "checkpoint": portable_path(checkpoint),
                 "training": training,
+                "training_metrics": load_training_metrics(checkpoint, training),
             })
 
     validate_training_comparison(selected_runs)
@@ -350,6 +394,7 @@ def main() -> None:
             "checkpoint": selected["checkpoint"],
             "checkpoint_sha256": sha256_file(checkpoint),
             "training": training,
+            "training_metrics": selected["training_metrics"],
             "metrics": parse_eval_metrics(result.stdout),
         })
 
