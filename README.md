@@ -4,6 +4,8 @@ PlaNet-inspired coarse image geolocation with a ResNet-50 classifier over geogra
 
 > Locked plan: `docs/implementation_plan.md` — L0→L4, solo + 4050 constraints. Do not add new datasets/backbones without re-plan.
 
+> **Learning the project:** start a separate teaching conversation with [`docs/CLASSROOM_PROMPT.md`](docs/CLASSROOM_PROMPT.md). It walks through the model, our fork-specific evaluation work, the experiments, and their limitations.
+
 ## Fork contribution and measured results
 
 This fork adds strict checkpoint/evaluation validation, hash-bound training and evaluation manifests, paired geographic metrics, and a finite-sample conformal order-statistic correction. Its real-data evidence is deliberately bounded: on one exploratory OSV-5M test sample, training with 20k rather than 10k images reduced mean geodesic error by 456 km and increased within-200-km accuracy by 1.54 percentage points across three paired seeds. The 20k model still averages 5,522 km error, and the training pool uses only four of 98 train archives. The [data-scale report](docs/results/l2_data_scale_osv_test_20261009.md) and [L3 calibration report](docs/results/l3_uncertainty_osv_test_20261009.md) separate these measured results from inherited upstream results and document their limits. See [fork status](docs/FORK_STATUS.md) for the exact scope and validation.
