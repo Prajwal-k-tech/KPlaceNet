@@ -126,22 +126,34 @@ CUDA execution remains unverified.
   training pool's opaque IDs and each 10k subset's source indices are in
   `docs/results/osv5m_train_pool_20k_manifest_20261008.json`; both manifests
   contain identifiers only, not image data or paths.
-- The Gradio prediction function loaded the seed-42 20k checkpoint on CPU and
-  rendered a finite-coordinate prediction for a synthetic image. This confirms
-  the inference/rendering path only; it is not geolocation evidence.
+- The Gradio prediction function loaded the seed-42 20k checkpoint and its
+  matching calibration artifact, verified the checkpoint hash, and returned a
+  finite prediction with a conformal set for a synthetic image. This confirms
+  inference/configuration only; it is not geolocation evidence.
 - Source-manifest validation now binds each generated fraction CSV to its
   shared source dataset and recognizes that per-seed CSV hashes differ. A real
   CLI run caught and fixed this assumption; the data-scale comparator also now
   works when invoked as a script. Twenty focused evaluation/comparator tests
   pass.
 
+## Final validation in progress
+
+- The complete local unittest suite passed: 70 tests, including the synthetic
+  train/evaluate integration, evaluation provenance, comparison CLI, and
+  conformal order-statistic cases.
+- The L3 output-path option was exercised by a real run. Its final report was
+  regenerated with a clean tree and records revision `aa703cc` with
+  `working_tree_dirty: false`.
+- The demo loaded the saved calibration artifact and matched its checkpoint
+  SHA-256. Its synthetic-image smoke is only an execution check.
+- GitHub Actions passed on commit `302b1d5` (run `37825707468`); the later
+  report-only commits are awaiting final workflow confirmation.
+
 ## Next steps
 
-1. Re-run the fixed L3 calibration evaluation after the L2 reports and docs are
-   committed, so its provenance snapshot is clean and verifiable.
-2. Run the complete local unittest suite, validate the demo with the generated
-   calibration artifact, update final CI/status receipts, and push the reports
-   directly to the fork branch.
+1. Verify GitHub Actions on the final fork head and confirm the worktree is
+   clean.
+2. Recheck external-organization PR comments for new requests.
 3. Remove only the task-specific virtualenv and package cache after validation;
    retain the bounded dataset and checkpoints needed to reproduce and demo the
    contribution.
