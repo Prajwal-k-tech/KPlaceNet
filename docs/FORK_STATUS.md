@@ -74,7 +74,7 @@ stale or modified caches are regenerated. Fraction CSVs retain source columns.
   its temporary training artifacts were removed automatically. No dataset or
   pretrained weights were downloaded.
 - GitHub Actions passed on commit `a692d88`: [run 37746197271](https://github.com/Prajwal-k-tech/KPlaceNet/actions/runs/37746197271), including both the standard-library and CPU model-test jobs.
-- The L2 cache-integrity changes are being tested locally and in Actions; their run result will be recorded after the workflow completes.
+- The L2 cache-integrity changes passed locally (48 tests) and in GitHub Actions on `b2e94f3`: [run 37748946520](https://github.com/Prajwal-k-tech/KPlaceNet/actions/runs/37748946520), including both workflow jobs.
 - No real-data evaluation was run. `data/` contains no required OSV-5M test
   subset or evaluation images, and the repository contains no trained checkpoint.
   No real-data accuracy, calibration, or regional result is claimed.
