@@ -6054,8 +6054,8 @@
       "Pillow": "12.3.0",
       "torchvision": "0.29.1+cu130"
     },
-    "repository_revision": "302b1d5dc2c1e2e453f0354cc52f967a38a506e4",
-    "working_tree_dirty": true
+    "repository_revision": "aa703ccbd335ea3267ddfbd1820053342684e993",
+    "working_tree_dirty": false
   },
   "num_cells": 300,
   "device": "cuda",
