@@ -393,16 +393,20 @@ def load_evaluation_sample_manifest(evaluation_csv: Path, manifest_path: Path) -
             ids.append(row["id"])
             splits.add(row["split"])
     id_hash = hashlib.sha256("\n".join(sorted(ids)).encode("utf-8")).hexdigest()
+    saved_ids = manifest.get("sample_ids")
     if (
         not ids
         or len(ids) != len(set(ids))
+        or not isinstance(saved_ids, list)
+        or not all(isinstance(value, str) for value in saved_ids)
+        or sorted(saved_ids) != sorted(ids)
         or splits != {"test"}
         or manifest.get("final_sample_count") != len(ids)
         or manifest.get("metadata_sha256") != sha256_file(evaluation_csv)
         or manifest.get("final_id_set_sha256") != id_hash
     ):
         raise ValueError("evaluation sample manifest does not match its CSV")
-    return {"path": portable_path(manifest_path), **manifest}
+    return {**manifest, "path": portable_path(manifest_path)}
 
 
 def parse_args() -> argparse.Namespace:

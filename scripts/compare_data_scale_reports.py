@@ -29,6 +29,20 @@ def compare_reports(smaller: dict[str, Any], larger: dict[str, Any], root: Path 
     for field in ("evaluation_csv_sha256", "evaluation_sample_manifest", "evaluation", "training_code_sha256"):
         if smaller.get(field) != larger.get(field):
             raise ValueError(f"reports use different {field}")
+    sample_manifest = smaller.get("evaluation_sample_manifest")
+    if not isinstance(sample_manifest, dict) or sample_manifest.get("split") != "test":
+        raise ValueError("data-scale reports require a verified test sample manifest")
+    sample_ids = sample_manifest.get("sample_ids")
+    if (
+        not isinstance(sample_ids, list)
+        or not sample_ids
+        or not all(isinstance(value, str) for value in sample_ids)
+        or len(sample_ids) != sample_manifest.get("final_sample_count")
+        or sample_manifest.get("metadata_sha256") != smaller["evaluation_csv_sha256"]
+        or hashlib.sha256("\n".join(sorted(sample_ids)).encode("utf-8")).hexdigest()
+        != sample_manifest.get("final_id_set_sha256")
+    ):
+        raise ValueError("data-scale reports have an invalid test sample manifest")
     for field in ("init", "regime", "modes", "seeds"):
         if small_comparison.get(field) != large_comparison.get(field):
             raise ValueError(f"reports use different comparison {field}")

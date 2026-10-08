@@ -68,9 +68,17 @@ def report(root: Path, fraction: float, ids_for_seed: dict[int, list[str]], offs
                 "median_km": 900 - offset,
             },
         })
+    test_ids = ["test-a", "test-b"]
     return {
         "comparison": {"fraction": fraction, "init": "imagenet", "regime": "layer4", "modes": ["uniform"], "seeds": [42, 43, 44]},
         "evaluation_csv_sha256": "same-test",
+        "evaluation_sample_manifest": {
+            "split": "test",
+            "final_sample_count": len(test_ids),
+            "metadata_sha256": "same-test",
+            "sample_ids": test_ids,
+            "final_id_set_sha256": hashlib.sha256("\n".join(test_ids).encode()).hexdigest(),
+        },
         "evaluation": {"image_size": 224},
         "training_code_sha256": {"train": "same-code"},
         "runs": runs,

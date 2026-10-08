@@ -74,6 +74,7 @@ class SamplingEvaluationTests(unittest.TestCase):
                 "final_sample_count": 2,
                 "metadata_sha256": hashlib.sha256(csv_bytes).hexdigest(),
                 "final_id_set_sha256": ids_hash,
+                "sample_ids": ["a", "b"],
             }), encoding="utf-8")
 
             manifest = load_evaluation_sample_manifest(csv_path, manifest_path)
