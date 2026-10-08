@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -109,6 +111,13 @@ def report(root: Path, fraction: float, ids_for_seed: dict[int, list[str]], offs
 
 
 class DataScaleReportTests(unittest.TestCase):
+    def test_comparison_cli_loads_from_repository_root(self):
+        script = Path(__file__).resolve().parents[1] / "scripts" / "compare_data_scale_reports.py"
+        result = subprocess.run(
+            [sys.executable, str(script), "--help"], capture_output=True, text=True, check=False
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+
     def test_compares_nested_seed_pairs_and_reports_sample_sd(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

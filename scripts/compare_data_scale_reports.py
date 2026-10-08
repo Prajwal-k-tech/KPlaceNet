@@ -7,10 +7,14 @@ import hashlib
 import json
 import math
 import statistics
+import sys
 from pathlib import Path
 from typing import Any
 
-from scripts.evaluate_sampling_comparison import ROOT, load_training_provenance
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+
+from scripts.evaluate_sampling_comparison import load_training_provenance  # noqa: E402
 
 METRICS = ("within_1km", "within_25km", "within_200km", "mean_km", "median_km")
 
