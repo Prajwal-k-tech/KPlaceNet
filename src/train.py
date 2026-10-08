@@ -10,7 +10,9 @@ No heavy logic beyond stubs; uses src.dataset + src.model + src.cells.
 from __future__ import annotations
 
 import argparse
+import importlib.metadata
 import json
+import platform
 import time
 from pathlib import Path
 import sys
@@ -25,12 +27,14 @@ try:
     from src.dataset import GeoDataset, get_stratified_sampler
     from src.model import build_model, load_places365_checkpoint
     from src.cells import build_cells, assign_cells, save_cells_json, load_cells_json
+    from src.reproducibility import sha256_file, stable_sample_ids, training_run_manifest
 except ImportError:
     # Fallback when running as script without package context
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
     from src.dataset import GeoDataset, get_stratified_sampler
     from src.model import build_model, load_places365_checkpoint
     from src.cells import build_cells, assign_cells, save_cells_json, load_cells_json
+    from src.reproducibility import sha256_file, stable_sample_ids, training_run_manifest
 
 
 def parse_args() -> argparse.Namespace:
@@ -150,6 +154,60 @@ def main() -> None:
         print(f"[train] note: cells ({num_classes}) != --num-cells ({args.num_cells}); using head dim = {num_classes}")
     train_args = dict(vars(args))
     train_args["num_cells"] = num_classes
+
+    # Persist exact training-data membership and experiment inputs next to the
+    # checkpoint. This binds later comparisons to the source CSV, selected rows,
+    # cell partition, configuration, and software versions.
+    selected_indices = (
+        list(range(full_len)) if subset_indices is None else subset_indices
+    )
+    sample_ids = stable_sample_ids(ds.df.to_dict(orient="records"))
+    cell_records = [
+        {
+            "cell_id": c.cell_id,
+            "lat_min": c.lat_min,
+            "lat_max": c.lat_max,
+            "lon_min": c.lon_min,
+            "lon_max": c.lon_max,
+            "centroid_lat": c.centroid_lat,
+            "centroid_lon": c.centroid_lon,
+            "count": c.count,
+        }
+        for c in cells
+    ]
+    run_manifest = training_run_manifest(
+        csv_sha256=sha256_file(str(Path(args.csv).resolve())),
+        sample_ids=sample_ids,
+        selected_indices=selected_indices,
+        seed=args.seed,
+        config=train_args,
+        cells=cell_records,
+        initialization=(
+            {
+                "kind": "places365",
+                "checkpoint_sha256": sha256_file(args.places365_checkpoint),
+            }
+            if args.places365_checkpoint is not None
+            else (
+                {
+                    "kind": "torchvision_imagenet",
+                    "architecture": "resnet50",
+                    "weights": "IMAGENET1K_V2",
+                }
+                if args.pretrained
+                else {"kind": "random_initialization"}
+            )
+        ),
+        software={
+            "python": platform.python_version(),
+            "torch": torch.__version__,
+            "torchvision": importlib.metadata.version("torchvision"),
+        },
+    )
+    manifest_path = ckpt_dir / "run_manifest.json"
+    with open(manifest_path, "w", encoding="utf-8") as f:
+        json.dump(run_manifest, f, indent=2)
+    print(f"[train] provenance manifest -> {manifest_path}")
 
     # ------------------------------------------------------------------
     # Apply subset indices if needed
@@ -338,6 +396,7 @@ def main() -> None:
                 "cells": [{"cell_id": c.cell_id, "centroid_lat": c.centroid_lat, "centroid_lon": c.centroid_lon} for c in cells],
                 "loss": epoch_loss,
                 "num_cells": num_classes,
+                "run_manifest_sha256": run_manifest["manifest_sha256"],
             },
             ckpt_path,
         )
@@ -354,6 +413,7 @@ def main() -> None:
                     "cells": [{"cell_id": c.cell_id, "centroid_lat": c.centroid_lat, "centroid_lon": c.centroid_lon} for c in cells],
                     "loss": epoch_loss,
                     "num_cells": num_classes,
+                    "run_manifest_sha256": run_manifest["manifest_sha256"],
                 },
                 best_path,
             )
@@ -389,6 +449,8 @@ def main() -> None:
         "total_elapsed_sec": total_elapsed,
         "trainable_params": trainable_params,
         "total_params": total_params,
+        "run_manifest": str(manifest_path),
+        "run_manifest_sha256": run_manifest["manifest_sha256"],
     }
     if places365_info is not None:
         run_meta["places365_loaded"] = places365_info["loaded"]

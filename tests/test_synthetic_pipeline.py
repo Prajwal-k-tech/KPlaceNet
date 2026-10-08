@@ -89,7 +89,27 @@ class SyntheticTrainEvalTests(unittest.TestCase):
             self.assertEqual(training.returncode, 0, training.stdout + training.stderr)
             checkpoint = checkpoint_dir / "last.pt"
             self.assertTrue(checkpoint.is_file())
-            self.assertTrue((checkpoint_dir / "metrics_run.json").is_file())
+            manifest_path = checkpoint_dir / "run_manifest.json"
+            self.assertTrue(manifest_path.is_file())
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            self.assertEqual(manifest["dataset_sample_count"], 8)
+            self.assertEqual(manifest["selected_indices"], list(range(8)))
+            self.assertEqual(len(manifest["selected_sample_ids"]), 8)
+            self.assertEqual(manifest["initialization"]["kind"], "random_initialization")
+            metrics_path = checkpoint_dir / "metrics_run.json"
+            self.assertTrue(metrics_path.is_file())
+            training_metrics = json.loads(metrics_path.read_text(encoding="utf-8"))
+            self.assertEqual(
+                training_metrics["run"]["run_manifest_sha256"],
+                manifest["manifest_sha256"],
+            )
+
+            import torch
+
+            saved_checkpoint = torch.load(checkpoint, map_location="cpu", weights_only=False)
+            self.assertEqual(
+                saved_checkpoint["run_manifest_sha256"], manifest["manifest_sha256"]
+            )
 
             evaluation = subprocess.run(
                 [

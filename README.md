@@ -72,6 +72,13 @@ generated images, loads the resulting checkpoint, and evaluates it on a
 separate generated fixture. It verifies the software path only; synthetic
 coordinates and random initialization are not geolocation results.
 
+Each training run also writes `run_manifest.json` beside its checkpoints and
+metrics. The manifest records the source CSV hash, selected row positions and
+opaque sample IDs, cell-definition hash, initialization source (including a
+hash for Places365 weights), seed, training arguments, and runtime versions.
+The checkpoint and metrics file carry the manifest hash so artifacts can be
+checked against the exact run provenance.
+
 ## Repo Layout
 
 ```

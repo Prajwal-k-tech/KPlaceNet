@@ -4,7 +4,7 @@
 **Fork:** [Prajwal-k-tech/KPlaceNet](https://github.com/Prajwal-k-tech/KPlaceNet)  
 **Work branch:** `prajwal/eval-integrity`  
 **Work:** evaluation-integrity guard, cell-balanced sampling, paired L2 evaluation,
-and CPU-tested synthetic train/evaluate smoke
+CPU-tested synthetic train/evaluate smoke, and per-run training provenance
 
 ## What this project implements
 
@@ -50,11 +50,16 @@ The fork runs dependency-free contract/reporting checks and a separate CPU
 model-test job in GitHub Actions. The CPU job runs the full unittest suite,
 including a generated-image training/evaluation smoke; it downloads no dataset
 or pretrained model.
+Training writes a `run_manifest.json` beside each checkpoint and metrics file.
+It records the source CSV hash, selected row positions and opaque sample IDs,
+cell-definition hash, initialization source (and Places365 checkpoint hash),
+seed, training arguments, and runtime versions. The checkpoint and metrics
+record the manifest hash for cross-artifact verification.
 
 ## Validation and limitations
 
 - Full `python -m unittest discover -s tests -v` in an isolated Python 3.12
-  CPU environment: all 43 tests passed, including the synthetic pipeline test.
+  CPU environment: all 45 tests passed, including the synthetic pipeline test.
 - The synthetic integration test generated 8 training and 4 evaluation images,
   trained one CPU epoch with random initialization, loaded the saved checkpoint,
   and emitted valid evaluator JSON for all 4 held-out synthetic images. Its
@@ -65,6 +70,8 @@ or pretrained model.
   its temporary training artifacts were removed automatically. No dataset or
   pretrained weights were downloaded.
 - GitHub Actions passed on commit `4f0de05`: [run 37735120091](https://github.com/Prajwal-k-tech/KPlaceNet/actions/runs/37735120091), including both the standard-library and CPU model-test jobs.
+- The later provenance-manifest change is being tested locally and in Actions;
+  its run result will be recorded after the workflow completes.
 - No real-data evaluation was run. `data/` contains no required OSV-5M test
   subset or evaluation images, and the repository contains no trained checkpoint.
   No real-data accuracy, calibration, or regional result is claimed.

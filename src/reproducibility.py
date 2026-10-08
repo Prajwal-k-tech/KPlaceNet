@@ -91,6 +91,61 @@ def sha256_file(path: str) -> str:
     return digest.hexdigest()
 
 
+def training_run_manifest(
+    *,
+    csv_sha256: str,
+    sample_ids: Sequence[str],
+    selected_indices: Sequence[int],
+    seed: int,
+    config: Mapping[str, Any],
+    cells: Sequence[Mapping[str, Any]],
+    initialization: Mapping[str, Any],
+    software: Mapping[str, str],
+) -> dict[str, Any]:
+    """Describe the exact data subset and setup used for one training run.
+
+    Sample identifiers are hashed before they are written so manifests remain
+    useful for overlap checks without copying source dataset IDs into artifacts.
+    The dataset and cells hashes bind those identifiers and model labels to the
+    exact CSV and geographic partition used by training.
+    """
+    if len(sample_ids) != len(set(sample_ids)):
+        raise ValueError("sample identifiers must be unique")
+    if isinstance(seed, bool) or not isinstance(seed, int) or seed < 0:
+        raise ValueError("seed must be a non-negative integer")
+    indices = list(selected_indices)
+    if (
+        len(indices) != len(set(indices))
+        or any(isinstance(index, bool) or not isinstance(index, int) for index in indices)
+        or any(index < 0 or index >= len(sample_ids) for index in indices)
+    ):
+        raise ValueError("selected indices must be unique valid sample positions")
+
+    selected_ids = [sample_ids[index] for index in indices]
+    hashed_ids = [
+        "sha256:" + hashlib.sha256(sample_id.encode("utf-8")).hexdigest()
+        for sample_id in selected_ids
+    ]
+    manifest: dict[str, Any] = {
+        "schema_version": 1,
+        "dataset_csv_sha256": csv_sha256,
+        "dataset_sample_count": len(sample_ids),
+        "selected_indices": indices,
+        "selected_sample_ids": hashed_ids,
+        "seed": seed,
+        "config": dict(config),
+        "initialization": dict(initialization),
+        "cells_sha256": hashlib.sha256(
+            json.dumps(list(cells), sort_keys=True, separators=(",", ":")).encode("utf-8")
+        ).hexdigest(),
+        "cell_count": len(cells),
+        "software": dict(software),
+    }
+    canonical = json.dumps(manifest, sort_keys=True, separators=(",", ":"))
+    manifest["manifest_sha256"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+    return manifest
+
+
 def split_manifest(
     *,
     temperature_indices: Sequence[int],

@@ -3,8 +3,15 @@
 from __future__ import annotations
 
 import unittest
+import hashlib
+import json
 
-from src.reproducibility import make_l3_split, split_manifest, stable_sample_ids
+from src.reproducibility import (
+    make_l3_split,
+    split_manifest,
+    stable_sample_ids,
+    training_run_manifest,
+)
 
 
 class ReproducibilityTests(unittest.TestCase):
@@ -92,6 +99,41 @@ class ReproducibilityTests(unittest.TestCase):
                     evaluation_indices=evaluation,
                     **base,
                 )
+
+    def test_training_manifest_binds_selected_rows_config_and_cells(self):
+        manifest = training_run_manifest(
+            csv_sha256="dataset-hash",
+            sample_ids=["id:private-a", "id:private-b", "id:private-c"],
+            selected_indices=[0, 2],
+            seed=17,
+            config={"sampling_mode": "uniform", "epochs": 3},
+            cells=[{"cell_id": 0, "centroid_lat": 1.0, "centroid_lon": 2.0}],
+            initialization={"kind": "random_initialization"},
+            software={"python": "3.12", "torch": "2.14.1"},
+        )
+        self.assertEqual(manifest["selected_indices"], [0, 2])
+        self.assertEqual(manifest["dataset_sample_count"], 3)
+        self.assertEqual(len(manifest["selected_sample_ids"]), 2)
+        self.assertNotIn("private-a", json.dumps(manifest))
+        canonical = {key: value for key, value in manifest.items() if key != "manifest_sha256"}
+        expected = hashlib.sha256(
+            json.dumps(canonical, sort_keys=True, separators=(",", ":")).encode("utf-8")
+        ).hexdigest()
+        self.assertEqual(manifest["manifest_sha256"], expected)
+
+    def test_training_manifest_rejects_duplicate_or_invalid_indices(self):
+        base = {
+            "csv_sha256": "dataset-hash",
+            "sample_ids": ["a", "b"],
+            "seed": 1,
+            "config": {},
+            "cells": [],
+            "initialization": {"kind": "random_initialization"},
+            "software": {},
+        }
+        for indices in ([0, 0], [-1], [2], [True]):
+            with self.subTest(indices=indices), self.assertRaises(ValueError):
+                training_run_manifest(selected_indices=indices, **base)
 
 
 if __name__ == "__main__":
