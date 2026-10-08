@@ -70,6 +70,19 @@ class FitConformalQuantileTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             fit_conformal_quantile(torch.tensor([[math.nan, math.nan]]), torch.tensor([0]))
 
+    @unittest.skipUnless(torch.cuda.is_available(), "CUDA is not available")
+    def test_temperature_scaler_fit_moves_parameter_to_logits_device(self):
+        from src.uncertainty import TemperatureScaler
+
+        logits = torch.tensor([[3.0, 0.0], [0.0, 3.0]], device="cuda")
+        labels = torch.tensor([1, 0])
+        scaler = TemperatureScaler()
+
+        scaler.fit(logits, labels, max_iter=5)
+
+        self.assertEqual(scaler.temperature.device, logits.device)
+        self.assertEqual(scaler(logits).device, logits.device)
+
 
 if __name__ == "__main__":
     unittest.main()

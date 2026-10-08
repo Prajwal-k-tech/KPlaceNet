@@ -81,6 +81,7 @@ class TemperatureScaler(nn.Module):
         if device is None:
             device = logits.device
 
+        self.to(device)
         logits = logits.to(device)
         labels = labels.to(device)
 

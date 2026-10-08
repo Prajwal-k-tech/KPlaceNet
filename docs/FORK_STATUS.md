@@ -59,6 +59,11 @@ The L2 runner validates generated fraction-CSV and cell-definition caches
 against the source CSV hash, settings, generator source hash, and artifact hash
 before reusing them; stale or modified caches are regenerated. Fraction CSVs
 retain source columns.
+Temperature fitting now moves the trainable temperature parameter along with
+calibration logits to the selected device, so CUDA-backed fitting does not mix
+CPU parameters with GPU tensors. A CUDA-conditional regression test checks
+both fitting and scaled-logit placement; this checkout has CPU-only PyTorch, so
+that branch is delegated to CI.
 
 ## Validation and limitations
 
