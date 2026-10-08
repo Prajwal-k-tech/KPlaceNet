@@ -37,6 +37,7 @@ def compare_reports(smaller: dict[str, Any], larger: dict[str, Any], root: Path 
         not isinstance(sample_ids, list)
         or not sample_ids
         or not all(isinstance(value, str) for value in sample_ids)
+        or len(sample_ids) != len(set(sample_ids))
         or len(sample_ids) != sample_manifest.get("final_sample_count")
         or sample_manifest.get("metadata_sha256") != smaller["evaluation_csv_sha256"]
         or hashlib.sha256("\n".join(sorted(sample_ids)).encode("utf-8")).hexdigest()

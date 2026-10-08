@@ -80,6 +80,16 @@ class SamplingEvaluationTests(unittest.TestCase):
             manifest = load_evaluation_sample_manifest(csv_path, manifest_path)
             self.assertEqual(manifest["final_id_set_sha256"], ids_hash)
 
+            tampered = json.loads(manifest_path.read_text(encoding="utf-8"))
+            tampered["sample_ids"] = ["a", "c"]
+            tampered["final_id_set_sha256"] = hashlib.sha256(b"a\nc").hexdigest()
+            manifest_path.write_text(json.dumps(tampered), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "does not match"):
+                load_evaluation_sample_manifest(csv_path, manifest_path)
+
+            tampered["sample_ids"] = ["a", "b"]
+            tampered["final_id_set_sha256"] = ids_hash
+            manifest_path.write_text(json.dumps(tampered), encoding="utf-8")
             csv_path.write_text("id,split\na,train\nb,test\n", encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "does not match"):
                 load_evaluation_sample_manifest(csv_path, manifest_path)
