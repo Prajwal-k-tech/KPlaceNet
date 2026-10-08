@@ -28,7 +28,9 @@ data/
   README.md          # explains gitignored subsets
   flickr_geo_tiny/   # 5-10k debug — via scripts/download_subset.py --dataset flickr_geo_tiny
   osv5m_subset_10k/  # train-split subset — via --dataset osv5m --split train (plan first, then --yes)
+  osv5m_subset_20k/  # bounded train pool used for the paired data-scale follow-up
   osv5m_test/        # official OSV test, eval-only — via --split test (never train)
+  osv5m_confirmatory_test/ # disjoint 3k official-test sample used for confirmation
   im2gps3k/          # 3k eval only — never train — via --dataset im2gps3k
   .gitkeep
 ```
@@ -36,6 +38,8 @@ data/
 - CSV format expected by `src/dataset.py`: `image_path,lat,lon` (header required). Paths may be absolute or relative to CSV location.
 - OSV-5M spatial separation (1km) is respected by not mixing splits; IM2GPS3k is eval-only.
 - Large datasets are **not** committed — see `data/README.md`.
+- The exact IDs and metadata hash of the confirmatory test sample are recorded
+  in [`docs/results/osv5m_test_confirmatory_sample_20261008.json`](docs/results/osv5m_test_confirmatory_sample_20261008.json).
 - OSV-5M data is available under [CC BY-SA 4.0](https://huggingface.co/datasets/osv5m/osv5m);
   cite the [dataset paper](https://arxiv.org/abs/2404.18873) and credit the
   [official dataset repository](https://github.com/gastruc/osv5m). Downloaded

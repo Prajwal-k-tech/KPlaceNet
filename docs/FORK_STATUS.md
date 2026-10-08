@@ -19,8 +19,10 @@ reproduction of PlaNet's model, scale, or reported benchmark results.
 The repository has L0-L4 code and historical result reports. At the start of
 this fork work, the data and checkpoints needed to reproduce them were absent.
 Those historical results are not results of this contribution. A bounded
-OSV-5M training and held-out evaluation is now running locally; see the
-validation section for its status.
+10k OSV-5M comparison of uniform and cell-balanced sampling is complete; a
+paired 10k-versus-20k follow-up is currently training. The first experiment's
+own data, code revision, and evaluation artifacts are recorded under
+`docs/results/`; the follow-up will use a second, disjoint test sample.
 
 ## Fork change in progress
 
@@ -92,22 +94,31 @@ CUDA execution remains unverified.
 - GitHub Actions passed on commit `ae25b44`: [run 37782064966](https://github.com/Prajwal-k-tech/KPlaceNet/actions/runs/37782064966). The full suite ran 49 tests, with 48 passing and the CUDA-only test skipped.
 - GitHub Actions passed on commits `5a52890`, `9b7d775`, and `b99fae5`: [run 37790574684](https://github.com/Prajwal-k-tech/KPlaceNet/actions/runs/37790574684), [run 37790980822](https://github.com/Prajwal-k-tech/KPlaceNet/actions/runs/37790980822), and [run 37791670958](https://github.com/Prajwal-k-tech/KPlaceNet/actions/runs/37791670958). The latest CPU suite ran 55 tests, with 54 passing and the CUDA-only test skipped.
 - The L2 cache-integrity changes passed locally (48 tests) and in GitHub Actions on `bbb1362`: [run 37749946875](https://github.com/Prajwal-k-tech/KPlaceNet/actions/runs/37749946875), including both workflow jobs.
-- A verified local data subset contains 10,000 official OSV-5M train images and
-  3,000 sampled official test images. Sample IDs are unique within each split,
-  there is no train/test ID overlap, every image decodes, and the official
-  train/test split labels are preserved. The source metadata hashes are recorded
-  with the experiment artifacts; image data and checkpoints are not committed.
-- A paired three-seed comparison of uniform and inverse-cell-frequency
-  cell-balanced sampling is in progress (ImageNet initialization, ResNet-50
-  layer4 fine-tuning, 10 epochs, 300 fixed geographic cells). Four of six runs
-  have completed; the fifth is in progress. Training accuracy differs between
-  samplers but is only diagnostic. No real-data evaluation result or performance
-  claim is available until all six runs finish and are evaluated on the
-  untouched test subset.
+- The initial real-data L2 experiment used 10,000 train images from shards 00–01
+  and a fixed 3,000-row OSV-5M test sample. Across three seeds, uniform sampling
+  reached 5,849.9 km mean geodesic error (sample SD 183.9 km); cell-balanced
+  reached 5,859.0 km (SD 143.5 km). The paired mean-distance difference was
+  +9.1 km (balanced worse; paired SD 222.7 km), with no mean change in within-
+  200-km accuracy. The model improves over the most-frequent-cell baseline but
+  its absolute localization performance remains weak; the sampler showed no
+  consistent gain. Since this test sample has been inspected, those results and
+  the data-scale follow-up on it are exploratory.
+- A second bounded train pool contains 20,000 official images from shards 00–03;
+  10,000 new IDs from shards 02–03 do not overlap the original train subset.
+  Every image decodes. The 10k/20k comparison uses one shared 300-cell map,
+  uniform sampling, paired seeds 42/43/44, and ten epochs. Four of six runs
+  have completed; the 10k seed-44 run is training. The six models will be scored
+  on a fresh 3,000-row sample from the same official test split, with zero
+  overlap against either the 20k training IDs or original test IDs. This is a
+  disjoint row sample, not an independent data source or geography. Its IDs,
+  metadata hash, split, and replacement sampling details are
+  checked in `docs/results/osv5m_test_confirmatory_sample_20261008.json`.
 
 ## Next steps
 
-1. Finish the six-run matrix and evaluate all checkpoints on the fixed,
-   untouched official test subset; report paired seed deltas and limitations.
-2. Package a verified checkpoint and matching calibration artifact for the
-   Gradio demo only after real-data inference is checked against the evaluator.
+1. Finish the six-run matrix and evaluate every checkpoint on the fresh test
+   sample; report paired seed deltas, limits, and the prior sample's exploratory
+   results separately.
+2. Update the README and status report, validate a chosen checkpoint through
+   local inference/demo, run final tests, and push the completed artifacts to the
+   fork branch.
