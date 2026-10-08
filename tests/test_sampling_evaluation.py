@@ -12,6 +12,8 @@ from scripts.evaluate_sampling_comparison import (
     ROOT,
     load_training_provenance,
     load_training_metrics,
+    load_majority_cell_baseline,
+    majority_cell_baseline,
     parse_checkpoint_manifest_hash,
     parse_eval_metrics,
     portable_path,
@@ -58,6 +60,57 @@ def training(seed, mode, sample_hash="same-samples", cell_hash="same-cells"):
 
 
 class SamplingEvaluationTests(unittest.TestCase):
+    def test_majority_cell_baseline_uses_highest_count_and_reports_geodesic_metrics(self):
+        cells = [
+            {"cell_id": 0, "count": 2, "centroid_lat": 0.0, "centroid_lon": 0.0},
+            {"cell_id": 1, "count": 4, "centroid_lat": 20.0, "centroid_lon": 20.0},
+        ]
+
+        result = majority_cell_baseline(cells, [20.0, 20.0], [20.0, 20.0])
+
+        self.assertEqual(result["cell_id"], 1)
+        self.assertEqual(result["training_cell_count"], 4)
+        self.assertEqual(result["training_cell_share_pct"], 100.0 * 4 / 6)
+        self.assertEqual(result["within_1km"], 100.0)
+        self.assertEqual(result["within_25km"], 100.0)
+        self.assertEqual(result["within_200km"], 100.0)
+        self.assertEqual(result["mean_km"], 0.0)
+
+    def test_majority_cell_baseline_rejects_invalid_coordinates(self):
+        cells = [{"cell_id": 0, "count": 1, "centroid_lat": 0.0, "centroid_lon": 0.0}]
+        with self.assertRaisesRegex(ValueError, "latitude/longitude"):
+            majority_cell_baseline(cells, [91.0], [0.0])
+
+    def test_majority_baseline_verifies_cells_and_uses_evaluation_csv(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            cells = [
+                {"cell_id": 0, "count": 1, "centroid_lat": 0.0, "centroid_lon": 0.0},
+                {"cell_id": 1, "count": 3, "centroid_lat": 10.0, "centroid_lon": 10.0},
+            ]
+            cells_path = root / "cells.json"
+            cells_path.write_text(json.dumps({"num_cells": 2, "cells": cells}))
+            evaluation_csv = root / "eval.csv"
+            evaluation_csv.write_text("image_path,lat,lon\na.jpg,10,10\n")
+            cell_hash = hashlib.sha256(
+                json.dumps(cells, sort_keys=True, separators=(",", ":")).encode()
+            ).hexdigest()
+            training = {
+                "cell_count": 2,
+                "cells_sha256": cell_hash,
+                "config": {"cells_json": str(cells_path)},
+            }
+
+            result = load_majority_cell_baseline(training, evaluation_csv)
+
+            self.assertEqual(result["cell_id"], 1)
+            self.assertEqual(result["n"], 1)
+            self.assertEqual(result["mean_km"], 0.0)
+            self.assertEqual(result["evaluation_csv_sha256"], hashlib.sha256(evaluation_csv.read_bytes()).hexdigest())
+            training["cells_sha256"] = "0" * 64
+            with self.assertRaisesRegex(ValueError, "hash mismatch"):
+                load_majority_cell_baseline(training, evaluation_csv)
+
     def test_portable_paths_omit_host_absolute_prefixes(self):
         self.assertEqual(portable_path("data/osv5m_test/metadata.csv"), "data/osv5m_test/metadata.csv")
         self.assertEqual(

@@ -8,6 +8,7 @@ report with paired per-seed deltas.
 from __future__ import annotations
 
 import argparse
+import csv
 import hashlib
 import importlib.metadata
 import json
@@ -77,6 +78,13 @@ def load_training_provenance(checkpoint: Path) -> dict[str, Any]:
     ):
         raise ValueError(f"Training manifest has invalid identity metadata: {manifest_path}")
     sample_ids = manifest["selected_sample_ids"]
+    if (
+        isinstance(manifest.get("cell_count"), bool)
+        or not isinstance(manifest.get("cell_count"), int)
+        or manifest["cell_count"] < 1
+        or not isinstance(manifest.get("cells_sha256"), str)
+    ):
+        raise ValueError(f"Training manifest has invalid cell metadata: {manifest_path}")
     if not isinstance(sample_ids, list) or not all(isinstance(value, str) for value in sample_ids):
         raise ValueError(f"Training manifest has invalid selected sample IDs: {manifest_path}")
     if not sample_ids or len(sample_ids) > manifest["dataset_sample_count"]:
@@ -91,6 +99,7 @@ def load_training_provenance(checkpoint: Path) -> dict[str, Any]:
         "selected_sample_count": len(sample_ids),
         "selected_sample_ids_sha256": hashlib.sha256(sample_ids_payload.encode("utf-8")).hexdigest(),
         "cells_sha256": manifest["cells_sha256"],
+        "cell_count": manifest["cell_count"],
         "seed": manifest["seed"],
         "config": {
             key: portable_path(value) if key in {"csv", "checkpoint_dir", "cells_json", "places365_checkpoint"}
@@ -282,6 +291,93 @@ def summarize_runs(runs: list[dict[str, Any]]) -> dict[str, Any]:
     return summary
 
 
+def majority_cell_baseline(
+    cells: list[dict[str, Any]], true_lats: list[float], true_lons: list[float]
+) -> dict[str, Any]:
+    """Score the training-majority cell as a geography-aware trivial baseline."""
+    if not cells:
+        raise ValueError("training cells must not be empty")
+    if not true_lats or len(true_lats) != len(true_lons):
+        raise ValueError("evaluation coordinates must be non-empty and aligned")
+    normalized = []
+    for cell in cells:
+        cell_id, count = cell.get("cell_id"), cell.get("count")
+        lat, lon = cell.get("centroid_lat"), cell.get("centroid_lon")
+        if (
+            isinstance(cell_id, bool) or not isinstance(cell_id, int)
+            or isinstance(count, bool) or not isinstance(count, int) or count < 0
+            or not isinstance(lat, (int, float)) or not math.isfinite(lat) or not -90 <= lat <= 90
+            or not isinstance(lon, (int, float)) or not math.isfinite(lon) or not -180 <= lon <= 180
+        ):
+            raise ValueError("training cells contain invalid ids, counts, or centroids")
+        normalized.append((cell_id, count, float(lat), float(lon)))
+    normalized.sort()
+    if [cell[0] for cell in normalized] != list(range(len(normalized))):
+        raise ValueError("training cell ids must be contiguous from zero")
+    cell_id, train_count, pred_lat, pred_lon = max(
+        normalized, key=lambda cell: (cell[1], -cell[0])
+    )
+
+    distances = []
+    for lat, lon in zip(true_lats, true_lons, strict=True):
+        if (
+            isinstance(lat, bool) or isinstance(lon, bool)
+            or not isinstance(lat, (int, float)) or not math.isfinite(lat) or not -90 <= lat <= 90
+            or not isinstance(lon, (int, float)) or not math.isfinite(lon) or not -180 <= lon <= 180
+        ):
+            raise ValueError("evaluation coordinates must be finite latitude/longitude values")
+        phi1, phi2 = math.radians(pred_lat), math.radians(lat)
+        dphi = phi2 - phi1
+        dlam = math.radians(lon - pred_lon)
+        hav = math.sin(dphi / 2) ** 2 + math.cos(phi1) * math.cos(phi2) * math.sin(dlam / 2) ** 2
+        distances.append(2 * 6371.0 * math.asin(math.sqrt(min(1.0, max(0.0, hav)))))
+
+    total = sum(cell[1] for cell in normalized)
+    return {
+        "baseline": "always predict the most frequent training cell centroid",
+        "cell_id": cell_id,
+        "training_cell_count": train_count,
+        "training_cell_share_pct": 100 * train_count / total if total else None,
+        "n": len(distances),
+        "within_1km": 100 * sum(distance <= 1 for distance in distances) / len(distances),
+        "within_25km": 100 * sum(distance <= 25 for distance in distances) / len(distances),
+        "within_200km": 100 * sum(distance <= 200 for distance in distances) / len(distances),
+        "mean_km": statistics.mean(distances),
+        "median_km": statistics.median(distances),
+    }
+
+
+def load_majority_cell_baseline(training: dict[str, Any], evaluation_csv: Path) -> dict[str, Any]:
+    """Load hash-verified training cells and score their majority-cell prior."""
+    cells_name = training["config"].get("cells_json")
+    if not isinstance(cells_name, str) or not cells_name:
+        raise ValueError("training manifest has no fixed-cell artifact path")
+    cells_path = Path(cells_name)
+    if not cells_path.is_absolute():
+        cells_path = ROOT / cells_path
+    artifact = json.loads(cells_path.read_text(encoding="utf-8"))
+    cells = artifact.get("cells") if isinstance(artifact, dict) else None
+    if not isinstance(cells, list) or len(cells) != training["cell_count"]:
+        raise ValueError(f"invalid fixed-cell artifact: {cells_path}")
+    cell_hash = hashlib.sha256(
+        json.dumps(cells, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
+    if cell_hash != training["cells_sha256"]:
+        raise ValueError(f"fixed-cell artifact hash mismatch: {cells_path}")
+    with evaluation_csv.open("r", newline="", encoding="utf-8") as stream:
+        rows = csv.DictReader(stream)
+        if not rows.fieldnames or not {"lat", "lon"}.issubset(rows.fieldnames):
+            raise ValueError(f"evaluation CSV must contain lat and lon columns: {evaluation_csv}")
+        coordinates = [(float(row["lat"]), float(row["lon"])) for row in rows]
+    baseline = majority_cell_baseline(
+        cells, [point[0] for point in coordinates], [point[1] for point in coordinates]
+    )
+    baseline["cells"] = portable_path(cells_path)
+    baseline["cells_sha256"] = cell_hash
+    baseline["evaluation_csv_sha256"] = sha256_file(evaluation_csv)
+    return baseline
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--csv", type=Path, default=ROOT / "data/osv5m_test/metadata.csv",
@@ -359,6 +455,7 @@ def main() -> None:
             })
 
     validate_training_comparison(selected_runs)
+    majority_baseline = load_majority_cell_baseline(selected_runs[0]["training"], args.csv)
 
     runs: list[dict[str, Any]] = []
     for selected in selected_runs:
@@ -454,6 +551,7 @@ def main() -> None:
             "cuda_device_name": cuda_device_name(),
         },
         "runs": runs,
+        "majority_cell_baseline": majority_baseline,
         "summary": summarize_runs(runs),
         "interpretation": (
             "Descriptive paired evaluation on the specified test CSV. It does not imply "
