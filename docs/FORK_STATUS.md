@@ -64,17 +64,16 @@ or pretrained model.
 - The isolated test environment used CPU PyTorch 2.14.1 and torchvision 0.29.1;
   its temporary training artifacts were removed automatically. No dataset or
   pretrained weights were downloaded.
-- The new CPU GitHub Actions job has been added but has not run remotely yet.
+- GitHub Actions passed on commit `4f0de05`: [run 37735120091](https://github.com/Prajwal-k-tech/KPlaceNet/actions/runs/37735120091), including both the standard-library and CPU model-test jobs.
 - No real-data evaluation was run. `data/` contains no required OSV-5M test
   subset or evaluation images, and the repository contains no trained checkpoint.
   No real-data accuracy, calibration, or regional result is claimed.
 
 ## Next steps
 
-1. Verify the new CPU model-test job on the fork after pushing this branch.
-2. Only after confirming the dataset/checkpoint download sizes and storage
-   budget, run paired uniform and cell-balanced experiments on a fixed train
-   subset and untouched spatially separated test set; repeat seeds before
-   making any performance claim.
-3. Package a verified checkpoint and matching calibration artifact for the
+1. Before running a real experiment, confirm dataset and checkpoint download
+   sizes and available storage. Then run paired uniform and cell-balanced
+   experiments on a fixed training subset and untouched spatially separated
+   test set; repeat seeds before making any performance claim.
+2. Package a verified checkpoint and matching calibration artifact for the
    Gradio demo only after real-data inference is checked against the evaluator.
