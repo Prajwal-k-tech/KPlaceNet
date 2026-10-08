@@ -184,9 +184,16 @@ epoch for any weighted-sampling power, including 0. Use `--sampling-mode
 uniform` for the original shuffled, no-replacement baseline. This intentionally
 changes the training distribution; compare the
 untouched test set and report both overall and geographic-stratum metrics.
-Use multiple seeds before treating a difference as a robust performance claim.
-The comparison script records per-checkpoint metrics and hashes, test-CSV hash,
-runtime versions, and balanced-minus-uniform deltas for each shared seed.
+Evaluation reports within-1/25/200-km accuracy and mean/median geodesic error
+globally and by occupied cell in a 6-by-12 equal-area latitude/longitude grid.
+Cells below 20 examples are retained with null metrics; the paired report also
+includes per-seed regional deltas where both samplers have enough examples.
+These are descriptive slices, not conditional accuracy guarantees, and do not
+adjust for spatial dependence. Use multiple seeds before treating a difference
+as a robust performance claim. The comparison script records per-checkpoint
+metrics and hashes, the fixed test-CSV hash, verified training-manifest hashes
+and configuration, runtime versions, and balanced-minus-uniform deltas for
+each shared seed.
 
 ## L3 — Uncertainty-Aware Geolocation (Gap 3)
 

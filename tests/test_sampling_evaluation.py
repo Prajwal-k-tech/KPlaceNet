@@ -55,6 +55,28 @@ class SamplingEvaluationTests(unittest.TestCase):
         self.assertIsNone(delta["mean"])
         self.assertEqual(delta["per_seed"], [])
 
+    def test_reports_paired_geographic_deltas_and_omits_sparse_bins(self):
+        baseline = run(42, "uniform")
+        balanced = run(42, "cell-balanced")
+        baseline["metrics"]["regional_distance"] = {"regions": {
+            "lat00_lon00": {"n": 30, "metrics": {"mean_km": 500.0, "median_km": 400.0,
+                                                        "within_1km": 0.0, "within_25km": 0.1,
+                                                        "within_200km": 0.4}},
+            "lat00_lon01": {"n": 2, "metrics": None},
+        }}
+        balanced["metrics"]["regional_distance"] = {"regions": {
+            "lat00_lon00": {"n": 30, "metrics": {"mean_km": 450.0, "median_km": 350.0,
+                                                        "within_1km": 0.0, "within_25km": 0.2,
+                                                        "within_200km": 0.5}},
+            "lat00_lon01": {"n": 2, "metrics": None},
+        }}
+        summary = summarize_runs([baseline, balanced])
+        regional = summary["regional_paired_delta_cell_balanced_minus_uniform"]
+        self.assertEqual(regional["lat00_lon00"]["mean_km"]["mean"], -50.0)
+        self.assertAlmostEqual(regional["lat00_lon00"]["within_200km"]["mean"], 0.1)
+        self.assertEqual(regional["lat00_lon00"]["within_200km"]["n"], 30)
+        self.assertEqual(regional["lat00_lon01"]["within_200km"]["mean"], None)
+
     def test_training_provenance_validates_manifest_and_hashes_selected_ids(self):
         with tempfile.TemporaryDirectory() as temporary:
             checkpoint = Path(temporary) / "run" / "last.pt"

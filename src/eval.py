@@ -1,7 +1,4 @@
-"""Eval — haversine within 1/25/200km (Section 5 primary metric).
-
-No new metrics without re-plan. L3 adds ECE/coverage, L4 adds cell balance.
-"""
+"""Evaluate geolocation error globally and across descriptive spatial strata."""
 
 from __future__ import annotations
 
@@ -9,7 +6,7 @@ import argparse
 import math
 import sys
 from pathlib import Path
-from typing import List, Tuple, Dict
+from typing import Any, List, Tuple, Dict
 
 import numpy as np
 import torch
@@ -20,11 +17,13 @@ try:
     from src.dataset import GeoDataset
     from src.eval_contract import validate_eval_checkpoint
     from src.model import build_model
+    from src.regional_eval import spatial_distance_metrics
 except ImportError:
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
     from src.dataset import GeoDataset
     from src.eval_contract import validate_eval_checkpoint
     from src.model import build_model
+    from src.regional_eval import spatial_distance_metrics
 
 
 # ---------------------------------------------------------------------------
@@ -93,6 +92,9 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--image-size", type=int, default=224, help="Must match training image_size")
     p.add_argument("--num-workers", type=int, default=0, help="DataLoader workers (0 for Windows)")
     p.add_argument("--device", type=str, default="auto", help="auto|cuda|cpu")
+    p.add_argument("--region-lat-bands", type=int, default=6)
+    p.add_argument("--region-lon-bands", type=int, default=12)
+    p.add_argument("--region-min-count", type=int, default=20)
     return p.parse_args()
 
 
@@ -166,12 +168,21 @@ def main() -> None:
         all_true_lons.extend(true_np[:, 1].tolist())
 
     # Metrics
-    metrics = within_km_accuracy(
+    metrics: dict[str, Any] = within_km_accuracy(
         np.array(all_pred_lats),
         np.array(all_pred_lons),
         np.array(all_true_lats),
         np.array(all_true_lons),
         thresholds_km=(1, 25, 200),
+    )
+    metrics["regional_distance"] = spatial_distance_metrics(
+        all_pred_lats,
+        all_pred_lons,
+        all_true_lats,
+        all_true_lons,
+        lat_bands=args.region_lat_bands,
+        lon_bands=args.region_lon_bands,
+        min_count=args.region_min_count,
     )
 
     # Print table — Section 5 locked metrics
@@ -184,6 +195,11 @@ def main() -> None:
     print(f" within 200km : {metrics['within_200km']:6.2f}%")
     print(f" mean distance: {metrics['mean_km']:.1f} km")
     print(f" median distance: {metrics['median_km']:.1f} km")
+    scored_regions = sum(
+        region["metrics"] is not None
+        for region in metrics["regional_distance"]["regions"].values()
+    )
+    print(f" regions with n >= {args.region_min_count}: {scored_regions}")
     print("=" * 52 + "\n")
 
     # Also emit JSON for notebook parsing

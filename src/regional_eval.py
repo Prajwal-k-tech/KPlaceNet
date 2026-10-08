@@ -177,3 +177,81 @@ def spatial_stratified_metrics(
             "independent Bernoulli observations and are not corrected for spatial dependence."
         ),
     }
+
+
+def spatial_distance_metrics(
+    pred_lats: Sequence[float],
+    pred_lons: Sequence[float],
+    true_lats: Sequence[float],
+    true_lons: Sequence[float],
+    *,
+    lat_bands: int = 6,
+    lon_bands: int = 12,
+    min_count: int = 20,
+) -> dict[str, Any]:
+    """Report geodesic distance metrics by equal-area region.
+
+    Sparse occupied regions remain in the result with ``metrics: None``.
+    These bins are descriptive diagnostics; they do not establish conditional
+    accuracy or regional guarantees.
+    """
+    sample_count = len(true_lats)
+    if not isinstance(lat_bands, int) or isinstance(lat_bands, bool) or lat_bands < 1:
+        raise ValueError("lat_bands must be a positive integer")
+    if not isinstance(lon_bands, int) or isinstance(lon_bands, bool) or lon_bands < 1:
+        raise ValueError("lon_bands must be a positive integer")
+    if not isinstance(min_count, int) or isinstance(min_count, bool) or min_count < 1:
+        raise ValueError("min_count must be a positive integer")
+    if sample_count == 0:
+        raise ValueError("evaluation data must contain at least one sample")
+    aligned = (pred_lats, pred_lons, true_lons)
+    if any(len(values) != sample_count for values in aligned):
+        raise ValueError("all coordinate arrays must have matching lengths")
+
+    groups: dict[tuple[int, int], list[float]] = defaultdict(list)
+    for pred_lat, pred_lon, true_lat, true_lon in zip(
+        pred_lats, pred_lons, true_lats, true_lons, strict=True
+    ):
+        pred_lat, pred_lon = float(pred_lat), float(pred_lon)
+        true_lat, true_lon = float(true_lat), float(true_lon)
+        _equal_area_region(true_lat, true_lon, lat_bands, lon_bands)
+        _equal_area_region(pred_lat, pred_lon, lat_bands, lon_bands)
+        phi1, phi2 = math.radians(pred_lat), math.radians(true_lat)
+        dphi = phi2 - phi1
+        dlam = math.radians(true_lon - pred_lon)
+        hav = math.sin(dphi / 2) ** 2 + math.cos(phi1) * math.cos(phi2) * math.sin(dlam / 2) ** 2
+        distance = 2.0 * 6371.0 * math.asin(math.sqrt(min(1.0, max(0.0, hav))))
+        groups[_equal_area_region(true_lat, true_lon, lat_bands, lon_bands)].append(distance)
+
+    regions: dict[str, Any] = {}
+    for (lat_index, lon_index), distances in sorted(groups.items()):
+        key = f"lat{lat_index:02d}_lon{lon_index:02d}"
+        n = len(distances)
+        if n < min_count:
+            regions[key] = {"n": n, "metrics": None}
+            continue
+        ordered = sorted(distances)
+        median = ordered[n // 2] if n % 2 else (ordered[n // 2 - 1] + ordered[n // 2]) / 2
+        regions[key] = {
+            "n": n,
+            "metrics": {
+                "mean_km": sum(distances) / n,
+                "median_km": median,
+                "within_1km": sum(distance <= 1.0 for distance in distances) / n,
+                "within_25km": sum(distance <= 25.0 for distance in distances) / n,
+                "within_200km": sum(distance <= 200.0 for distance in distances) / n,
+            },
+        }
+    return {
+        "grid": {
+            "method": "equal_area_latitude_bands_x_uniform_longitude_bands",
+            "latitude_bands": lat_bands,
+            "longitude_bands": lon_bands,
+            "minimum_count_for_metrics": min_count,
+        },
+        "regions": regions,
+        "limitations": (
+            "Descriptive geographic strata only; they do not provide conditional or regional "
+            "accuracy guarantees and do not account for spatial dependence."
+        ),
+    }

@@ -117,6 +117,36 @@ def summarize_runs(runs: list[dict[str, Any]]) -> dict[str, Any]:
             "mean": statistics.mean(deltas) if deltas else None,
             "stdev": statistics.stdev(deltas) if len(deltas) > 1 else (0.0 if deltas else None),
         }
+    region_keys = sorted({
+        region
+        for run in runs
+        for region in run.get("metrics", {}).get("regional_distance", {}).get("regions", {})
+    })
+    regional_delta: dict[str, Any] = {}
+    for region in region_keys:
+        per_metric: dict[str, Any] = {}
+        for key in METRIC_KEYS:
+            deltas = []
+            sample_counts = set()
+            for seed in sorted(uniform.keys() & balanced.keys()):
+                baseline = uniform[seed]["metrics"].get("regional_distance", {}).get("regions", {}).get(region, {})
+                treatment = balanced[seed]["metrics"].get("regional_distance", {}).get("regions", {}).get(region, {})
+                baseline_metrics = baseline.get("metrics")
+                treatment_metrics = treatment.get("metrics")
+                if baseline_metrics is None or treatment_metrics is None:
+                    continue
+                if key not in baseline_metrics or key not in treatment_metrics:
+                    continue
+                deltas.append(treatment_metrics[key] - baseline_metrics[key])
+                sample_counts.add(baseline["n"])
+            per_metric[key] = {
+                "per_seed": deltas,
+                "mean": statistics.mean(deltas) if deltas else None,
+                "stdev": statistics.stdev(deltas) if len(deltas) > 1 else (0.0 if deltas else None),
+                "n": next(iter(sample_counts)) if len(sample_counts) == 1 else None,
+            }
+        regional_delta[region] = per_metric
+    summary["regional_paired_delta_cell_balanced_minus_uniform"] = regional_delta
     return summary
 
 

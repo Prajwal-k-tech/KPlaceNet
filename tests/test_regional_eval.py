@@ -6,10 +6,34 @@ import json
 import math
 import unittest
 
-from src.regional_eval import spatial_stratified_metrics
+from src.regional_eval import spatial_distance_metrics, spatial_stratified_metrics
 
 
 class SpatialStratifiedMetricsTests(unittest.TestCase):
+    def test_reports_equal_area_geodesic_metrics_and_sparse_bins(self):
+        result = spatial_distance_metrics(
+            pred_lats=[0.0, 0.0, 10.0],
+            pred_lons=[0.0, 1.0, 91.0],
+            true_lats=[0.0, 0.0, 10.0],
+            true_lons=[0.0, 0.0, 90.0],
+            lat_bands=2,
+            lon_bands=4,
+            min_count=2,
+        )
+        equatorial = result["regions"]["lat01_lon02"]
+        self.assertEqual(equatorial["n"], 2)
+        self.assertAlmostEqual(equatorial["metrics"]["mean_km"], 55.597, places=2)
+        self.assertAlmostEqual(equatorial["metrics"]["median_km"], 55.597, places=2)
+        self.assertEqual(equatorial["metrics"]["within_200km"], 1.0)
+        self.assertEqual(equatorial["metrics"]["within_25km"], 0.5)
+        self.assertIsNone(result["regions"]["lat01_lon03"]["metrics"])
+
+    def test_geodesic_strata_validates_coordinate_alignment(self):
+        with self.assertRaisesRegex(ValueError, "matching lengths"):
+            spatial_distance_metrics([0.0], [], [0.0], [0.0])
+        with self.assertRaisesRegex(ValueError, "latitude"):
+            spatial_distance_metrics([91.0], [0.0], [0.0], [0.0])
+
     def test_groups_samples_and_reports_quality_and_coverage_interval(self):
         result = spatial_stratified_metrics(
             probabilities=[[0.9, 0.1], [0.2, 0.8], [0.6, 0.4]],
