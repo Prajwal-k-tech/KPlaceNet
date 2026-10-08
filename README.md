@@ -36,6 +36,10 @@ data/
 - CSV format expected by `src/dataset.py`: `image_path,lat,lon` (header required). Paths may be absolute or relative to CSV location.
 - OSV-5M spatial separation (1km) is respected by not mixing splits; IM2GPS3k is eval-only.
 - Large datasets are **not** committed — see `data/README.md`.
+- OSV-5M data is available under [CC BY-SA 4.0](https://huggingface.co/datasets/osv5m/osv5m);
+  cite the [dataset paper](https://arxiv.org/abs/2404.18873) and credit the
+  [official dataset repository](https://github.com/gastruc/osv5m). Downloaded
+  images and metadata remain local and are not included in this fork.
 
 ## How to Run — Smoke Test (L0 exit gate)
 

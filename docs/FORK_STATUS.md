@@ -58,7 +58,14 @@ record the manifest hash for cross-artifact verification.
 The L2 runner validates generated fraction-CSV and cell-definition caches
 against the source CSV hash, settings, generator source hash, and artifact hash
 before reusing them; stale or modified caches are regenerated. Fraction CSVs
-retain source columns.
+retain source columns. The experiment runner supports loader-worker tuning and
+has a regression test for running its plan from a clean checkout. The paired
+evaluator verifies each checkpoint's training-manifest content hash and checks
+that the manifest seed and sampling mode match the requested comparison. It
+records the manifest/configuration, training CSV hash, selected sample-ID hash,
+fixed test CSV hash, checkpoint hash, and paired seed deltas. Evaluation also
+reports descriptive geodesic error by equal-area region, keeps sparse bins
+visible without metrics, and summarizes paired regional deltas.
 Temperature fitting now moves the trainable temperature parameter along with
 calibration logits to the selected device, so CUDA-backed fitting does not mix
 CPU parameters with GPU tensors. A CUDA-conditional regression test checks
@@ -69,8 +76,9 @@ CUDA execution remains unverified.
 ## Validation and limitations
 
 - Full `python -m unittest discover -s tests -v` in an isolated Python 3.12
-  CPU environment: 49 tests ran, 48 passed, and the CUDA-only device-placement
-  test was skipped. This includes the synthetic pipeline and stale-cache tests.
+  CPU environment: 55 tests ran, 54 passed, and the CUDA-only device-placement
+  test was skipped. This includes the synthetic pipeline, stale-cache,
+  provenance-integrity, and geographic-strata tests.
 - The synthetic integration test generated 8 training and 4 evaluation images,
   trained one CPU epoch with random initialization, loaded the saved checkpoint,
   and emitted valid evaluator JSON for all 4 held-out synthetic images. Its
@@ -82,6 +90,7 @@ CUDA execution remains unverified.
   pretrained weights were downloaded.
 - GitHub Actions passed on commit `a692d88`: [run 37746197271](https://github.com/Prajwal-k-tech/KPlaceNet/actions/runs/37746197271), including both the standard-library and CPU model-test jobs.
 - GitHub Actions passed on commit `ae25b44`: [run 37782064966](https://github.com/Prajwal-k-tech/KPlaceNet/actions/runs/37782064966). The full suite ran 49 tests, with 48 passing and the CUDA-only test skipped.
+- GitHub Actions passed on commits `5a52890`, `9b7d775`, and `b99fae5`: [run 37790574684](https://github.com/Prajwal-k-tech/KPlaceNet/actions/runs/37790574684), [run 37790980822](https://github.com/Prajwal-k-tech/KPlaceNet/actions/runs/37790980822), and [run 37791670958](https://github.com/Prajwal-k-tech/KPlaceNet/actions/runs/37791670958). The latest CPU suite ran 55 tests, with 54 passing and the CUDA-only test skipped.
 - The L2 cache-integrity changes passed locally (48 tests) and in GitHub Actions on `bbb1362`: [run 37749946875](https://github.com/Prajwal-k-tech/KPlaceNet/actions/runs/37749946875), including both workflow jobs.
 - A verified local data subset contains 10,000 official OSV-5M train images and
   3,000 sampled official test images. Sample IDs are unique within each split,
@@ -90,9 +99,11 @@ CUDA execution remains unverified.
   with the experiment artifacts; image data and checkpoints are not committed.
 - A paired three-seed comparison of uniform and inverse-cell-frequency
   cell-balanced sampling is in progress (ImageNet initialization, ResNet-50
-  layer4 fine-tuning, 10 epochs, 300 fixed geographic cells). No real-data
-  evaluation result or performance claim is available until all six runs finish
-  and are evaluated on the untouched test subset.
+  layer4 fine-tuning, 10 epochs, 300 fixed geographic cells). Four of six runs
+  have completed; the fifth is in progress. Training accuracy differs between
+  samplers but is only diagnostic. No real-data evaluation result or performance
+  claim is available until all six runs finish and are evaluated on the
+  untouched test subset.
 
 ## Next steps
 

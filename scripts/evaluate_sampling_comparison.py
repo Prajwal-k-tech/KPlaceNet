@@ -34,6 +34,17 @@ def sha256_file(path: Path) -> str:
     return digest.hexdigest()
 
 
+def portable_path(path: Path | str) -> str:
+    """Render paths relative to the repository without exposing host paths."""
+    value = Path(path)
+    if not value.is_absolute():
+        return value.as_posix()
+    try:
+        return value.resolve().relative_to(ROOT).as_posix()
+    except ValueError:
+        return value.name
+
+
 def load_training_provenance(checkpoint: Path) -> dict[str, Any]:
     """Load and verify the manifest paired with a training checkpoint."""
     manifest_path = checkpoint.parent / "run_manifest.json"
@@ -51,12 +62,28 @@ def load_training_provenance(checkpoint: Path) -> dict[str, Any]:
                 "cells_sha256", "seed", "config", "initialization", "software")
     if any(key not in manifest for key in required):
         raise ValueError(f"Training manifest is missing required provenance: {manifest_path}")
+    config = manifest["config"]
+    if not isinstance(config, dict) or not isinstance(manifest["initialization"], dict) or not isinstance(manifest["software"], dict):
+        raise ValueError(f"Training manifest has invalid configuration metadata: {manifest_path}")
+    if (
+        not isinstance(manifest["dataset_csv_sha256"], str)
+        or not isinstance(manifest["cells_sha256"], str)
+        or isinstance(manifest["dataset_sample_count"], bool)
+        or not isinstance(manifest["dataset_sample_count"], int)
+        or manifest["dataset_sample_count"] < 1
+        or isinstance(manifest["seed"], bool)
+        or not isinstance(manifest["seed"], int)
+        or manifest["seed"] < 0
+    ):
+        raise ValueError(f"Training manifest has invalid identity metadata: {manifest_path}")
     sample_ids = manifest["selected_sample_ids"]
     if not isinstance(sample_ids, list) or not all(isinstance(value, str) for value in sample_ids):
         raise ValueError(f"Training manifest has invalid selected sample IDs: {manifest_path}")
+    if not sample_ids or len(sample_ids) > manifest["dataset_sample_count"]:
+        raise ValueError(f"Training manifest has an invalid selected sample count: {manifest_path}")
     sample_ids_payload = json.dumps(sample_ids, separators=(",", ":"))
     return {
-        "manifest_path": str(manifest_path.relative_to(ROOT)) if manifest_path.is_relative_to(ROOT) else str(manifest_path),
+        "manifest_path": portable_path(manifest_path),
         "manifest_file_sha256": sha256_file(manifest_path),
         "manifest_sha256": declared_hash,
         "training_csv_sha256": manifest["dataset_csv_sha256"],
@@ -65,10 +92,58 @@ def load_training_provenance(checkpoint: Path) -> dict[str, Any]:
         "selected_sample_ids_sha256": hashlib.sha256(sample_ids_payload.encode("utf-8")).hexdigest(),
         "cells_sha256": manifest["cells_sha256"],
         "seed": manifest["seed"],
-        "config": manifest["config"],
+        "config": {
+            key: portable_path(value) if key in {"csv", "checkpoint_dir", "cells_json", "places365_checkpoint"}
+            and value is not None else value
+            for key, value in manifest["config"].items()
+        },
         "initialization": manifest["initialization"],
         "software": manifest["software"],
     }
+
+
+def validate_training_comparison(runs: list[dict[str, Any]]) -> None:
+    """Reject comparisons whose checkpoints do not share a controlled setup."""
+    if not runs:
+        raise ValueError("comparison must contain at least one training run")
+    variable_config = {"csv", "checkpoint_dir", "run_tag", "seed", "sampling_mode", "sampling_power"}
+    reference = runs[0]["training"]
+    reference_config = {
+        key: value for key, value in reference["config"].items() if key not in variable_config
+    }
+    invariant_fields = (
+        "training_csv_sha256",
+        "training_dataset_sample_count",
+        "cells_sha256",
+        "initialization",
+        "software",
+    )
+    for run in runs[1:]:
+        training = run["training"]
+        if any(training[field] != reference[field] for field in invariant_fields):
+            raise ValueError("training runs do not share the same data, cells, initialization, or software")
+        config = {key: value for key, value in training["config"].items() if key not in variable_config}
+        if config != reference_config:
+            raise ValueError("training runs do not share the same model and optimization configuration")
+
+    by_seed: dict[int, dict[str, dict[str, Any]]] = {}
+    balanced_powers: set[Any] = set()
+    for run in runs:
+        by_seed.setdefault(run["seed"], {})[run["sampling_mode"]] = run["training"]
+        if run["sampling_mode"] == "cell-balanced":
+            balanced_powers.add(run["training"]["config"].get("sampling_power"))
+    if len(balanced_powers) > 1:
+        raise ValueError("cell-balanced runs do not share the same sampling power")
+    for seed, modes in by_seed.items():
+        uniform = modes.get("uniform")
+        balanced = modes.get("cell-balanced")
+        if uniform is None or balanced is None:
+            continue
+        if (
+            uniform["selected_sample_ids_sha256"] != balanced["selected_sample_ids_sha256"]
+            or uniform["selected_sample_count"] != balanced["selected_sample_count"]
+        ):
+            raise ValueError(f"paired sampling runs for seed={seed} used different training samples")
 
 
 def parse_eval_metrics(stdout: str) -> dict[str, float | int]:
@@ -85,6 +160,17 @@ def parse_eval_metrics(stdout: str) -> dict[str, float | int]:
                     raise ValueError(f"evaluator returned invalid metric {key!r}")
             return metrics
     raise ValueError("evaluator output did not contain a [json] metrics record")
+
+
+def parse_checkpoint_manifest_hash(stdout: str) -> str:
+    """Read the training-manifest hash embedded inside an evaluated checkpoint."""
+    for line in stdout.splitlines():
+        if line.startswith("[run-manifest]"):
+            value = line[len("[run-manifest]"):].strip()
+            if len(value) == 64 and all(char in "0123456789abcdef" for char in value):
+                return value
+            raise ValueError("evaluator returned an invalid checkpoint training-manifest hash")
+    raise ValueError("evaluator output did not include the checkpoint training-manifest hash")
 
 
 def summarize_runs(runs: list[dict[str, Any]]) -> dict[str, Any]:
@@ -166,6 +252,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--image-size", type=int, default=224)
     parser.add_argument("--num-workers", type=int, default=0)
     parser.add_argument("--device", default="auto")
+    parser.add_argument("--region-lat-bands", type=int, default=6)
+    parser.add_argument("--region-lon-bands", type=int, default=12)
+    parser.add_argument("--region-min-count", type=int, default=20)
     return parser.parse_args()
 
 
@@ -174,6 +263,16 @@ def package_version(name: str) -> str | None:
         return importlib.metadata.version(name)
     except importlib.metadata.PackageNotFoundError:
         return None
+
+
+def cuda_device_name() -> str | None:
+    try:
+        import torch
+    except ImportError:
+        return None
+    if not torch.cuda.is_available():
+        return None
+    return torch.cuda.get_device_name(0)
 
 
 def main() -> None:
@@ -189,7 +288,7 @@ def main() -> None:
     if not 0.0 < args.fraction <= 1.0:
         raise SystemExit("--fraction must be in (0, 1]")
 
-    runs: list[dict[str, Any]] = []
+    selected_runs: list[dict[str, Any]] = []
     for seed in args.seeds:
         for mode in args.modes:
             name = checkpoint_dir_name(args.init, args.fraction, args.regime, mode, seed)
@@ -201,26 +300,55 @@ def main() -> None:
                 raise ValueError(f"Training manifest seed does not match requested seed={seed}: {checkpoint}")
             if training["config"].get("sampling_mode") != mode:
                 raise ValueError(f"Training manifest sampling mode does not match {mode}: {checkpoint}")
-            command = [
-                sys.executable, "-m", "src.eval", "--csv", str(args.csv),
-                "--checkpoint", str(checkpoint), "--batch-size", str(args.batch_size),
-                "--image-size", str(args.image_size), "--num-workers", str(args.num_workers),
-                "--device", args.device,
-            ]
-            result = subprocess.run(command, cwd=ROOT, capture_output=True, text=True, check=False)
-            if result.returncode:
-                raise RuntimeError(
-                    f"Evaluation failed for seed={seed}, mode={mode} (exit {result.returncode}):\n"
-                    f"{result.stderr[-3000:]}"
-                )
-            runs.append({
+            expected_initialization = "torchvision_imagenet" if args.init == "imagenet" else "places365"
+            if training["initialization"].get("kind") != expected_initialization:
+                raise ValueError(f"Training manifest initialization does not match {args.init}: {checkpoint}")
+            selected_runs.append({
                 "seed": seed,
                 "sampling_mode": mode,
-                "checkpoint": str(checkpoint.relative_to(ROOT)) if checkpoint.is_relative_to(ROOT) else str(checkpoint),
-                "checkpoint_sha256": sha256_file(checkpoint),
+                "checkpoint_path": checkpoint,
+                "checkpoint": portable_path(checkpoint),
                 "training": training,
-                "metrics": parse_eval_metrics(result.stdout),
             })
+
+    validate_training_comparison(selected_runs)
+
+    runs: list[dict[str, Any]] = []
+    for selected in selected_runs:
+        seed = selected["seed"]
+        mode = selected["sampling_mode"]
+        checkpoint = selected["checkpoint_path"]
+        training = selected["training"]
+        assert isinstance(checkpoint, Path)
+        assert isinstance(training, dict)
+        command = [
+            sys.executable, "-m", "src.eval", "--csv", str(args.csv),
+            "--checkpoint", str(checkpoint), "--batch-size", str(args.batch_size),
+            "--image-size", str(args.image_size), "--num-workers", str(args.num_workers),
+            "--region-lat-bands", str(args.region_lat_bands),
+            "--region-lon-bands", str(args.region_lon_bands),
+            "--region-min-count", str(args.region_min_count),
+            "--device", args.device,
+        ]
+        result = subprocess.run(command, cwd=ROOT, capture_output=True, text=True, check=False)
+        if result.returncode:
+            raise RuntimeError(
+                f"Evaluation failed for seed={seed}, mode={mode} (exit {result.returncode}):\n"
+                f"{result.stderr[-3000:]}"
+            )
+        checkpoint_manifest_hash = parse_checkpoint_manifest_hash(result.stdout)
+        if checkpoint_manifest_hash != training["manifest_sha256"]:
+            raise ValueError(
+                f"Checkpoint and training manifest disagree for seed={seed}, mode={mode}: {checkpoint}"
+            )
+        runs.append({
+            "seed": seed,
+            "sampling_mode": mode,
+            "checkpoint": selected["checkpoint"],
+            "checkpoint_sha256": sha256_file(checkpoint),
+            "training": training,
+            "metrics": parse_eval_metrics(result.stdout),
+        })
 
     try:
         revision = subprocess.run(
@@ -237,8 +365,18 @@ def main() -> None:
             "regime": args.regime,
             "modes": args.modes,
             "seeds": args.seeds,
+            "checkpoint_policy": "last.pt from the final configured epoch; no test-set selection",
         },
-        "evaluation_csv": str(args.csv),
+        "evaluation": {
+            "batch_size": args.batch_size,
+            "image_size": args.image_size,
+            "num_workers": args.num_workers,
+            "device": args.device,
+            "region_lat_bands": args.region_lat_bands,
+            "region_lon_bands": args.region_lon_bands,
+            "region_min_count": args.region_min_count,
+        },
+        "evaluation_csv": portable_path(args.csv),
         "evaluation_csv_sha256": sha256_file(args.csv),
         "evaluator_revision": revision,
         "runtime": {
@@ -246,6 +384,7 @@ def main() -> None:
             "torch": package_version("torch"),
             "torchvision": package_version("torchvision"),
             "numpy": package_version("numpy"),
+            "cuda_device_name": cuda_device_name(),
         },
         "runs": runs,
         "summary": summarize_runs(runs),

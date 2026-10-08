@@ -10,8 +10,11 @@ from pathlib import Path
 
 from scripts.evaluate_sampling_comparison import (
     load_training_provenance,
+    parse_checkpoint_manifest_hash,
     parse_eval_metrics,
+    portable_path,
     summarize_runs,
+    validate_training_comparison,
 )
 
 
@@ -29,7 +32,38 @@ def run(seed, mode, offset=0.0):
     }
 
 
+def training(seed, mode, sample_hash="same-samples", cell_hash="same-cells"):
+    return {
+        "seed": seed,
+        "training_csv_sha256": "same-dataset",
+        "training_dataset_sample_count": 100,
+        "selected_sample_count": 100,
+        "selected_sample_ids_sha256": sample_hash,
+        "cells_sha256": cell_hash,
+        "initialization": {"kind": "torchvision_imagenet"},
+        "software": {"torch": "test"},
+        "config": {
+            "seed": seed,
+            "sampling_mode": mode,
+            "sampling_power": 1.0,
+            "csv": f"train_{seed}.csv",
+            "checkpoint_dir": f"checkpoints/{seed}_{mode}",
+            "run_tag": f"run_{seed}_{mode}",
+            "epochs": 10,
+            "batch_size": 16,
+        },
+    }
+
+
 class SamplingEvaluationTests(unittest.TestCase):
+    def test_portable_paths_omit_host_absolute_prefixes(self):
+        self.assertEqual(portable_path("data/osv5m_test/metadata.csv"), "data/osv5m_test/metadata.csv")
+        self.assertEqual(
+            portable_path("/home/prajwal-k/Projects/osource/kplacenet/checkpoints/model/last.pt"),
+            "checkpoints/model/last.pt",
+        )
+        self.assertEqual(portable_path("/tmp/external/model.pt"), "model.pt")
+
     def test_parses_json_line_and_rejects_empty_or_missing_metrics(self):
         metrics = {"within_1km": 1.0, "within_25km": 10.0, "within_200km": 30.0,
                    "mean_km": 1000.0, "median_km": 900.0, "n": 5}
@@ -38,6 +72,14 @@ class SamplingEvaluationTests(unittest.TestCase):
             parse_eval_metrics("no metrics")
         with self.assertRaises(ValueError):
             parse_eval_metrics('[json]{"n": 0}')
+
+    def test_parses_and_validates_embedded_checkpoint_manifest_hash(self):
+        digest = "a" * 64
+        self.assertEqual(parse_checkpoint_manifest_hash("[run-manifest]" + digest), digest)
+        with self.assertRaisesRegex(ValueError, "invalid"):
+            parse_checkpoint_manifest_hash("[run-manifest]not-a-hash")
+        with self.assertRaisesRegex(ValueError, "did not include"):
+            parse_checkpoint_manifest_hash("no provenance")
 
     def test_reports_mode_means_and_seed_paired_deltas(self):
         report = summarize_runs([
@@ -117,6 +159,28 @@ class SamplingEvaluationTests(unittest.TestCase):
             )
             with self.assertRaisesRegex(ValueError, "hash mismatch"):
                 load_training_provenance(checkpoint)
+
+    def test_training_comparison_requires_paired_samples_and_shared_setup(self):
+        validate_training_comparison([
+            {"seed": 42, "sampling_mode": "uniform", "training": training(42, "uniform")},
+            {"seed": 42, "sampling_mode": "cell-balanced", "training": training(42, "cell-balanced")},
+            {"seed": 43, "sampling_mode": "uniform", "training": training(43, "uniform", "seed-43-samples")},
+            {"seed": 43, "sampling_mode": "cell-balanced", "training": training(43, "cell-balanced", "seed-43-samples")},
+        ])
+
+        bad_samples = [
+            {"seed": 42, "sampling_mode": "uniform", "training": training(42, "uniform")},
+            {"seed": 42, "sampling_mode": "cell-balanced", "training": training(42, "cell-balanced", "other-samples")},
+        ]
+        with self.assertRaisesRegex(ValueError, "different training samples"):
+            validate_training_comparison(bad_samples)
+
+        bad_cells = [
+            {"seed": 42, "sampling_mode": "uniform", "training": training(42, "uniform")},
+            {"seed": 42, "sampling_mode": "cell-balanced", "training": training(42, "cell-balanced", cell_hash="other-cells")},
+        ]
+        with self.assertRaisesRegex(ValueError, "same data, cells"):
+            validate_training_comparison(bad_cells)
 
 
 if __name__ == "__main__":

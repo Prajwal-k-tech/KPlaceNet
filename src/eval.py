@@ -119,6 +119,7 @@ def main() -> None:
     ckpt = torch.load(str(ckpt_path), map_location="cpu")
     num_cells, cells = validate_eval_checkpoint(ckpt)
     print(f"[eval] loaded checkpoint epoch={ckpt.get('epoch', '?')} loss={ckpt.get('loss', '?')}")
+    print(f"[run-manifest]{ckpt.get('run_manifest_sha256', '')}")
     if num_cells != args.num_cells:
         print(f"[eval] using checkpoint num_cells={num_cells} (CLI was {args.num_cells})")
 
