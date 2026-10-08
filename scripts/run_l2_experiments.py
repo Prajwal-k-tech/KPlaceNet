@@ -29,10 +29,13 @@ from __future__ import annotations
 
 import argparse
 import csv
+import hashlib
 import json
 import math
+import os
 import subprocess
 import sys
+import tempfile
 import time
 from pathlib import Path
 from typing import List
@@ -116,40 +119,121 @@ def subset_csv_path(full_csv: Path, fraction: float, seed: int) -> Path:
     return full_csv.parent / f"{stem}_sub{frac_str}_s{seed}.csv"
 
 
-def make_subset_csv(full_csv: Path, fraction: float, seed: int, num_cells: int) -> tuple[Path, int]:
+def _sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _cache_manifest_path(artifact: Path) -> Path:
+    return artifact.with_name(artifact.name + ".manifest.json")
+
+
+def _valid_generated_cache(
+    artifact: Path, expected: dict[str, object]
+) -> dict[str, object] | None:
+    """Return sidecar metadata only when its inputs and artifact hash match."""
+    sidecar = _cache_manifest_path(artifact)
+    if not artifact.is_file() or not sidecar.is_file():
+        return None
+    try:
+        metadata = json.loads(sidecar.read_text(encoding="utf-8"))
+        if any(metadata.get(key) != value for key, value in expected.items()):
+            return None
+        if metadata.get("artifact_sha256") != _sha256_file(artifact):
+            return None
+        return metadata
+    except (OSError, json.JSONDecodeError, TypeError):
+        return None
+
+
+def _write_cache_manifest(artifact: Path, metadata: dict[str, object]) -> None:
+    sidecar = _cache_manifest_path(artifact)
+    payload = {**metadata, "artifact_sha256": _sha256_file(artifact)}
+    with tempfile.NamedTemporaryFile(
+        "w", encoding="utf-8", dir=sidecar.parent, delete=False
+    ) as stream:
+        json.dump(payload, stream, indent=2)
+        temporary_path = Path(stream.name)
+    os.replace(temporary_path, sidecar)
+
+
+def make_subset_csv(
+    full_csv: Path,
+    fraction: float,
+    seed: int,
+    num_cells: int,
+    *,
+    source_csv_sha256: str | None = None,
+) -> tuple[Path, int]:
     """Create a deterministic seeded subset CSV from the full CSV.
 
     Returns (subset_csv_path, actual_num_rows).
-    The subset CSV includes image_path, lat, lon (header) only,
-    since cells are loaded from JSON and assigned by train.py.
+    The subset CSV preserves source columns so sample IDs and source metadata
+    remain available to training provenance. A sidecar validates cache reuse
+    against the source CSV hash, fraction, seed, and generated CSV hash.
     """
+    if not math.isfinite(fraction) or not 0.0 < fraction <= 1.0:
+        raise ValueError("fraction must be finite and in (0, 1]")
+    if isinstance(seed, bool) or not isinstance(seed, int) or seed < 0:
+        raise ValueError("seed must be a non-negative integer")
     import numpy as np
 
     out_path = subset_csv_path(full_csv, fraction, seed)
-    if out_path.exists():
-        # Count rows to report
-        with open(out_path, newline="", encoding="utf-8") as f:
-            reader = csv.reader(f)
-            next(reader, None)  # skip header
-            n = sum(1 for _ in reader)
-        print(f"  subset CSV exists: {out_path} ({n} rows)")
-        return out_path, n
+    expected = {
+        "format_version": 1,
+        "source_csv_sha256": source_csv_sha256 or _sha256_file(full_csv),
+        "fraction": fraction,
+        "seed": seed,
+        "sampling_algorithm": "numpy.RandomState.choice(sorted_indices)",
+    }
+    cached = _valid_generated_cache(out_path, expected)
+    if cached is not None:
+        cached_count = cached.get("row_count")
+        if (
+            isinstance(cached_count, int)
+            and not isinstance(cached_count, bool)
+            and cached_count > 0
+            and count_csv_rows(out_path) == cached_count
+        ):
+            print(f"  verified subset cache: {out_path} ({cached_count} rows)")
+            return out_path, cached_count
 
     with open(full_csv, newline="", encoding="utf-8") as f:
         reader = csv.DictReader(f)
+        fieldnames = reader.fieldnames
+        if not fieldnames or not {"image_path", "lat", "lon"}.issubset(fieldnames):
+            raise ValueError("source CSV must contain image_path, lat, and lon columns")
         rows = list(reader)
+    if not rows:
+        raise ValueError("source CSV must contain at least one data row")
 
     rng = np.random.RandomState(seed)
     n_keep = max(1, int(len(rows) * fraction))
     indices = rng.choice(len(rows), size=n_keep, replace=False)
-    selected = [rows[i] for i in sorted(indices)]
+    selected_indices = sorted(int(i) for i in indices)
+    selected = [rows[i] for i in selected_indices]
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    with open(out_path, "w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=["image_path", "lat", "lon"])
+    with tempfile.NamedTemporaryFile(
+        "w", newline="", encoding="utf-8", dir=out_path.parent, delete=False
+    ) as stream:
+        writer = csv.DictWriter(stream, fieldnames=fieldnames)
         writer.writeheader()
-        for row in selected:
-            writer.writerow({"image_path": row["image_path"], "lat": row["lat"], "lon": row["lon"]})
+        writer.writerows(selected)
+        temporary_path = Path(stream.name)
+    os.replace(temporary_path, out_path)
+    _write_cache_manifest(
+        out_path,
+        {
+            **expected,
+            "source_row_count": len(rows),
+            "row_count": n_keep,
+            "selected_source_indices": selected_indices,
+        },
+    )
 
     print(f"  subset CSV created: {out_path} ({len(selected)} rows)")
     return out_path, len(selected)
@@ -162,10 +246,23 @@ def count_csv_rows(path: Path) -> int:
         return sum(1 for _ in reader)
 
 
-def build_cells_from_csv(csv_path: Path, num_cells: int, cells_json_path: Path, seed: int) -> None:
-    """Build cells from full CSV and save to JSON (done once)."""
-    if cells_json_path.exists():
-        print(f"  cells JSON exists: {cells_json_path}")
+def build_cells_from_csv(
+    csv_path: Path,
+    num_cells: int,
+    cells_json_path: Path,
+    seed: int,
+    *,
+    source_csv_sha256: str | None = None,
+) -> None:
+    """Build or reuse cells only when their source CSV and settings match."""
+    expected = {
+        "format_version": 1,
+        "source_csv_sha256": source_csv_sha256 or _sha256_file(csv_path),
+        "requested_num_cells": num_cells,
+        "algorithm": "quad_tree",
+    }
+    if _valid_generated_cache(cells_json_path, expected) is not None:
+        print(f"  verified cells cache: {cells_json_path}")
         return
 
     print(f"  building cells from {csv_path} ...")
@@ -182,6 +279,7 @@ def build_cells_from_csv(csv_path: Path, num_cells: int, cells_json_path: Path, 
 
     cells = build_cells(coords_np, K=num_cells, method="quad_tree")
     save_cells_json(cells, cells_json_path)
+    _write_cache_manifest(cells_json_path, expected)
     print(f"  effective cells: {len(cells)}")
 
 
@@ -250,6 +348,7 @@ def main() -> None:
         sys.exit(1)
 
     num_full_rows = count_csv_rows(full_csv)
+    full_csv_sha256 = None if plan_only else _sha256_file(full_csv)
     # The effective num_cells will be determined by build_cells; use --num-cells as target
     target_num_cells = 300
 
@@ -264,7 +363,13 @@ def main() -> None:
         else:
             print(f"  Cells JSON exists: {cells_json_path}")
     else:
-        build_cells_from_csv(full_csv, target_num_cells, cells_json_path, args.seed)
+        build_cells_from_csv(
+            full_csv,
+            target_num_cells,
+            cells_json_path,
+            args.seed,
+            source_csv_sha256=full_csv_sha256,
+        )
         # Read back actual num_cells
         with open(cells_json_path, encoding="utf-8") as f:
             data = json.load(f)
@@ -277,10 +382,16 @@ def main() -> None:
             sp = subset_csv_path(full_csv, frac, run_seed)
             n_expected = max(1, int(num_full_rows * frac))
             if plan_only:
-                exists_tag = " [exists]" if sp.exists() else ""
+                exists_tag = " [cache present; verified on run]" if sp.exists() else ""
                 print(f"  seed {run_seed} fraction {frac:.2f}: {n_expected} rows -> {sp}{exists_tag}")
             else:
-                _, n_actual = make_subset_csv(full_csv, frac, run_seed, target_num_cells)
+                _, n_actual = make_subset_csv(
+                    full_csv,
+                    frac,
+                    run_seed,
+                    target_num_cells,
+                    source_csv_sha256=full_csv_sha256,
+                )
 
     # --- Step 3: Build run commands ---
     print(f"\n[3/3] Experiment matrix ({len(seeds)} seeds x {len(args.inits)} inits x {len(args.fractions)} fractions x {len(args.regimes)} regimes x {len(args.sampling_modes)} sampling modes)")

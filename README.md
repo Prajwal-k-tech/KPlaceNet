@@ -137,6 +137,12 @@ python scripts/run_l2_experiments.py --run --epochs 10
 python scripts/run_l2_experiments.py --run --fractions 0.01 0.10 --inits imagenet places365 --regimes frozen layer4 --skip-existing
 ```
 
+The runner writes a `.manifest.json` sidecar for generated subset CSVs and cell
+definitions. It reuses these artifacts only when the source CSV hash, settings,
+and generated-file hash still match; otherwise it regenerates them. Fraction
+CSVs preserve source columns so training provenance can identify the selected
+examples.
+
 ### L2 Checkpoint Structure
 
 Each run saves to `checkpoints/l2_<init>_<fraction>_<regime>/`:

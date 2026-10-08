@@ -55,11 +55,15 @@ It records the source CSV hash, selected row positions and opaque sample IDs,
 cell-definition hash, initialization source (and Places365 checkpoint hash),
 seed, training arguments, and runtime versions. The checkpoint and metrics
 record the manifest hash for cross-artifact verification.
+The L2 runner validates generated fraction-CSV and cell-definition caches
+against the source CSV hash, settings, and artifact hash before reusing them;
+stale or modified caches are regenerated. Fraction CSVs retain source columns.
 
 ## Validation and limitations
 
 - Full `python -m unittest discover -s tests -v` in an isolated Python 3.12
-  CPU environment: all 45 tests passed, including the synthetic pipeline test.
+  CPU environment: all 48 tests passed, including the synthetic pipeline and
+  stale-cache tests.
 - The synthetic integration test generated 8 training and 4 evaluation images,
   trained one CPU epoch with random initialization, loaded the saved checkpoint,
   and emitted valid evaluator JSON for all 4 held-out synthetic images. Its
@@ -69,8 +73,8 @@ record the manifest hash for cross-artifact verification.
 - The isolated test environment used CPU PyTorch 2.14.1 and torchvision 0.29.1;
   its temporary training artifacts were removed automatically. No dataset or
   pretrained weights were downloaded.
-- GitHub Actions passed on commit `4f0de05`: [run 37735120091](https://github.com/Prajwal-k-tech/KPlaceNet/actions/runs/37735120091), including both the standard-library and CPU model-test jobs.
-- The training-provenance change passed on commit `a692d88`: [run 37746197271](https://github.com/Prajwal-k-tech/KPlaceNet/actions/runs/37746197271), including both workflow jobs.
+- GitHub Actions passed on commit `a692d88`: [run 37746197271](https://github.com/Prajwal-k-tech/KPlaceNet/actions/runs/37746197271), including both the standard-library and CPU model-test jobs.
+- The L2 cache-integrity changes are being tested locally and in Actions; their run result will be recorded after the workflow completes.
 - No real-data evaluation was run. `data/` contains no required OSV-5M test
   subset or evaluation images, and the repository contains no trained checkpoint.
   No real-data accuracy, calibration, or regional result is claimed.

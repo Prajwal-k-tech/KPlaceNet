@@ -2,11 +2,19 @@
 
 from __future__ import annotations
 
+import csv
+import importlib.util
+import json
+import tempfile
 import unittest
 from argparse import Namespace
 from pathlib import Path
 
-from scripts.run_l2_experiments import checkpoint_dir_name, make_train_cmd
+from scripts.run_l2_experiments import (
+    checkpoint_dir_name,
+    make_subset_csv,
+    make_train_cmd,
+)
 
 
 class SamplingRunnerTests(unittest.TestCase):
@@ -30,6 +38,111 @@ class SamplingRunnerTests(unittest.TestCase):
     def test_non_default_seed_gets_an_isolated_checkpoint_directory(self):
         name = checkpoint_dir_name("imagenet", 1.0, "frozen", "cell-balanced", 43)
         self.assertEqual(name, "l2_imagenet_1.0_frozen_s43_cell-balanced")
+
+    def test_subset_generation_rejects_invalid_fraction(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            source = Path(temporary) / "train.csv"
+            with self.assertRaises(ValueError):
+                make_subset_csv(source, 0.0, 42, 2)
+
+    @unittest.skipUnless(importlib.util.find_spec("numpy"), "requires NumPy")
+    def test_subset_cache_tracks_source_and_preserves_source_columns(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            source = Path(temporary) / "train.csv"
+
+            def write_source(revision: str) -> None:
+                with source.open("w", newline="", encoding="utf-8") as stream:
+                    writer = csv.DictWriter(
+                        stream, fieldnames=["image_path", "lat", "lon", "id", "region"]
+                    )
+                    writer.writeheader()
+                    for index in range(10):
+                        writer.writerow({
+                            "image_path": f"images/{index}.jpg",
+                            "lat": index,
+                            "lon": index + 1,
+                            "id": f"{revision}-{index}",
+                            "region": revision,
+                        })
+
+            write_source("first")
+            subset, count = make_subset_csv(source, 0.5, 42, 2)
+            self.assertEqual(count, 5)
+            with subset.open(newline="", encoding="utf-8") as stream:
+                first_rows = list(csv.DictReader(stream))
+            self.assertEqual(len(first_rows), 5)
+            self.assertEqual(first_rows[0]["region"], "first")
+            first_manifest = json.loads(
+                Path(str(subset) + ".manifest.json").read_text(encoding="utf-8")
+            )
+
+            # Same inputs reuse a validated artifact.
+            self.assertEqual(make_subset_csv(source, 0.5, 42, 2), (subset, 5))
+
+            # A changed source invalidates and regenerates the cached subset.
+            write_source("second")
+            self.assertEqual(make_subset_csv(source, 0.5, 42, 2), (subset, 5))
+            with subset.open(newline="", encoding="utf-8") as stream:
+                second_rows = list(csv.DictReader(stream))
+            second_manifest = json.loads(
+                Path(str(subset) + ".manifest.json").read_text(encoding="utf-8")
+            )
+            self.assertNotEqual(
+                first_manifest["source_csv_sha256"],
+                second_manifest["source_csv_sha256"],
+            )
+            self.assertTrue(all(row["region"] == "second" for row in second_rows))
+
+            # A modified generated file is also detected and rebuilt.
+            subset.write_text("corrupt cache\n", encoding="utf-8")
+            self.assertEqual(make_subset_csv(source, 0.5, 42, 2), (subset, 5))
+            with subset.open(newline="", encoding="utf-8") as stream:
+                self.assertEqual(len(list(csv.DictReader(stream))), 5)
+
+    @unittest.skipUnless(
+        all(importlib.util.find_spec(module) for module in ("torch", "torchvision", "numpy")),
+        "requires the CPU model-test dependencies",
+    )
+    def test_cells_cache_rebuilds_when_source_changes(self):
+        from scripts.run_l2_experiments import build_cells_from_csv
+
+        with tempfile.TemporaryDirectory() as temporary:
+            source = Path(temporary) / "train.csv"
+            cells_path = Path(temporary) / "cells.json"
+
+            def write_source(offset: float) -> None:
+                with source.open("w", newline="", encoding="utf-8") as stream:
+                    writer = csv.DictWriter(stream, fieldnames=["image_path", "lat", "lon"])
+                    writer.writeheader()
+                    for index, (lat, lon) in enumerate(((-40, -100), (-20, -80), (20, 80), (40, 100))):
+                        writer.writerow({
+                            "image_path": f"{index}.jpg",
+                            "lat": lat + offset,
+                            "lon": lon + offset,
+                        })
+
+            write_source(0.0)
+            build_cells_from_csv(source, 2, cells_path, 42)
+            first_manifest = json.loads(
+                Path(str(cells_path) + ".manifest.json").read_text(encoding="utf-8")
+            )
+            first_artifact = cells_path.read_bytes()
+
+            # Unchanged inputs validate and reuse the same cell artifact.
+            build_cells_from_csv(source, 2, cells_path, 42)
+            self.assertEqual(cells_path.read_bytes(), first_artifact)
+
+            # Changed source coordinates invalidate and rebuild the partition.
+            write_source(5.0)
+            build_cells_from_csv(source, 2, cells_path, 42)
+            second_manifest = json.loads(
+                Path(str(cells_path) + ".manifest.json").read_text(encoding="utf-8")
+            )
+            self.assertNotEqual(
+                first_manifest["source_csv_sha256"],
+                second_manifest["source_csv_sha256"],
+            )
+            self.assertNotEqual(cells_path.read_bytes(), first_artifact)
 
 
 if __name__ == "__main__":
