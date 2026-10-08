@@ -146,7 +146,11 @@ def compare_reports(smaller: dict[str, Any], larger: dict[str, Any], root: Path 
             key: {"mean": statistics.mean(values), "sample_sd": statistics.stdev(values) if len(values) > 1 else 0.0}
             for key, values in deltas.items()
         },
-        "interpretation": "Descriptive paired results only; three seeds do not establish statistical significance or generalization beyond the evaluated subset.",
+        "interpretation": (
+            "Exploratory paired results: the data-scale question followed inspection of an earlier test sample. "
+            "This sample is ID-disjoint but comes from the same official OSV-5M test split; three seeds do not "
+            "establish statistical significance or generalization beyond these rows."
+        ),
     }
 
 

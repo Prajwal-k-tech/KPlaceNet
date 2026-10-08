@@ -1,0 +1,5631 @@
+{
+  "schema_version": 1,
+  "comparison": {
+    "init": "imagenet",
+    "fraction": 1.0,
+    "regime": "layer4",
+    "modes": [
+      "uniform",
+      "cell-balanced"
+    ],
+    "seeds": [
+      42,
+      43,
+      44
+    ],
+    "checkpoint_policy": "last.pt from the final configured epoch; no test-set selection"
+  },
+  "evaluation": {
+    "batch_size": 32,
+    "image_size": 224,
+    "num_workers": 4,
+    "device": "cuda",
+    "region_lat_bands": 6,
+    "region_lon_bands": 12,
+    "region_min_count": 20
+  },
+  "evaluation_csv": "data/osv5m_test/metadata.csv",
+  "evaluation_csv_sha256": "d0ae3837e459d3171fbee3e2882e0c2c7634f6ffd5f7442d11274b80c5ec69ac",
+  "evaluator_revision": "721bb0f78d198a02ef557f5e1e2b2db1e7f75a32",
+  "evaluator_working_tree_dirty": false,
+  "training_code_sha256": {
+    "train": "54eb48f96d537e14d3fad1aa2a85a9a253030c1dce71240655239799f9f16f4b",
+    "model": "32efc71dcfbc0d58a67b8424519e651e8ff87024b8f8536f20204f2f7c9cefa5",
+    "dataset": "36780e0c96eead339dd66c5f2d59222a0fe271dee9b92dc591f84ba81a4ba5f1",
+    "cells": "ed0f9b12ef45503227084566bec55a1adce1fa849ee8ec5ac64483619c2085f3",
+    "reproducibility": "892022d40540af8ccab92315827bb651cc416e6b49168ab9408a74526bc84e8d",
+    "l2_runner": "8d88b270c74510eb5523fdb460ee4696757a5fa3dc1ee76551e650e021ec8d12"
+  },
+  "runtime": {
+    "python": "3.12.14",
+    "torch": "2.14.1+cu130",
+    "torchvision": "0.29.1+cu130",
+    "numpy": "2.5.2",
+    "cuda_device_name": "NVIDIA GeForce RTX 3050 6GB Laptop GPU"
+  },
+  "runs": [
+    {
+      "seed": 42,
+      "sampling_mode": "uniform",
+      "checkpoint": "checkpoints/l2_imagenet_1.0_layer4/last.pt",
+      "checkpoint_sha256": "4f8a8a8e0ed3e30cb44cc4ea042d859d168331a7c0bd062dabe155c944171154",
+      "training": {
+        "manifest_path": "checkpoints/l2_imagenet_1.0_layer4/run_manifest.json",
+        "manifest_file_sha256": "c60bca154f6652de29f975fcb96f05cba42612a3349aee34a09e446d5f3f8cb0",
+        "manifest_sha256": "9362dc48179ce9578524df334d858d14b5dd87a7c779294c0b46ccf6585a2ffb",
+        "training_csv_sha256": "dd0d70ffc916aece79602ed9e623905e5e8a81dc2002d1a7b47e894c0d6617be",
+        "training_dataset_sample_count": 10000,
+        "selected_sample_count": 10000,
+        "selected_sample_ids_sha256": "38345beb9d54a1abdb04d58bc44835fef0251420be05206671b5dc79599dd6e5",
+        "cells_sha256": "e291ad6a6f589cb9fd0cca1255fcb33a49a247f5991249c21e7f965f089d9552",
+        "cell_count": 300,
+        "seed": 42,
+        "config": {
+          "csv": "data/osv5m_subset_10k/metadata_sub1p0_s42.csv",
+          "num_cells": 300,
+          "epochs": 10,
+          "batch_size": 16,
+          "image_size": 224,
+          "lr": 0.001,
+          "weight_decay": 0.0001,
+          "pretrained": true,
+          "freeze_backbone": true,
+          "unfreeze_last_block": true,
+          "amp": true,
+          "num_workers": 4,
+          "checkpoint_dir": "checkpoints/l2_imagenet_1.0_layer4",
+          "seed": 42,
+          "sampling_mode": "uniform",
+          "sampling_power": 1.0,
+          "device": "cuda",
+          "cells_json": "checkpoints/l2_cells_full.json",
+          "save_cells": null,
+          "max_samples": 10000,
+          "places365_checkpoint": null,
+          "run_tag": "l2_imagenet_1.0_layer4"
+        },
+        "initialization": {
+          "kind": "torchvision_imagenet",
+          "architecture": "resnet50",
+          "weights": "IMAGENET1K_V2"
+        },
+        "software": {
+          "python": "3.12.14",
+          "torch": "2.14.1+cu130",
+          "torchvision": "0.29.1+cu130"
+        }
+      },
+      "training_metrics": {
+        "path": "checkpoints/l2_imagenet_1.0_layer4/metrics_l2_imagenet_1.0_layer4.json",
+        "sha256": "650268a6316ddbd41a97e7f4da4461c25e63e5037a7c08a82c84e2931ccdd865",
+        "final_epoch": 10,
+        "final_training_loss": 0.16504163086414336,
+        "final_training_cell_accuracy_pct": 96.52,
+        "final_epoch_elapsed_sec": 57.98755884170532,
+        "run_elapsed_sec": 461.27512979507446
+      },
+      "metrics": {
+        "within_1km": 0.0,
+        "within_25km": 0.2,
+        "within_200km": 3.266666666666666,
+        "mean_km": 5757.691175187275,
+        "median_km": 4424.151647242712,
+        "regional_distance": {
+          "grid": {
+            "method": "equal_area_latitude_bands_x_uniform_longitude_bands",
+            "latitude_bands": 6,
+            "longitude_bands": 12,
+            "minimum_count_for_metrics": 20
+          },
+          "regions": {
+            "lat00_lon03": {
+              "n": 13,
+              "metrics": null
+            },
+            "lat00_lon04": {
+              "n": 2,
+              "metrics": null
+            },
+            "lat00_lon10": {
+              "n": 8,
+              "metrics": null
+            },
+            "lat00_lon11": {
+              "n": 11,
+              "metrics": null
+            },
+            "lat01_lon03": {
+              "n": 80,
+              "metrics": {
+                "mean_km": 9874.196054869306,
+                "median_km": 9599.060330805925,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 3.75
+              }
+            },
+            "lat01_lon04": {
+              "n": 79,
+              "metrics": {
+                "mean_km": 7773.293224059366,
+                "median_km": 8512.307593534415,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 1.2658227848101267
+              }
+            },
+            "lat01_lon06": {
+              "n": 41,
+              "metrics": {
+                "mean_km": 10274.556951944598,
+                "median_km": 10847.31892703981,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat01_lon07": {
+              "n": 40,
+              "metrics": {
+                "mean_km": 10776.491564228596,
+                "median_km": 9847.423280397346,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat01_lon09": {
+              "n": 15,
+              "metrics": null
+            },
+            "lat01_lon10": {
+              "n": 87,
+              "metrics": {
+                "mean_km": 6198.014042612134,
+                "median_km": 1966.6580742329065,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 2.2988505747126435
+              }
+            },
+            "lat01_lon11": {
+              "n": 34,
+              "metrics": {
+                "mean_km": 9393.299140501116,
+                "median_km": 9213.262599012058,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 5.882352941176471
+              }
+            },
+            "lat02_lon00": {
+              "n": 4,
+              "metrics": null
+            },
+            "lat02_lon02": {
+              "n": 1,
+              "metrics": null
+            },
+            "lat02_lon03": {
+              "n": 59,
+              "metrics": {
+                "mean_km": 9829.438690110474,
+                "median_km": 9711.799912083987,
+                "within_1km": 0.0,
+                "within_25km": 1.694915254237288,
+                "within_200km": 3.389830508474576
+              }
+            },
+            "lat02_lon04": {
+              "n": 90,
+              "metrics": {
+                "mean_km": 8135.0069065189755,
+                "median_km": 8077.2712713860565,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 2.2222222222222223
+              }
+            },
+            "lat02_lon06": {
+              "n": 97,
+              "metrics": {
+                "mean_km": 5673.356867632709,
+                "median_km": 4510.865761908201,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat02_lon07": {
+              "n": 73,
+              "metrics": {
+                "mean_km": 7487.057911330061,
+                "median_km": 7120.918375817891,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat02_lon09": {
+              "n": 20,
+              "metrics": {
+                "mean_km": 7531.338390738577,
+                "median_km": 5489.00399851959,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat02_lon10": {
+              "n": 40,
+              "metrics": {
+                "mean_km": 8230.52579436972,
+                "median_km": 6069.255985990461,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat02_lon11": {
+              "n": 25,
+              "metrics": {
+                "mean_km": 9769.267499172222,
+                "median_km": 8640.749079293331,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat03_lon00": {
+              "n": 4,
+              "metrics": null
+            },
+            "lat03_lon02": {
+              "n": 21,
+              "metrics": {
+                "mean_km": 9419.487642031763,
+                "median_km": 9732.993394610678,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat03_lon03": {
+              "n": 70,
+              "metrics": {
+                "mean_km": 7604.571110809154,
+                "median_km": 6093.2656610991135,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 5.714285714285714
+              }
+            },
+            "lat03_lon04": {
+              "n": 3,
+              "metrics": null
+            },
+            "lat03_lon05": {
+              "n": 68,
+              "metrics": {
+                "mean_km": 4017.3280127045273,
+                "median_km": 2365.320005948488,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 1.4705882352941178
+              }
+            },
+            "lat03_lon06": {
+              "n": 91,
+              "metrics": {
+                "mean_km": 5236.29309873916,
+                "median_km": 3827.810203457842,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat03_lon07": {
+              "n": 48,
+              "metrics": {
+                "mean_km": 5864.611989567984,
+                "median_km": 4853.511695529614,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat03_lon08": {
+              "n": 49,
+              "metrics": {
+                "mean_km": 4946.243230762149,
+                "median_km": 3518.087940515514,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat03_lon09": {
+              "n": 79,
+              "metrics": {
+                "mean_km": 7121.160074838365,
+                "median_km": 7368.422759602041,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 2.5316455696202533
+              }
+            },
+            "lat03_lon10": {
+              "n": 28,
+              "metrics": {
+                "mean_km": 10134.873646505675,
+                "median_km": 10779.681359610915,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat03_lon11": {
+              "n": 4,
+              "metrics": null
+            },
+            "lat04_lon00": {
+              "n": 2,
+              "metrics": null
+            },
+            "lat04_lon01": {
+              "n": 7,
+              "metrics": null
+            },
+            "lat04_lon02": {
+              "n": 202,
+              "metrics": {
+                "mean_km": 3299.851009342839,
+                "median_km": 1610.04344776701,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 1.9801980198019802
+              }
+            },
+            "lat04_lon03": {
+              "n": 101,
+              "metrics": {
+                "mean_km": 4067.810803290459,
+                "median_km": 1321.8977961041683,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 9.900990099009901
+              }
+            },
+            "lat04_lon05": {
+              "n": 49,
+              "metrics": {
+                "mean_km": 5822.209380635298,
+                "median_km": 3681.15685963548,
+                "within_1km": 0.0,
+                "within_25km": 2.0408163265306123,
+                "within_200km": 2.0408163265306123
+              }
+            },
+            "lat04_lon06": {
+              "n": 60,
+              "metrics": {
+                "mean_km": 4951.602291341428,
+                "median_km": 2835.0434454982314,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 1.6666666666666667
+              }
+            },
+            "lat04_lon07": {
+              "n": 158,
+              "metrics": {
+                "mean_km": 4579.879214257193,
+                "median_km": 3262.1452074891304,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 2.5316455696202533
+              }
+            },
+            "lat04_lon08": {
+              "n": 123,
+              "metrics": {
+                "mean_km": 5324.833614359792,
+                "median_km": 3588.5919160705653,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 7.317073170731708
+              }
+            },
+            "lat04_lon09": {
+              "n": 66,
+              "metrics": {
+                "mean_km": 6313.877797766501,
+                "median_km": 6289.342792590758,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 4.545454545454546
+              }
+            },
+            "lat04_lon10": {
+              "n": 41,
+              "metrics": {
+                "mean_km": 5616.156973887959,
+                "median_km": 5786.258337532141,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 7.317073170731708
+              }
+            },
+            "lat05_lon00": {
+              "n": 1,
+              "metrics": null
+            },
+            "lat05_lon01": {
+              "n": 67,
+              "metrics": {
+                "mean_km": 4084.2971582297514,
+                "median_km": 3293.6553872827535,
+                "within_1km": 0.0,
+                "within_25km": 1.492537313432836,
+                "within_200km": 4.477611940298507
+              }
+            },
+            "lat05_lon02": {
+              "n": 123,
+              "metrics": {
+                "mean_km": 3335.663308361947,
+                "median_km": 1552.0031262926009,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.8130081300813008
+              }
+            },
+            "lat05_lon03": {
+              "n": 73,
+              "metrics": {
+                "mean_km": 3155.9511663770095,
+                "median_km": 1828.3732264714517,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 8.219178082191782
+              }
+            },
+            "lat05_lon04": {
+              "n": 5,
+              "metrics": null
+            },
+            "lat05_lon05": {
+              "n": 69,
+              "metrics": {
+                "mean_km": 2788.117819797796,
+                "median_km": 1218.3503919158152,
+                "within_1km": 0.0,
+                "within_25km": 1.4492753623188406,
+                "within_200km": 5.797101449275362
+              }
+            },
+            "lat05_lon06": {
+              "n": 269,
+              "metrics": {
+                "mean_km": 3345.8746566686045,
+                "median_km": 1318.2002549455656,
+                "within_1km": 0.0,
+                "within_25km": 0.37174721189591076,
+                "within_200km": 9.66542750929368
+              }
+            },
+            "lat05_lon07": {
+              "n": 148,
+              "metrics": {
+                "mean_km": 4434.146798006181,
+                "median_km": 2760.9342563783566,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 2.027027027027027
+              }
+            },
+            "lat05_lon08": {
+              "n": 88,
+              "metrics": {
+                "mean_km": 6800.354811885307,
+                "median_km": 5976.735849694106,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat05_lon09": {
+              "n": 19,
+              "metrics": null
+            },
+            "lat05_lon10": {
+              "n": 45,
+              "metrics": {
+                "mean_km": 8189.096096772308,
+                "median_km": 8240.120512783968,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            }
+          },
+          "limitations": "Descriptive geographic strata only; they do not provide conditional or regional accuracy guarantees and do not account for spatial dependence."
+        },
+        "n": 3000
+      }
+    },
+    {
+      "seed": 42,
+      "sampling_mode": "cell-balanced",
+      "checkpoint": "checkpoints/l2_imagenet_1.0_layer4_cell-balanced/last.pt",
+      "checkpoint_sha256": "d781b15bcc7d47b9910a6a0b193796c75aeebbde05f35b3f20d68447f597a399",
+      "training": {
+        "manifest_path": "checkpoints/l2_imagenet_1.0_layer4_cell-balanced/run_manifest.json",
+        "manifest_file_sha256": "d64bfd0fbd74448e1f31e17392a5a09c416748d76422dd9b6b3e2d82fe2b1a55",
+        "manifest_sha256": "9ad2142dbfad2f56671630120506545add94a49dad533d2490209323231f8afb",
+        "training_csv_sha256": "dd0d70ffc916aece79602ed9e623905e5e8a81dc2002d1a7b47e894c0d6617be",
+        "training_dataset_sample_count": 10000,
+        "selected_sample_count": 10000,
+        "selected_sample_ids_sha256": "38345beb9d54a1abdb04d58bc44835fef0251420be05206671b5dc79599dd6e5",
+        "cells_sha256": "e291ad6a6f589cb9fd0cca1255fcb33a49a247f5991249c21e7f965f089d9552",
+        "cell_count": 300,
+        "seed": 42,
+        "config": {
+          "csv": "data/osv5m_subset_10k/metadata_sub1p0_s42.csv",
+          "num_cells": 300,
+          "epochs": 10,
+          "batch_size": 16,
+          "image_size": 224,
+          "lr": 0.001,
+          "weight_decay": 0.0001,
+          "pretrained": true,
+          "freeze_backbone": true,
+          "unfreeze_last_block": true,
+          "amp": true,
+          "num_workers": 4,
+          "checkpoint_dir": "checkpoints/l2_imagenet_1.0_layer4_cell-balanced",
+          "seed": 42,
+          "sampling_mode": "cell-balanced",
+          "sampling_power": 1.0,
+          "device": "cuda",
+          "cells_json": "checkpoints/l2_cells_full.json",
+          "save_cells": null,
+          "max_samples": 10000,
+          "places365_checkpoint": null,
+          "run_tag": "l2_imagenet_1.0_layer4_cell-balanced"
+        },
+        "initialization": {
+          "kind": "torchvision_imagenet",
+          "architecture": "resnet50",
+          "weights": "IMAGENET1K_V2"
+        },
+        "software": {
+          "python": "3.12.14",
+          "torch": "2.14.1+cu130",
+          "torchvision": "0.29.1+cu130"
+        }
+      },
+      "training_metrics": {
+        "path": "checkpoints/l2_imagenet_1.0_layer4_cell-balanced/metrics_l2_imagenet_1.0_layer4_cell-balanced.json",
+        "sha256": "c00d153a4f3409d1d0cfa24d44064eaab2bbcd95d523881661fb9878ed84422c",
+        "final_epoch": 10,
+        "final_training_loss": 0.27025576527118683,
+        "final_training_cell_accuracy_pct": 93.49,
+        "final_epoch_elapsed_sec": 58.74128007888794,
+        "run_elapsed_sec": 642.3309435844421
+      },
+      "metrics": {
+        "within_1km": 0.0,
+        "within_25km": 0.13333333333333333,
+        "within_200km": 3.266666666666666,
+        "mean_km": 6001.014426722885,
+        "median_km": 5075.153871222793,
+        "regional_distance": {
+          "grid": {
+            "method": "equal_area_latitude_bands_x_uniform_longitude_bands",
+            "latitude_bands": 6,
+            "longitude_bands": 12,
+            "minimum_count_for_metrics": 20
+          },
+          "regions": {
+            "lat00_lon03": {
+              "n": 13,
+              "metrics": null
+            },
+            "lat00_lon04": {
+              "n": 2,
+              "metrics": null
+            },
+            "lat00_lon10": {
+              "n": 8,
+              "metrics": null
+            },
+            "lat00_lon11": {
+              "n": 11,
+              "metrics": null
+            },
+            "lat01_lon03": {
+              "n": 80,
+              "metrics": {
+                "mean_km": 9401.167902121506,
+                "median_km": 9587.14638819488,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 3.75
+              }
+            },
+            "lat01_lon04": {
+              "n": 79,
+              "metrics": {
+                "mean_km": 8233.744423808655,
+                "median_km": 9539.01084864024,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 1.2658227848101267
+              }
+            },
+            "lat01_lon06": {
+              "n": 41,
+              "metrics": {
+                "mean_km": 11450.622587951215,
+                "median_km": 14258.675762071178,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 2.4390243902439024
+              }
+            },
+            "lat01_lon07": {
+              "n": 40,
+              "metrics": {
+                "mean_km": 9549.654246082899,
+                "median_km": 8824.917794047018,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat01_lon09": {
+              "n": 15,
+              "metrics": null
+            },
+            "lat01_lon10": {
+              "n": 87,
+              "metrics": {
+                "mean_km": 5285.4564214293505,
+                "median_km": 1966.6580742329065,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 3.4482758620689653
+              }
+            },
+            "lat01_lon11": {
+              "n": 34,
+              "metrics": {
+                "mean_km": 9682.92148144729,
+                "median_km": 11521.533224189374,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 5.882352941176471
+              }
+            },
+            "lat02_lon00": {
+              "n": 4,
+              "metrics": null
+            },
+            "lat02_lon02": {
+              "n": 1,
+              "metrics": null
+            },
+            "lat02_lon03": {
+              "n": 59,
+              "metrics": {
+                "mean_km": 8655.790953447151,
+                "median_km": 9013.421135988254,
+                "within_1km": 0.0,
+                "within_25km": 1.694915254237288,
+                "within_200km": 8.474576271186441
+              }
+            },
+            "lat02_lon04": {
+              "n": 90,
+              "metrics": {
+                "mean_km": 7575.807487631792,
+                "median_km": 7973.7011709314265,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 1.1111111111111112
+              }
+            },
+            "lat02_lon06": {
+              "n": 97,
+              "metrics": {
+                "mean_km": 7136.819824897999,
+                "median_km": 6355.540413390462,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat02_lon07": {
+              "n": 73,
+              "metrics": {
+                "mean_km": 8222.687245280355,
+                "median_km": 8010.210862659295,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat02_lon09": {
+              "n": 20,
+              "metrics": {
+                "mean_km": 7120.443273111657,
+                "median_km": 3444.801118858987,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat02_lon10": {
+              "n": 40,
+              "metrics": {
+                "mean_km": 8771.197511881554,
+                "median_km": 10297.238074035287,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat02_lon11": {
+              "n": 25,
+              "metrics": {
+                "mean_km": 8447.078519309947,
+                "median_km": 7240.793402629025,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat03_lon00": {
+              "n": 4,
+              "metrics": null
+            },
+            "lat03_lon02": {
+              "n": 21,
+              "metrics": {
+                "mean_km": 9550.881201871729,
+                "median_km": 11713.963550285287,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat03_lon03": {
+              "n": 70,
+              "metrics": {
+                "mean_km": 7227.550807131202,
+                "median_km": 5374.477889003053,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 7.142857142857143
+              }
+            },
+            "lat03_lon04": {
+              "n": 3,
+              "metrics": null
+            },
+            "lat03_lon05": {
+              "n": 68,
+              "metrics": {
+                "mean_km": 5151.3413962451705,
+                "median_km": 3618.1466629104893,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat03_lon06": {
+              "n": 91,
+              "metrics": {
+                "mean_km": 4637.216352350427,
+                "median_km": 4026.2392068511076,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 1.098901098901099
+              }
+            },
+            "lat03_lon07": {
+              "n": 48,
+              "metrics": {
+                "mean_km": 6192.1491558683,
+                "median_km": 4913.17228069613,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 2.0833333333333335
+              }
+            },
+            "lat03_lon08": {
+              "n": 49,
+              "metrics": {
+                "mean_km": 7399.647415509207,
+                "median_km": 6517.826686106209,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat03_lon09": {
+              "n": 79,
+              "metrics": {
+                "mean_km": 8145.566870866467,
+                "median_km": 9163.783863149372,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 1.2658227848101267
+              }
+            },
+            "lat03_lon10": {
+              "n": 28,
+              "metrics": {
+                "mean_km": 8797.727307652507,
+                "median_km": 9231.106603666423,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat03_lon11": {
+              "n": 4,
+              "metrics": null
+            },
+            "lat04_lon00": {
+              "n": 2,
+              "metrics": null
+            },
+            "lat04_lon01": {
+              "n": 7,
+              "metrics": null
+            },
+            "lat04_lon02": {
+              "n": 202,
+              "metrics": {
+                "mean_km": 3012.288222532989,
+                "median_km": 1478.8302564040314,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 2.4752475247524752
+              }
+            },
+            "lat04_lon03": {
+              "n": 101,
+              "metrics": {
+                "mean_km": 3972.749307976553,
+                "median_km": 1729.500138508512,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 9.900990099009901
+              }
+            },
+            "lat04_lon05": {
+              "n": 49,
+              "metrics": {
+                "mean_km": 6581.126806123315,
+                "median_km": 6034.032890371006,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 6.122448979591836
+              }
+            },
+            "lat04_lon06": {
+              "n": 60,
+              "metrics": {
+                "mean_km": 4761.528023446227,
+                "median_km": 2559.8586986009573,
+                "within_1km": 0.0,
+                "within_25km": 1.6666666666666667,
+                "within_200km": 1.6666666666666667
+              }
+            },
+            "lat04_lon07": {
+              "n": 158,
+              "metrics": {
+                "mean_km": 5062.734958954811,
+                "median_km": 2794.275843122964,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 4.430379746835443
+              }
+            },
+            "lat04_lon08": {
+              "n": 123,
+              "metrics": {
+                "mean_km": 6900.267788719385,
+                "median_km": 5769.930519849086,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 4.065040650406504
+              }
+            },
+            "lat04_lon09": {
+              "n": 66,
+              "metrics": {
+                "mean_km": 7888.3148194950045,
+                "median_km": 7865.537129028146,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 1.5151515151515151
+              }
+            },
+            "lat04_lon10": {
+              "n": 41,
+              "metrics": {
+                "mean_km": 6471.730735650854,
+                "median_km": 7102.464618437452,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 7.317073170731708
+              }
+            },
+            "lat05_lon00": {
+              "n": 1,
+              "metrics": null
+            },
+            "lat05_lon01": {
+              "n": 67,
+              "metrics": {
+                "mean_km": 4056.5463357450476,
+                "median_km": 2313.954473326396,
+                "within_1km": 0.0,
+                "within_25km": 1.492537313432836,
+                "within_200km": 4.477611940298507
+              }
+            },
+            "lat05_lon02": {
+              "n": 123,
+              "metrics": {
+                "mean_km": 2518.7014219418315,
+                "median_km": 975.0867777418285,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 2.4390243902439024
+              }
+            },
+            "lat05_lon03": {
+              "n": 73,
+              "metrics": {
+                "mean_km": 4262.52739529997,
+                "median_km": 3595.6438541614975,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 2.73972602739726
+              }
+            },
+            "lat05_lon04": {
+              "n": 5,
+              "metrics": null
+            },
+            "lat05_lon05": {
+              "n": 69,
+              "metrics": {
+                "mean_km": 3505.2638085483213,
+                "median_km": 1827.6443400266387,
+                "within_1km": 0.0,
+                "within_25km": 1.4492753623188406,
+                "within_200km": 4.3478260869565215
+              }
+            },
+            "lat05_lon06": {
+              "n": 269,
+              "metrics": {
+                "mean_km": 3871.562422801765,
+                "median_km": 1871.9628507658476,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 8.178438661710038
+              }
+            },
+            "lat05_lon07": {
+              "n": 148,
+              "metrics": {
+                "mean_km": 4783.848175923747,
+                "median_km": 3083.0277101516376,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 2.027027027027027
+              }
+            },
+            "lat05_lon08": {
+              "n": 88,
+              "metrics": {
+                "mean_km": 7253.209587337392,
+                "median_km": 8246.760826333331,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat05_lon09": {
+              "n": 19,
+              "metrics": null
+            },
+            "lat05_lon10": {
+              "n": 45,
+              "metrics": {
+                "mean_km": 7257.883622429146,
+                "median_km": 7676.941905200875,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 2.2222222222222223
+              }
+            }
+          },
+          "limitations": "Descriptive geographic strata only; they do not provide conditional or regional accuracy guarantees and do not account for spatial dependence."
+        },
+        "n": 3000
+      }
+    },
+    {
+      "seed": 43,
+      "sampling_mode": "uniform",
+      "checkpoint": "checkpoints/l2_imagenet_1.0_layer4_s43/last.pt",
+      "checkpoint_sha256": "8240970643dd78b281feb9672d826d91ccd4a2e88caea1b98d5a89d3309ad109",
+      "training": {
+        "manifest_path": "checkpoints/l2_imagenet_1.0_layer4_s43/run_manifest.json",
+        "manifest_file_sha256": "ca3b6e4c7c278a7dc3627d00e60dad1cc76f4c5d6979014afa5720b244fca17b",
+        "manifest_sha256": "f023cf0f9e63a92809e0fdeaccade0f04127308899371cec4305c2e6cfa74533",
+        "training_csv_sha256": "dd0d70ffc916aece79602ed9e623905e5e8a81dc2002d1a7b47e894c0d6617be",
+        "training_dataset_sample_count": 10000,
+        "selected_sample_count": 10000,
+        "selected_sample_ids_sha256": "38345beb9d54a1abdb04d58bc44835fef0251420be05206671b5dc79599dd6e5",
+        "cells_sha256": "e291ad6a6f589cb9fd0cca1255fcb33a49a247f5991249c21e7f965f089d9552",
+        "cell_count": 300,
+        "seed": 43,
+        "config": {
+          "csv": "data/osv5m_subset_10k/metadata_sub1p0_s43.csv",
+          "num_cells": 300,
+          "epochs": 10,
+          "batch_size": 16,
+          "image_size": 224,
+          "lr": 0.001,
+          "weight_decay": 0.0001,
+          "pretrained": true,
+          "freeze_backbone": true,
+          "unfreeze_last_block": true,
+          "amp": true,
+          "num_workers": 4,
+          "checkpoint_dir": "checkpoints/l2_imagenet_1.0_layer4_s43",
+          "seed": 43,
+          "sampling_mode": "uniform",
+          "sampling_power": 1.0,
+          "device": "cuda",
+          "cells_json": "checkpoints/l2_cells_full.json",
+          "save_cells": null,
+          "max_samples": 10000,
+          "places365_checkpoint": null,
+          "run_tag": "l2_imagenet_1.0_layer4_s43"
+        },
+        "initialization": {
+          "kind": "torchvision_imagenet",
+          "architecture": "resnet50",
+          "weights": "IMAGENET1K_V2"
+        },
+        "software": {
+          "python": "3.12.14",
+          "torch": "2.14.1+cu130",
+          "torchvision": "0.29.1+cu130"
+        }
+      },
+      "training_metrics": {
+        "path": "checkpoints/l2_imagenet_1.0_layer4_s43/metrics_l2_imagenet_1.0_layer4_s43.json",
+        "sha256": "8b0cecd075773fc779475465d8fcb985c66a6eeb3c111311f6ce43201a999678",
+        "final_epoch": 10,
+        "final_training_loss": 0.17265245444774627,
+        "final_training_cell_accuracy_pct": 96.41,
+        "final_epoch_elapsed_sec": 46.44501876831055,
+        "run_elapsed_sec": 635.5901226997375
+      },
+      "metrics": {
+        "within_1km": 0.0,
+        "within_25km": 0.23333333333333336,
+        "within_200km": 3.8,
+        "mean_km": 5730.3782259080635,
+        "median_km": 4430.610785208462,
+        "regional_distance": {
+          "grid": {
+            "method": "equal_area_latitude_bands_x_uniform_longitude_bands",
+            "latitude_bands": 6,
+            "longitude_bands": 12,
+            "minimum_count_for_metrics": 20
+          },
+          "regions": {
+            "lat00_lon03": {
+              "n": 13,
+              "metrics": null
+            },
+            "lat00_lon04": {
+              "n": 2,
+              "metrics": null
+            },
+            "lat00_lon10": {
+              "n": 8,
+              "metrics": null
+            },
+            "lat00_lon11": {
+              "n": 11,
+              "metrics": null
+            },
+            "lat01_lon03": {
+              "n": 80,
+              "metrics": {
+                "mean_km": 9623.587300958276,
+                "median_km": 9825.65971046071,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 1.25
+              }
+            },
+            "lat01_lon04": {
+              "n": 79,
+              "metrics": {
+                "mean_km": 7700.664553476098,
+                "median_km": 8512.506484167341,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 1.2658227848101267
+              }
+            },
+            "lat01_lon06": {
+              "n": 41,
+              "metrics": {
+                "mean_km": 9437.293951736618,
+                "median_km": 8251.856476441077,
+                "within_1km": 0.0,
+                "within_25km": 2.4390243902439024,
+                "within_200km": 4.878048780487805
+              }
+            },
+            "lat01_lon07": {
+              "n": 40,
+              "metrics": {
+                "mean_km": 10643.705031993908,
+                "median_km": 9844.247558859275,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat01_lon09": {
+              "n": 15,
+              "metrics": null
+            },
+            "lat01_lon10": {
+              "n": 87,
+              "metrics": {
+                "mean_km": 6403.8292961094985,
+                "median_km": 2193.4093717909172,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 6.896551724137931
+              }
+            },
+            "lat01_lon11": {
+              "n": 34,
+              "metrics": {
+                "mean_km": 9733.305327851842,
+                "median_km": 11179.614148015404,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 5.882352941176471
+              }
+            },
+            "lat02_lon00": {
+              "n": 4,
+              "metrics": null
+            },
+            "lat02_lon02": {
+              "n": 1,
+              "metrics": null
+            },
+            "lat02_lon03": {
+              "n": 59,
+              "metrics": {
+                "mean_km": 7679.314573871739,
+                "median_km": 8222.381006274129,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 5.084745762711864
+              }
+            },
+            "lat02_lon04": {
+              "n": 90,
+              "metrics": {
+                "mean_km": 7916.72627302141,
+                "median_km": 7696.449483093768,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 1.1111111111111112
+              }
+            },
+            "lat02_lon06": {
+              "n": 97,
+              "metrics": {
+                "mean_km": 6644.847461599545,
+                "median_km": 6162.409823608539,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat02_lon07": {
+              "n": 73,
+              "metrics": {
+                "mean_km": 6919.875164100172,
+                "median_km": 5863.1014687171255,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat02_lon09": {
+              "n": 20,
+              "metrics": {
+                "mean_km": 8866.97584919689,
+                "median_km": 9209.381401796863,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 5.0
+              }
+            },
+            "lat02_lon10": {
+              "n": 40,
+              "metrics": {
+                "mean_km": 10383.996147583763,
+                "median_km": 12526.772812414001,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat02_lon11": {
+              "n": 25,
+              "metrics": {
+                "mean_km": 10882.801853178837,
+                "median_km": 11451.69642256537,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat03_lon00": {
+              "n": 4,
+              "metrics": null
+            },
+            "lat03_lon02": {
+              "n": 21,
+              "metrics": {
+                "mean_km": 8351.738864410041,
+                "median_km": 9778.942530449036,
+                "within_1km": 0.0,
+                "within_25km": 4.761904761904762,
+                "within_200km": 4.761904761904762
+              }
+            },
+            "lat03_lon03": {
+              "n": 70,
+              "metrics": {
+                "mean_km": 6121.096284833229,
+                "median_km": 4260.565937807825,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 7.142857142857143
+              }
+            },
+            "lat03_lon04": {
+              "n": 3,
+              "metrics": null
+            },
+            "lat03_lon05": {
+              "n": 68,
+              "metrics": {
+                "mean_km": 4278.937405048065,
+                "median_km": 3463.4687050232014,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat03_lon06": {
+              "n": 91,
+              "metrics": {
+                "mean_km": 5082.898750389087,
+                "median_km": 4283.563399136632,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 1.098901098901099
+              }
+            },
+            "lat03_lon07": {
+              "n": 48,
+              "metrics": {
+                "mean_km": 5694.704981770643,
+                "median_km": 4919.081548516364,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat03_lon08": {
+              "n": 49,
+              "metrics": {
+                "mean_km": 6270.047875506517,
+                "median_km": 5095.176718356654,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 4.081632653061225
+              }
+            },
+            "lat03_lon09": {
+              "n": 79,
+              "metrics": {
+                "mean_km": 8509.326552285655,
+                "median_km": 8654.21796641727,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 3.7974683544303796
+              }
+            },
+            "lat03_lon10": {
+              "n": 28,
+              "metrics": {
+                "mean_km": 12130.812826055455,
+                "median_km": 13419.404033660045,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat03_lon11": {
+              "n": 4,
+              "metrics": null
+            },
+            "lat04_lon00": {
+              "n": 2,
+              "metrics": null
+            },
+            "lat04_lon01": {
+              "n": 7,
+              "metrics": null
+            },
+            "lat04_lon02": {
+              "n": 202,
+              "metrics": {
+                "mean_km": 3027.5579906317057,
+                "median_km": 1255.4889548754395,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 3.9603960396039604
+              }
+            },
+            "lat04_lon03": {
+              "n": 101,
+              "metrics": {
+                "mean_km": 3256.1072983325603,
+                "median_km": 1262.0464123730023,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 7.920792079207921
+              }
+            },
+            "lat04_lon05": {
+              "n": 49,
+              "metrics": {
+                "mean_km": 4180.094186000666,
+                "median_km": 2804.6669152178256,
+                "within_1km": 0.0,
+                "within_25km": 2.0408163265306123,
+                "within_200km": 4.081632653061225
+              }
+            },
+            "lat04_lon06": {
+              "n": 60,
+              "metrics": {
+                "mean_km": 4865.288435861481,
+                "median_km": 2987.5777170374367,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 1.6666666666666667
+              }
+            },
+            "lat04_lon07": {
+              "n": 158,
+              "metrics": {
+                "mean_km": 4406.985474133587,
+                "median_km": 3060.1341875334256,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 2.5316455696202533
+              }
+            },
+            "lat04_lon08": {
+              "n": 123,
+              "metrics": {
+                "mean_km": 5774.055224784642,
+                "median_km": 4250.306497093272,
+                "within_1km": 0.0,
+                "within_25km": 0.8130081300813008,
+                "within_200km": 8.94308943089431
+              }
+            },
+            "lat04_lon09": {
+              "n": 66,
+              "metrics": {
+                "mean_km": 8251.68146074366,
+                "median_km": 7860.071625836725,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 1.5151515151515151
+              }
+            },
+            "lat04_lon10": {
+              "n": 41,
+              "metrics": {
+                "mean_km": 6430.710624748916,
+                "median_km": 7509.974961505389,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 9.75609756097561
+              }
+            },
+            "lat05_lon00": {
+              "n": 1,
+              "metrics": null
+            },
+            "lat05_lon01": {
+              "n": 67,
+              "metrics": {
+                "mean_km": 4067.3052771482808,
+                "median_km": 3385.411698650458,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 2.985074626865672
+              }
+            },
+            "lat05_lon02": {
+              "n": 123,
+              "metrics": {
+                "mean_km": 3098.36181901368,
+                "median_km": 1351.202254918609,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 4.065040650406504
+              }
+            },
+            "lat05_lon03": {
+              "n": 73,
+              "metrics": {
+                "mean_km": 2949.352634457291,
+                "median_km": 1876.18834419138,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 6.8493150684931505
+              }
+            },
+            "lat05_lon04": {
+              "n": 5,
+              "metrics": null
+            },
+            "lat05_lon05": {
+              "n": 69,
+              "metrics": {
+                "mean_km": 3067.516145643952,
+                "median_km": 1581.9885596931108,
+                "within_1km": 0.0,
+                "within_25km": 1.4492753623188406,
+                "within_200km": 8.695652173913043
+              }
+            },
+            "lat05_lon06": {
+              "n": 269,
+              "metrics": {
+                "mean_km": 2993.4756349596355,
+                "median_km": 1241.6502771828957,
+                "within_1km": 0.0,
+                "within_25km": 0.7434944237918215,
+                "within_200km": 7.434944237918216
+              }
+            },
+            "lat05_lon07": {
+              "n": 148,
+              "metrics": {
+                "mean_km": 4287.291633423595,
+                "median_km": 2675.080410763592,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 2.7027027027027026
+              }
+            },
+            "lat05_lon08": {
+              "n": 88,
+              "metrics": {
+                "mean_km": 6670.986385040903,
+                "median_km": 6237.179176758305,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat05_lon09": {
+              "n": 19,
+              "metrics": null
+            },
+            "lat05_lon10": {
+              "n": 45,
+              "metrics": {
+                "mean_km": 7097.086179135252,
+                "median_km": 8073.7119833537745,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 2.2222222222222223
+              }
+            }
+          },
+          "limitations": "Descriptive geographic strata only; they do not provide conditional or regional accuracy guarantees and do not account for spatial dependence."
+        },
+        "n": 3000
+      }
+    },
+    {
+      "seed": 43,
+      "sampling_mode": "cell-balanced",
+      "checkpoint": "checkpoints/l2_imagenet_1.0_layer4_s43_cell-balanced/last.pt",
+      "checkpoint_sha256": "323659d919119a7c59a874a5a6f2299fadb450b60f72a269c3bc6d6d256d6bca",
+      "training": {
+        "manifest_path": "checkpoints/l2_imagenet_1.0_layer4_s43_cell-balanced/run_manifest.json",
+        "manifest_file_sha256": "ece226e6293063ff73d9051feda6688c2d3418c9bf82088993e05725abc2a5a8",
+        "manifest_sha256": "9b2969464df3e93dc6a9f4d8bd073e30f00c463d1e8f6c046e5a30c3e9a31ccd",
+        "training_csv_sha256": "dd0d70ffc916aece79602ed9e623905e5e8a81dc2002d1a7b47e894c0d6617be",
+        "training_dataset_sample_count": 10000,
+        "selected_sample_count": 10000,
+        "selected_sample_ids_sha256": "38345beb9d54a1abdb04d58bc44835fef0251420be05206671b5dc79599dd6e5",
+        "cells_sha256": "e291ad6a6f589cb9fd0cca1255fcb33a49a247f5991249c21e7f965f089d9552",
+        "cell_count": 300,
+        "seed": 43,
+        "config": {
+          "csv": "data/osv5m_subset_10k/metadata_sub1p0_s43.csv",
+          "num_cells": 300,
+          "epochs": 10,
+          "batch_size": 16,
+          "image_size": 224,
+          "lr": 0.001,
+          "weight_decay": 0.0001,
+          "pretrained": true,
+          "freeze_backbone": true,
+          "unfreeze_last_block": true,
+          "amp": true,
+          "num_workers": 4,
+          "checkpoint_dir": "checkpoints/l2_imagenet_1.0_layer4_s43_cell-balanced",
+          "seed": 43,
+          "sampling_mode": "cell-balanced",
+          "sampling_power": 1.0,
+          "device": "cuda",
+          "cells_json": "checkpoints/l2_cells_full.json",
+          "save_cells": null,
+          "max_samples": 10000,
+          "places365_checkpoint": null,
+          "run_tag": "l2_imagenet_1.0_layer4_s43_cell-balanced"
+        },
+        "initialization": {
+          "kind": "torchvision_imagenet",
+          "architecture": "resnet50",
+          "weights": "IMAGENET1K_V2"
+        },
+        "software": {
+          "python": "3.12.14",
+          "torch": "2.14.1+cu130",
+          "torchvision": "0.29.1+cu130"
+        }
+      },
+      "training_metrics": {
+        "path": "checkpoints/l2_imagenet_1.0_layer4_s43_cell-balanced/metrics_l2_imagenet_1.0_layer4_s43_cell-balanced.json",
+        "sha256": "03cba1eedf985e90976f42c1d13a57a1fb2dc7c9bbee658a21d025415bd5dd08",
+        "final_epoch": 10,
+        "final_training_loss": 0.2690585418820381,
+        "final_training_cell_accuracy_pct": 93.62,
+        "final_epoch_elapsed_sec": 88.7634801864624,
+        "run_elapsed_sec": 467.9221029281616
+      },
+      "metrics": {
+        "within_1km": 0.0,
+        "within_25km": 0.16666666666666669,
+        "within_200km": 3.5666666666666664,
+        "mean_km": 5714.071858691683,
+        "median_km": 4458.384861540064,
+        "regional_distance": {
+          "grid": {
+            "method": "equal_area_latitude_bands_x_uniform_longitude_bands",
+            "latitude_bands": 6,
+            "longitude_bands": 12,
+            "minimum_count_for_metrics": 20
+          },
+          "regions": {
+            "lat00_lon03": {
+              "n": 13,
+              "metrics": null
+            },
+            "lat00_lon04": {
+              "n": 2,
+              "metrics": null
+            },
+            "lat00_lon10": {
+              "n": 8,
+              "metrics": null
+            },
+            "lat00_lon11": {
+              "n": 11,
+              "metrics": null
+            },
+            "lat01_lon03": {
+              "n": 80,
+              "metrics": {
+                "mean_km": 10251.329197839734,
+                "median_km": 10359.209620178943,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 2.5
+              }
+            },
+            "lat01_lon04": {
+              "n": 79,
+              "metrics": {
+                "mean_km": 8478.162875488988,
+                "median_km": 9808.26270394349,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 2.5316455696202533
+              }
+            },
+            "lat01_lon06": {
+              "n": 41,
+              "metrics": {
+                "mean_km": 11094.00000668247,
+                "median_km": 10395.350254895184,
+                "within_1km": 0.0,
+                "within_25km": 2.4390243902439024,
+                "within_200km": 2.4390243902439024
+              }
+            },
+            "lat01_lon07": {
+              "n": 40,
+              "metrics": {
+                "mean_km": 8716.264453662861,
+                "median_km": 8440.76092262987,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat01_lon09": {
+              "n": 15,
+              "metrics": null
+            },
+            "lat01_lon10": {
+              "n": 87,
+              "metrics": {
+                "mean_km": 4919.073673135398,
+                "median_km": 1363.3971609053576,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 5.747126436781609
+              }
+            },
+            "lat01_lon11": {
+              "n": 34,
+              "metrics": {
+                "mean_km": 10751.97656253135,
+                "median_km": 14656.075070541523,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 5.882352941176471
+              }
+            },
+            "lat02_lon00": {
+              "n": 4,
+              "metrics": null
+            },
+            "lat02_lon02": {
+              "n": 1,
+              "metrics": null
+            },
+            "lat02_lon03": {
+              "n": 59,
+              "metrics": {
+                "mean_km": 9592.442241399536,
+                "median_km": 10006.228929411678,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 3.389830508474576
+              }
+            },
+            "lat02_lon04": {
+              "n": 90,
+              "metrics": {
+                "mean_km": 8416.472223573726,
+                "median_km": 8649.162460390351,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat02_lon06": {
+              "n": 97,
+              "metrics": {
+                "mean_km": 5869.962694272958,
+                "median_km": 5839.620432038576,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat02_lon07": {
+              "n": 73,
+              "metrics": {
+                "mean_km": 7380.94864959184,
+                "median_km": 7071.2630707924345,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat02_lon09": {
+              "n": 20,
+              "metrics": {
+                "mean_km": 7756.685730104327,
+                "median_km": 4694.206562304744,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat02_lon10": {
+              "n": 40,
+              "metrics": {
+                "mean_km": 8511.685852746099,
+                "median_km": 11516.260329429362,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat02_lon11": {
+              "n": 25,
+              "metrics": {
+                "mean_km": 9590.485109025793,
+                "median_km": 9997.433984733763,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat03_lon00": {
+              "n": 4,
+              "metrics": null
+            },
+            "lat03_lon02": {
+              "n": 21,
+              "metrics": {
+                "mean_km": 11162.788627291597,
+                "median_km": 11810.524309409095,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat03_lon03": {
+              "n": 70,
+              "metrics": {
+                "mean_km": 7937.465574506514,
+                "median_km": 7499.481455508403,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 1.4285714285714286
+              }
+            },
+            "lat03_lon04": {
+              "n": 3,
+              "metrics": null
+            },
+            "lat03_lon05": {
+              "n": 68,
+              "metrics": {
+                "mean_km": 4508.192992187592,
+                "median_km": 4147.862939049195,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 1.4705882352941178
+              }
+            },
+            "lat03_lon06": {
+              "n": 91,
+              "metrics": {
+                "mean_km": 4618.109458722822,
+                "median_km": 4096.6057645625015,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat03_lon07": {
+              "n": 48,
+              "metrics": {
+                "mean_km": 5878.91627034303,
+                "median_km": 4700.863901402111,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat03_lon08": {
+              "n": 49,
+              "metrics": {
+                "mean_km": 4952.741457936461,
+                "median_km": 4589.494141747269,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 4.081632653061225
+              }
+            },
+            "lat03_lon09": {
+              "n": 79,
+              "metrics": {
+                "mean_km": 8148.236291248095,
+                "median_km": 8725.89887491792,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 1.2658227848101267
+              }
+            },
+            "lat03_lon10": {
+              "n": 28,
+              "metrics": {
+                "mean_km": 9372.836221008538,
+                "median_km": 9611.497819080836,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat03_lon11": {
+              "n": 4,
+              "metrics": null
+            },
+            "lat04_lon00": {
+              "n": 2,
+              "metrics": null
+            },
+            "lat04_lon01": {
+              "n": 7,
+              "metrics": null
+            },
+            "lat04_lon02": {
+              "n": 202,
+              "metrics": {
+                "mean_km": 4115.753441065268,
+                "median_km": 1821.6084690779387,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 2.9702970297029703
+              }
+            },
+            "lat04_lon03": {
+              "n": 101,
+              "metrics": {
+                "mean_km": 4492.376412683988,
+                "median_km": 1663.2862542980808,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 4.9504950495049505
+              }
+            },
+            "lat04_lon05": {
+              "n": 49,
+              "metrics": {
+                "mean_km": 5099.970922876236,
+                "median_km": 2909.6951129993395,
+                "within_1km": 0.0,
+                "within_25km": 2.0408163265306123,
+                "within_200km": 2.0408163265306123
+              }
+            },
+            "lat04_lon06": {
+              "n": 60,
+              "metrics": {
+                "mean_km": 4257.817863089799,
+                "median_km": 2219.102710177458,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 5.0
+              }
+            },
+            "lat04_lon07": {
+              "n": 158,
+              "metrics": {
+                "mean_km": 4148.650658097481,
+                "median_km": 2678.2052121224874,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 4.430379746835443
+              }
+            },
+            "lat04_lon08": {
+              "n": 123,
+              "metrics": {
+                "mean_km": 5445.667955518391,
+                "median_km": 4658.182691523091,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 6.504065040650406
+              }
+            },
+            "lat04_lon09": {
+              "n": 66,
+              "metrics": {
+                "mean_km": 7240.885719834909,
+                "median_km": 7640.653670740003,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 4.545454545454546
+              }
+            },
+            "lat04_lon10": {
+              "n": 41,
+              "metrics": {
+                "mean_km": 5707.736545467644,
+                "median_km": 5808.655275830438,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 4.878048780487805
+              }
+            },
+            "lat05_lon00": {
+              "n": 1,
+              "metrics": null
+            },
+            "lat05_lon01": {
+              "n": 67,
+              "metrics": {
+                "mean_km": 4319.583912132572,
+                "median_km": 3591.514676648675,
+                "within_1km": 0.0,
+                "within_25km": 1.492537313432836,
+                "within_200km": 4.477611940298507
+              }
+            },
+            "lat05_lon02": {
+              "n": 123,
+              "metrics": {
+                "mean_km": 4104.887744398639,
+                "median_km": 1866.504335232896,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 3.252032520325203
+              }
+            },
+            "lat05_lon03": {
+              "n": 73,
+              "metrics": {
+                "mean_km": 3937.3324294465497,
+                "median_km": 2159.9934505235747,
+                "within_1km": 0.0,
+                "within_25km": 1.36986301369863,
+                "within_200km": 8.219178082191782
+              }
+            },
+            "lat05_lon04": {
+              "n": 5,
+              "metrics": null
+            },
+            "lat05_lon05": {
+              "n": 69,
+              "metrics": {
+                "mean_km": 2336.78395685593,
+                "median_km": 1020.078972573887,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 8.695652173913043
+              }
+            },
+            "lat05_lon06": {
+              "n": 269,
+              "metrics": {
+                "mean_km": 2299.0613580804124,
+                "median_km": 986.7708562917604,
+                "within_1km": 0.0,
+                "within_25km": 0.37174721189591076,
+                "within_200km": 10.037174721189592
+              }
+            },
+            "lat05_lon07": {
+              "n": 148,
+              "metrics": {
+                "mean_km": 3263.067928485297,
+                "median_km": 2215.1712655989913,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 2.7027027027027026
+              }
+            },
+            "lat05_lon08": {
+              "n": 88,
+              "metrics": {
+                "mean_km": 6238.911986488278,
+                "median_km": 4994.365651355083,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat05_lon09": {
+              "n": 19,
+              "metrics": null
+            },
+            "lat05_lon10": {
+              "n": 45,
+              "metrics": {
+                "mean_km": 7029.307969127855,
+                "median_km": 7521.275665165034,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 2.2222222222222223
+              }
+            }
+          },
+          "limitations": "Descriptive geographic strata only; they do not provide conditional or regional accuracy guarantees and do not account for spatial dependence."
+        },
+        "n": 3000
+      }
+    },
+    {
+      "seed": 44,
+      "sampling_mode": "uniform",
+      "checkpoint": "checkpoints/l2_imagenet_1.0_layer4_s44/last.pt",
+      "checkpoint_sha256": "3d9048c6dc2501f0ccdfd568c3eb0371dec2e5df78c14a247515bde2896d4dfc",
+      "training": {
+        "manifest_path": "checkpoints/l2_imagenet_1.0_layer4_s44/run_manifest.json",
+        "manifest_file_sha256": "f23f17ec0e41de36e3e07b9a3bab61c6055ecc2effdc4bfbff4142eab9f3b5f8",
+        "manifest_sha256": "9fee326a987620f1fa0d5e1a8acbad21531997a37b5c2c78c058135b7aa04810",
+        "training_csv_sha256": "dd0d70ffc916aece79602ed9e623905e5e8a81dc2002d1a7b47e894c0d6617be",
+        "training_dataset_sample_count": 10000,
+        "selected_sample_count": 10000,
+        "selected_sample_ids_sha256": "38345beb9d54a1abdb04d58bc44835fef0251420be05206671b5dc79599dd6e5",
+        "cells_sha256": "e291ad6a6f589cb9fd0cca1255fcb33a49a247f5991249c21e7f965f089d9552",
+        "cell_count": 300,
+        "seed": 44,
+        "config": {
+          "csv": "data/osv5m_subset_10k/metadata_sub1p0_s44.csv",
+          "num_cells": 300,
+          "epochs": 10,
+          "batch_size": 16,
+          "image_size": 224,
+          "lr": 0.001,
+          "weight_decay": 0.0001,
+          "pretrained": true,
+          "freeze_backbone": true,
+          "unfreeze_last_block": true,
+          "amp": true,
+          "num_workers": 4,
+          "checkpoint_dir": "checkpoints/l2_imagenet_1.0_layer4_s44",
+          "seed": 44,
+          "sampling_mode": "uniform",
+          "sampling_power": 1.0,
+          "device": "cuda",
+          "cells_json": "checkpoints/l2_cells_full.json",
+          "save_cells": null,
+          "max_samples": 10000,
+          "places365_checkpoint": null,
+          "run_tag": "l2_imagenet_1.0_layer4_s44"
+        },
+        "initialization": {
+          "kind": "torchvision_imagenet",
+          "architecture": "resnet50",
+          "weights": "IMAGENET1K_V2"
+        },
+        "software": {
+          "python": "3.12.14",
+          "torch": "2.14.1+cu130",
+          "torchvision": "0.29.1+cu130"
+        }
+      },
+      "training_metrics": {
+        "path": "checkpoints/l2_imagenet_1.0_layer4_s44/metrics_l2_imagenet_1.0_layer4_s44.json",
+        "sha256": "a6c48d7e2c5a5cdeace7b0eea457c0900b7672cf977d42d882ee3cb43394e9ec",
+        "final_epoch": 10,
+        "final_training_loss": 0.18063141802549362,
+        "final_training_cell_accuracy_pct": 96.11,
+        "final_epoch_elapsed_sec": 87.35174751281738,
+        "run_elapsed_sec": 790.621339559555
+      },
+      "metrics": {
+        "within_1km": 0.0,
+        "within_25km": 0.16666666666666669,
+        "within_200km": 3.0666666666666664,
+        "mean_km": 6061.714702446962,
+        "median_km": 5105.936847422123,
+        "regional_distance": {
+          "grid": {
+            "method": "equal_area_latitude_bands_x_uniform_longitude_bands",
+            "latitude_bands": 6,
+            "longitude_bands": 12,
+            "minimum_count_for_metrics": 20
+          },
+          "regions": {
+            "lat00_lon03": {
+              "n": 13,
+              "metrics": null
+            },
+            "lat00_lon04": {
+              "n": 2,
+              "metrics": null
+            },
+            "lat00_lon10": {
+              "n": 8,
+              "metrics": null
+            },
+            "lat00_lon11": {
+              "n": 11,
+              "metrics": null
+            },
+            "lat01_lon03": {
+              "n": 80,
+              "metrics": {
+                "mean_km": 9830.024997146724,
+                "median_km": 9706.14385277111,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 2.5
+              }
+            },
+            "lat01_lon04": {
+              "n": 79,
+              "metrics": {
+                "mean_km": 7598.175835654572,
+                "median_km": 7588.538067426887,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 1.2658227848101267
+              }
+            },
+            "lat01_lon06": {
+              "n": 41,
+              "metrics": {
+                "mean_km": 10162.766322874888,
+                "median_km": 13488.020045982525,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 2.4390243902439024
+              }
+            },
+            "lat01_lon07": {
+              "n": 40,
+              "metrics": {
+                "mean_km": 8442.226298723355,
+                "median_km": 7864.00863292206,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat01_lon09": {
+              "n": 15,
+              "metrics": null
+            },
+            "lat01_lon10": {
+              "n": 87,
+              "metrics": {
+                "mean_km": 6387.723964722677,
+                "median_km": 1809.6335769428263,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 4.597701149425287
+              }
+            },
+            "lat01_lon11": {
+              "n": 34,
+              "metrics": {
+                "mean_km": 11475.169376972952,
+                "median_km": 14322.059586437843,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat02_lon00": {
+              "n": 4,
+              "metrics": null
+            },
+            "lat02_lon02": {
+              "n": 1,
+              "metrics": null
+            },
+            "lat02_lon03": {
+              "n": 59,
+              "metrics": {
+                "mean_km": 8516.929766467447,
+                "median_km": 7858.005953015917,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat02_lon04": {
+              "n": 90,
+              "metrics": {
+                "mean_km": 6517.902236881059,
+                "median_km": 7164.298814655245,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 2.2222222222222223
+              }
+            },
+            "lat02_lon06": {
+              "n": 97,
+              "metrics": {
+                "mean_km": 7218.304519547212,
+                "median_km": 6732.17715769061,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat02_lon07": {
+              "n": 73,
+              "metrics": {
+                "mean_km": 7776.52284827854,
+                "median_km": 6785.073512463734,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat02_lon09": {
+              "n": 20,
+              "metrics": {
+                "mean_km": 10202.343046310776,
+                "median_km": 13014.208447913628,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 5.0
+              }
+            },
+            "lat02_lon10": {
+              "n": 40,
+              "metrics": {
+                "mean_km": 9998.568224785751,
+                "median_km": 12945.333671178354,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat02_lon11": {
+              "n": 25,
+              "metrics": {
+                "mean_km": 10019.14142493296,
+                "median_km": 10214.21017975154,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat03_lon00": {
+              "n": 4,
+              "metrics": null
+            },
+            "lat03_lon02": {
+              "n": 21,
+              "metrics": {
+                "mean_km": 4826.907500057503,
+                "median_km": 2657.3906993260484,
+                "within_1km": 0.0,
+                "within_25km": 4.761904761904762,
+                "within_200km": 4.761904761904762
+              }
+            },
+            "lat03_lon03": {
+              "n": 70,
+              "metrics": {
+                "mean_km": 7122.587802125059,
+                "median_km": 5375.416868354635,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat03_lon04": {
+              "n": 3,
+              "metrics": null
+            },
+            "lat03_lon05": {
+              "n": 68,
+              "metrics": {
+                "mean_km": 4612.580680096263,
+                "median_km": 4705.048911618842,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 1.4705882352941178
+              }
+            },
+            "lat03_lon06": {
+              "n": 91,
+              "metrics": {
+                "mean_km": 5432.909276998705,
+                "median_km": 4294.988060780012,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat03_lon07": {
+              "n": 48,
+              "metrics": {
+                "mean_km": 6816.731662307492,
+                "median_km": 5190.598500957647,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 2.0833333333333335
+              }
+            },
+            "lat03_lon08": {
+              "n": 49,
+              "metrics": {
+                "mean_km": 6753.697958867531,
+                "median_km": 6478.426795779081,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 2.0408163265306123
+              }
+            },
+            "lat03_lon09": {
+              "n": 79,
+              "metrics": {
+                "mean_km": 8793.415035489703,
+                "median_km": 8532.15983509643,
+                "within_1km": 0.0,
+                "within_25km": 1.2658227848101267,
+                "within_200km": 3.7974683544303796
+              }
+            },
+            "lat03_lon10": {
+              "n": 28,
+              "metrics": {
+                "mean_km": 10603.59338495985,
+                "median_km": 11297.5648399793,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat03_lon11": {
+              "n": 4,
+              "metrics": null
+            },
+            "lat04_lon00": {
+              "n": 2,
+              "metrics": null
+            },
+            "lat04_lon01": {
+              "n": 7,
+              "metrics": null
+            },
+            "lat04_lon02": {
+              "n": 202,
+              "metrics": {
+                "mean_km": 3805.1007644116075,
+                "median_km": 1682.6695136891758,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 2.9702970297029703
+              }
+            },
+            "lat04_lon03": {
+              "n": 101,
+              "metrics": {
+                "mean_km": 4157.246454873338,
+                "median_km": 2268.7062133220734,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 2.9702970297029703
+              }
+            },
+            "lat04_lon05": {
+              "n": 49,
+              "metrics": {
+                "mean_km": 5055.822526445292,
+                "median_km": 3424.238269890632,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat04_lon06": {
+              "n": 60,
+              "metrics": {
+                "mean_km": 4705.115452246109,
+                "median_km": 3417.4213744083395,
+                "within_1km": 0.0,
+                "within_25km": 1.6666666666666667,
+                "within_200km": 6.666666666666667
+              }
+            },
+            "lat04_lon07": {
+              "n": 158,
+              "metrics": {
+                "mean_km": 6085.788305266859,
+                "median_km": 3821.607242894382,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 3.1645569620253164
+              }
+            },
+            "lat04_lon08": {
+              "n": 123,
+              "metrics": {
+                "mean_km": 6464.930966236024,
+                "median_km": 4784.2623566879,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 8.130081300813009
+              }
+            },
+            "lat04_lon09": {
+              "n": 66,
+              "metrics": {
+                "mean_km": 8501.282583533775,
+                "median_km": 7873.236844646394,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 3.0303030303030303
+              }
+            },
+            "lat04_lon10": {
+              "n": 41,
+              "metrics": {
+                "mean_km": 6013.800175953853,
+                "median_km": 5430.236234812853,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 4.878048780487805
+              }
+            },
+            "lat05_lon00": {
+              "n": 1,
+              "metrics": null
+            },
+            "lat05_lon01": {
+              "n": 67,
+              "metrics": {
+                "mean_km": 5191.3886616229765,
+                "median_km": 4316.129806457037,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 1.492537313432836
+              }
+            },
+            "lat05_lon02": {
+              "n": 123,
+              "metrics": {
+                "mean_km": 4629.9236914525745,
+                "median_km": 2332.5485771908934,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 4.065040650406504
+              }
+            },
+            "lat05_lon03": {
+              "n": 73,
+              "metrics": {
+                "mean_km": 3996.861443425386,
+                "median_km": 2864.1331177718034,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 6.8493150684931505
+              }
+            },
+            "lat05_lon04": {
+              "n": 5,
+              "metrics": null
+            },
+            "lat05_lon05": {
+              "n": 69,
+              "metrics": {
+                "mean_km": 3382.7707544401032,
+                "median_km": 1622.2512329112994,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 4.3478260869565215
+              }
+            },
+            "lat05_lon06": {
+              "n": 269,
+              "metrics": {
+                "mean_km": 2907.939805368473,
+                "median_km": 1034.739594878711,
+                "within_1km": 0.0,
+                "within_25km": 0.7434944237918215,
+                "within_200km": 8.921933085501859
+              }
+            },
+            "lat05_lon07": {
+              "n": 148,
+              "metrics": {
+                "mean_km": 4101.796755463319,
+                "median_km": 2340.373737750934,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 1.3513513513513513
+              }
+            },
+            "lat05_lon08": {
+              "n": 88,
+              "metrics": {
+                "mean_km": 5743.155742473277,
+                "median_km": 4041.170127716421,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat05_lon09": {
+              "n": 19,
+              "metrics": null
+            },
+            "lat05_lon10": {
+              "n": 45,
+              "metrics": {
+                "mean_km": 7737.297298908926,
+                "median_km": 7965.221996741214,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 2.2222222222222223
+              }
+            }
+          },
+          "limitations": "Descriptive geographic strata only; they do not provide conditional or regional accuracy guarantees and do not account for spatial dependence."
+        },
+        "n": 3000
+      }
+    },
+    {
+      "seed": 44,
+      "sampling_mode": "cell-balanced",
+      "checkpoint": "checkpoints/l2_imagenet_1.0_layer4_s44_cell-balanced/last.pt",
+      "checkpoint_sha256": "8bb1c9a42862b0c9635cae918fb5da926f8e4326851493177247a510f4a37de7",
+      "training": {
+        "manifest_path": "checkpoints/l2_imagenet_1.0_layer4_s44_cell-balanced/run_manifest.json",
+        "manifest_file_sha256": "d1d2dbec9118c3e02c50a0bd29fd539d657debd58922443674248d7b06fdb47a",
+        "manifest_sha256": "8f44cb4ef3269a9f77e0c6f28c37a4867e4397219b4733bae867dcb3cb976233",
+        "training_csv_sha256": "dd0d70ffc916aece79602ed9e623905e5e8a81dc2002d1a7b47e894c0d6617be",
+        "training_dataset_sample_count": 10000,
+        "selected_sample_count": 10000,
+        "selected_sample_ids_sha256": "38345beb9d54a1abdb04d58bc44835fef0251420be05206671b5dc79599dd6e5",
+        "cells_sha256": "e291ad6a6f589cb9fd0cca1255fcb33a49a247f5991249c21e7f965f089d9552",
+        "cell_count": 300,
+        "seed": 44,
+        "config": {
+          "csv": "data/osv5m_subset_10k/metadata_sub1p0_s44.csv",
+          "num_cells": 300,
+          "epochs": 10,
+          "batch_size": 16,
+          "image_size": 224,
+          "lr": 0.001,
+          "weight_decay": 0.0001,
+          "pretrained": true,
+          "freeze_backbone": true,
+          "unfreeze_last_block": true,
+          "amp": true,
+          "num_workers": 4,
+          "checkpoint_dir": "checkpoints/l2_imagenet_1.0_layer4_s44_cell-balanced",
+          "seed": 44,
+          "sampling_mode": "cell-balanced",
+          "sampling_power": 1.0,
+          "device": "cuda",
+          "cells_json": "checkpoints/l2_cells_full.json",
+          "save_cells": null,
+          "max_samples": 10000,
+          "places365_checkpoint": null,
+          "run_tag": "l2_imagenet_1.0_layer4_s44_cell-balanced"
+        },
+        "initialization": {
+          "kind": "torchvision_imagenet",
+          "architecture": "resnet50",
+          "weights": "IMAGENET1K_V2"
+        },
+        "software": {
+          "python": "3.12.14",
+          "torch": "2.14.1+cu130",
+          "torchvision": "0.29.1+cu130"
+        }
+      },
+      "training_metrics": {
+        "path": "checkpoints/l2_imagenet_1.0_layer4_s44_cell-balanced/metrics_l2_imagenet_1.0_layer4_s44_cell-balanced.json",
+        "sha256": "620279cbbc23b5de1c24633987e8a48ec3fc5a6454f1f158a147d5d189bf6f4d",
+        "final_epoch": 10,
+        "final_training_loss": 0.261605945456028,
+        "final_training_cell_accuracy_pct": 93.8,
+        "final_epoch_elapsed_sec": 53.613462924957275,
+        "run_elapsed_sec": 600.7779731750488
+      },
+      "metrics": {
+        "within_1km": 0.0,
+        "within_25km": 0.16666666666666669,
+        "within_200km": 3.3000000000000003,
+        "mean_km": 5861.893696833125,
+        "median_km": 4743.9724657086645,
+        "regional_distance": {
+          "grid": {
+            "method": "equal_area_latitude_bands_x_uniform_longitude_bands",
+            "latitude_bands": 6,
+            "longitude_bands": 12,
+            "minimum_count_for_metrics": 20
+          },
+          "regions": {
+            "lat00_lon03": {
+              "n": 13,
+              "metrics": null
+            },
+            "lat00_lon04": {
+              "n": 2,
+              "metrics": null
+            },
+            "lat00_lon10": {
+              "n": 8,
+              "metrics": null
+            },
+            "lat00_lon11": {
+              "n": 11,
+              "metrics": null
+            },
+            "lat01_lon03": {
+              "n": 80,
+              "metrics": {
+                "mean_km": 9636.640353136718,
+                "median_km": 9387.137095403266,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 3.75
+              }
+            },
+            "lat01_lon04": {
+              "n": 79,
+              "metrics": {
+                "mean_km": 8066.875593845338,
+                "median_km": 8767.14009291672,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat01_lon06": {
+              "n": 41,
+              "metrics": {
+                "mean_km": 10531.063902592097,
+                "median_km": 13215.160905664638,
+                "within_1km": 0.0,
+                "within_25km": 2.4390243902439024,
+                "within_200km": 7.317073170731708
+              }
+            },
+            "lat01_lon07": {
+              "n": 40,
+              "metrics": {
+                "mean_km": 10122.30874298947,
+                "median_km": 8533.779859899245,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat01_lon09": {
+              "n": 15,
+              "metrics": null
+            },
+            "lat01_lon10": {
+              "n": 87,
+              "metrics": {
+                "mean_km": 5774.583284338362,
+                "median_km": 2035.1268859334,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 2.2988505747126435
+              }
+            },
+            "lat01_lon11": {
+              "n": 34,
+              "metrics": {
+                "mean_km": 10844.132332199226,
+                "median_km": 12527.06954784982,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat02_lon00": {
+              "n": 4,
+              "metrics": null
+            },
+            "lat02_lon02": {
+              "n": 1,
+              "metrics": null
+            },
+            "lat02_lon03": {
+              "n": 59,
+              "metrics": {
+                "mean_km": 8561.126526368102,
+                "median_km": 8309.079039867347,
+                "within_1km": 0.0,
+                "within_25km": 1.694915254237288,
+                "within_200km": 10.169491525423728
+              }
+            },
+            "lat02_lon04": {
+              "n": 90,
+              "metrics": {
+                "mean_km": 8060.277324158717,
+                "median_km": 7983.4731656293425,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 1.1111111111111112
+              }
+            },
+            "lat02_lon06": {
+              "n": 97,
+              "metrics": {
+                "mean_km": 6543.975345686269,
+                "median_km": 6526.621115743379,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat02_lon07": {
+              "n": 73,
+              "metrics": {
+                "mean_km": 7835.263863350824,
+                "median_km": 6997.974160462607,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat02_lon09": {
+              "n": 20,
+              "metrics": {
+                "mean_km": 7655.6044597997625,
+                "median_km": 5189.646635620808,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 5.0
+              }
+            },
+            "lat02_lon10": {
+              "n": 40,
+              "metrics": {
+                "mean_km": 8831.073591992454,
+                "median_km": 9090.845626917182,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat02_lon11": {
+              "n": 25,
+              "metrics": {
+                "mean_km": 10406.377988075703,
+                "median_km": 10936.399037947778,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat03_lon00": {
+              "n": 4,
+              "metrics": null
+            },
+            "lat03_lon02": {
+              "n": 21,
+              "metrics": {
+                "mean_km": 8361.916287568227,
+                "median_km": 8911.934276876056,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat03_lon03": {
+              "n": 70,
+              "metrics": {
+                "mean_km": 8739.659614154565,
+                "median_km": 9135.816815867398,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 1.4285714285714286
+              }
+            },
+            "lat03_lon04": {
+              "n": 3,
+              "metrics": null
+            },
+            "lat03_lon05": {
+              "n": 68,
+              "metrics": {
+                "mean_km": 5448.7095956752055,
+                "median_km": 5452.801512276157,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat03_lon06": {
+              "n": 91,
+              "metrics": {
+                "mean_km": 5987.323943329204,
+                "median_km": 4751.536749867726,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat03_lon07": {
+              "n": 48,
+              "metrics": {
+                "mean_km": 6274.558035466819,
+                "median_km": 4884.30441643531,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat03_lon08": {
+              "n": 49,
+              "metrics": {
+                "mean_km": 6025.529277493662,
+                "median_km": 5757.4027448449,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat03_lon09": {
+              "n": 79,
+              "metrics": {
+                "mean_km": 8358.419871765285,
+                "median_km": 9139.771693068575,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 1.2658227848101267
+              }
+            },
+            "lat03_lon10": {
+              "n": 28,
+              "metrics": {
+                "mean_km": 10385.530233172332,
+                "median_km": 10672.686951124859,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat03_lon11": {
+              "n": 4,
+              "metrics": null
+            },
+            "lat04_lon00": {
+              "n": 2,
+              "metrics": null
+            },
+            "lat04_lon01": {
+              "n": 7,
+              "metrics": null
+            },
+            "lat04_lon02": {
+              "n": 202,
+              "metrics": {
+                "mean_km": 3395.001679745104,
+                "median_km": 1577.5154963000828,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 2.4752475247524752
+              }
+            },
+            "lat04_lon03": {
+              "n": 101,
+              "metrics": {
+                "mean_km": 4003.4642443784023,
+                "median_km": 1167.7084219475123,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 7.920792079207921
+              }
+            },
+            "lat04_lon05": {
+              "n": 49,
+              "metrics": {
+                "mean_km": 6368.335128888754,
+                "median_km": 6525.444592856773,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat04_lon06": {
+              "n": 60,
+              "metrics": {
+                "mean_km": 3853.5272210574235,
+                "median_km": 2030.6577984897003,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 6.666666666666667
+              }
+            },
+            "lat04_lon07": {
+              "n": 158,
+              "metrics": {
+                "mean_km": 5032.058826769696,
+                "median_km": 3052.653867320225,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 3.1645569620253164
+              }
+            },
+            "lat04_lon08": {
+              "n": 123,
+              "metrics": {
+                "mean_km": 5359.903628658068,
+                "median_km": 3961.0814926075645,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 8.94308943089431
+              }
+            },
+            "lat04_lon09": {
+              "n": 66,
+              "metrics": {
+                "mean_km": 6782.3909352182245,
+                "median_km": 6628.284479876696,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 4.545454545454546
+              }
+            },
+            "lat04_lon10": {
+              "n": 41,
+              "metrics": {
+                "mean_km": 6031.947552528417,
+                "median_km": 8164.40594995649,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 4.878048780487805
+              }
+            },
+            "lat05_lon00": {
+              "n": 1,
+              "metrics": null
+            },
+            "lat05_lon01": {
+              "n": 67,
+              "metrics": {
+                "mean_km": 3336.9406453714896,
+                "median_km": 2699.1157390598023,
+                "within_1km": 0.0,
+                "within_25km": 1.492537313432836,
+                "within_200km": 2.985074626865672
+              }
+            },
+            "lat05_lon02": {
+              "n": 123,
+              "metrics": {
+                "mean_km": 3454.186618794736,
+                "median_km": 1812.2919061524922,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.8130081300813008
+              }
+            },
+            "lat05_lon03": {
+              "n": 73,
+              "metrics": {
+                "mean_km": 3416.640684077213,
+                "median_km": 1854.0137144351415,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 8.219178082191782
+              }
+            },
+            "lat05_lon04": {
+              "n": 5,
+              "metrics": null
+            },
+            "lat05_lon05": {
+              "n": 69,
+              "metrics": {
+                "mean_km": 3334.5107646113584,
+                "median_km": 1611.9122008064132,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 8.695652173913043
+              }
+            },
+            "lat05_lon06": {
+              "n": 269,
+              "metrics": {
+                "mean_km": 2845.591093209708,
+                "median_km": 1137.944121213154,
+                "within_1km": 0.0,
+                "within_25km": 0.7434944237918215,
+                "within_200km": 7.806691449814126
+              }
+            },
+            "lat05_lon07": {
+              "n": 148,
+              "metrics": {
+                "mean_km": 3567.3508148995656,
+                "median_km": 2145.745054776005,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 3.3783783783783785
+              }
+            },
+            "lat05_lon08": {
+              "n": 88,
+              "metrics": {
+                "mean_km": 6512.5291796708325,
+                "median_km": 5726.601892938446,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 0.0
+              }
+            },
+            "lat05_lon09": {
+              "n": 19,
+              "metrics": null
+            },
+            "lat05_lon10": {
+              "n": 45,
+              "metrics": {
+                "mean_km": 7311.196915831968,
+                "median_km": 8220.582100824233,
+                "within_1km": 0.0,
+                "within_25km": 0.0,
+                "within_200km": 2.2222222222222223
+              }
+            }
+          },
+          "limitations": "Descriptive geographic strata only; they do not provide conditional or regional accuracy guarantees and do not account for spatial dependence."
+        },
+        "n": 3000
+      }
+    }
+  ],
+  "majority_cell_baseline": {
+    "baseline": "always predict the most frequent training cell centroid",
+    "cell_id": 43,
+    "training_cell_count": 113,
+    "training_cell_share_pct": 1.13,
+    "n": 3000,
+    "within_1km": 0.0,
+    "within_25km": 0.03333333333333333,
+    "within_200km": 0.13333333333333333,
+    "mean_km": 9585.526947464754,
+    "median_km": 10509.191476694225,
+    "cells": "checkpoints/l2_cells_full.json",
+    "cells_sha256": "e291ad6a6f589cb9fd0cca1255fcb33a49a247f5991249c21e7f965f089d9552",
+    "evaluation_csv_sha256": "d0ae3837e459d3171fbee3e2882e0c2c7634f6ffd5f7442d11274b80c5ec69ac"
+  },
+  "summary": {
+    "by_mode": {
+      "cell-balanced": {
+        "runs": 3,
+        "metrics": {
+          "within_1km": {
+            "mean": 0.0,
+            "stdev": 0.0
+          },
+          "within_25km": {
+            "mean": 0.15555555555555556,
+            "stdev": 0.01924500897298754
+          },
+          "within_200km": {
+            "mean": 3.3777777777777778,
+            "stdev": 0.1644294287438749
+          },
+          "mean_km": {
+            "mean": 5858.9933274158975,
+            "stdev": 143.4932696824231
+          },
+          "median_km": {
+            "mean": 4759.170399490507,
+            "stdev": 308.6652486427352
+          }
+        }
+      },
+      "uniform": {
+        "runs": 3,
+        "metrics": {
+          "within_1km": {
+            "mean": 0.0,
+            "stdev": 0.0
+          },
+          "within_25km": {
+            "mean": 0.2,
+            "stdev": 0.03333333333333334
+          },
+          "within_200km": {
+            "mean": 3.3777777777777773,
+            "stdev": 0.37908271353848855
+          },
+          "mean_km": {
+            "mean": 5849.928034514101,
+            "stdev": 183.92034644149754
+          },
+          "median_km": {
+            "mean": 4653.566426624432,
+            "stdev": 391.77758782927435
+          }
+        }
+      }
+    },
+    "paired_delta_cell_balanced_minus_uniform": {
+      "within_1km": {
+        "per_seed": [
+          0.0,
+          0.0,
+          0.0
+        ],
+        "mean": 0.0,
+        "stdev": 0.0
+      },
+      "within_25km": {
+        "per_seed": [
+          -0.06666666666666668,
+          -0.06666666666666668,
+          0.0
+        ],
+        "mean": -0.04444444444444445,
+        "stdev": 0.03849001794597506
+      },
+      "within_200km": {
+        "per_seed": [
+          0.0,
+          -0.2333333333333334,
+          0.23333333333333384
+        ],
+        "mean": 1.4802973661668753e-16,
+        "stdev": 0.23333333333333361
+      },
+      "mean_km": {
+        "per_seed": [
+          243.32325153561032,
+          -16.30636721638075,
+          -199.82100561383686
+        ],
+        "mean": 9.065292901797571,
+        "stdev": 222.65892978723784
+      },
+      "median_km": {
+        "per_seed": [
+          651.002223980081,
+          27.774076331601464,
+          -361.96438171345835
+        ],
+        "mean": 105.6039728660747,
+        "stdev": 510.94858416331647
+      }
+    },
+    "regional_paired_delta_cell_balanced_minus_uniform": {
+      "lat00_lon03": {
+        "within_1km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        },
+        "within_25km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        },
+        "within_200km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        },
+        "mean_km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        },
+        "median_km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        }
+      },
+      "lat00_lon04": {
+        "within_1km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        },
+        "within_25km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        },
+        "within_200km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        },
+        "mean_km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        },
+        "median_km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        }
+      },
+      "lat00_lon10": {
+        "within_1km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        },
+        "within_25km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        },
+        "within_200km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        },
+        "mean_km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        },
+        "median_km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        }
+      },
+      "lat00_lon11": {
+        "within_1km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        },
+        "within_25km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        },
+        "within_200km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        },
+        "mean_km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        },
+        "median_km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        }
+      },
+      "lat01_lon03": {
+        "within_1km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 80
+        },
+        "within_25km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 80
+        },
+        "within_200km": {
+          "per_seed": [
+            0.0,
+            1.25,
+            1.25
+          ],
+          "mean": 0.8333333333333334,
+          "stdev": 0.7216878364870322,
+          "n": 80
+        },
+        "mean_km": {
+          "per_seed": [
+            -473.02815274780005,
+            627.7418968814582,
+            -193.384644010006
+          ],
+          "mean": -12.890299958782634,
+          "stdev": 572.1514936763348,
+          "n": 80
+        },
+        "median_km": {
+          "per_seed": [
+            -11.913942611045059,
+            533.5499097182328,
+            -319.00675736784433
+          ],
+          "mean": 67.54306991311448,
+          "stdev": 431.7965727951976,
+          "n": 80
+        }
+      },
+      "lat01_lon04": {
+        "within_1km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 79
+        },
+        "within_25km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 79
+        },
+        "within_200km": {
+          "per_seed": [
+            0.0,
+            1.2658227848101267,
+            -1.2658227848101267
+          ],
+          "mean": 0.0,
+          "stdev": 1.2658227848101267,
+          "n": 79
+        },
+        "mean_km": {
+          "per_seed": [
+            460.4511997492891,
+            777.4983220128897,
+            468.69975819076535
+          ],
+          "mean": 568.8830933176481,
+          "stdev": 180.71315644348255,
+          "n": 79
+        },
+        "median_km": {
+          "per_seed": [
+            1026.7032551058255,
+            1295.756219776149,
+            1178.6020254898322
+          ],
+          "mean": 1167.0205001239356,
+          "stdev": 134.89986377614792,
+          "n": 79
+        }
+      },
+      "lat01_lon06": {
+        "within_1km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 41
+        },
+        "within_25km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            2.4390243902439024
+          ],
+          "mean": 0.8130081300813008,
+          "stdev": 1.4081713882673799,
+          "n": 41
+        },
+        "within_200km": {
+          "per_seed": [
+            2.4390243902439024,
+            -2.4390243902439024,
+            4.878048780487806
+          ],
+          "mean": 1.6260162601626018,
+          "stdev": 3.7256712967120653,
+          "n": 41
+        },
+        "mean_km": {
+          "per_seed": [
+            1176.0656360066168,
+            1656.7060549458529,
+            368.2975797172094
+          ],
+          "mean": 1067.0230902232263,
+          "stdev": 651.088939664499,
+          "n": 41
+        },
+        "median_km": {
+          "per_seed": [
+            3411.356835031367,
+            2143.493778454107,
+            -272.85914031788707
+          ],
+          "mean": 1760.6638243891957,
+          "stdev": 1871.7053503561053,
+          "n": 41
+        }
+      },
+      "lat01_lon07": {
+        "within_1km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 40
+        },
+        "within_25km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 40
+        },
+        "within_200km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 40
+        },
+        "mean_km": {
+          "per_seed": [
+            -1226.8373181456973,
+            -1927.4405783310467,
+            1680.0824442661142
+          ],
+          "mean": -491.3984840702099,
+          "stdev": 1912.9057213155784,
+          "n": 40
+        },
+        "median_km": {
+          "per_seed": [
+            -1022.5054863503283,
+            -1403.4866362294051,
+            669.7712269771846
+          ],
+          "mean": -585.4069652008496,
+          "stdev": 1103.5809348345433,
+          "n": 40
+        }
+      },
+      "lat01_lon09": {
+        "within_1km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        },
+        "within_25km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        },
+        "within_200km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        },
+        "mean_km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        },
+        "median_km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        }
+      },
+      "lat01_lon10": {
+        "within_1km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 87
+        },
+        "within_25km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 87
+        },
+        "within_200km": {
+          "per_seed": [
+            1.1494252873563218,
+            -1.1494252873563218,
+            -2.2988505747126435
+          ],
+          "mean": -0.7662835249042145,
+          "stdev": 1.7557761283355708,
+          "n": 87
+        },
+        "mean_km": {
+          "per_seed": [
+            -912.5576211827838,
+            -1484.7556229741003,
+            -613.1406803843147
+          ],
+          "mean": -1003.484641513733,
+          "stdev": 442.86447622963334,
+          "n": 87
+        },
+        "median_km": {
+          "per_seed": [
+            0.0,
+            -830.0122108855596,
+            225.49330899057372
+          ],
+          "mean": -201.50630063166196,
+          "stdev": 555.8566069751622,
+          "n": 87
+        }
+      },
+      "lat01_lon11": {
+        "within_1km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 34
+        },
+        "within_25km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 34
+        },
+        "within_200km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 34
+        },
+        "mean_km": {
+          "per_seed": [
+            289.6223409461745,
+            1018.6712346795084,
+            -631.0370447737259
+          ],
+          "mean": 225.75217695065234,
+          "stdev": 826.7066591063295,
+          "n": 34
+        },
+        "median_km": {
+          "per_seed": [
+            2308.270625177316,
+            3476.4609225261192,
+            -1794.9900385880228
+          ],
+          "mean": 1329.913836371804,
+          "stdev": 2768.561957679325,
+          "n": 34
+        }
+      },
+      "lat02_lon00": {
+        "within_1km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        },
+        "within_25km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        },
+        "within_200km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        },
+        "mean_km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        },
+        "median_km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        }
+      },
+      "lat02_lon02": {
+        "within_1km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        },
+        "within_25km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        },
+        "within_200km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        },
+        "mean_km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        },
+        "median_km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        }
+      },
+      "lat02_lon03": {
+        "within_1km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 59
+        },
+        "within_25km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            1.694915254237288
+          ],
+          "mean": 0.5649717514124294,
+          "stdev": 0.9785597782875013,
+          "n": 59
+        },
+        "within_200km": {
+          "per_seed": [
+            5.084745762711865,
+            -1.694915254237288,
+            10.169491525423728
+          ],
+          "mean": 4.519774011299435,
+          "stdev": 5.952346753024146,
+          "n": 59
+        },
+        "mean_km": {
+          "per_seed": [
+            -1173.6477366633226,
+            1913.1276675277968,
+            44.1967599006548
+          ],
+          "mean": 261.22556358837636,
+          "stdev": 1554.789929605413,
+          "n": 59
+        },
+        "median_km": {
+          "per_seed": [
+            -698.378776095733,
+            1783.8479231375495,
+            451.07308685143016
+          ],
+          "mean": 512.1807446310822,
+          "stdev": 1242.2411021923745,
+          "n": 59
+        }
+      },
+      "lat02_lon04": {
+        "within_1km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 90
+        },
+        "within_25km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 90
+        },
+        "within_200km": {
+          "per_seed": [
+            -1.1111111111111112,
+            -1.1111111111111112,
+            -1.1111111111111112
+          ],
+          "mean": -1.1111111111111112,
+          "stdev": 0.0,
+          "n": 90
+        },
+        "mean_km": {
+          "per_seed": [
+            -559.1994188871831,
+            499.7459505523166,
+            1542.3750872776582
+          ],
+          "mean": 494.30720631426385,
+          "stdev": 1050.7978093785048,
+          "n": 90
+        },
+        "median_km": {
+          "per_seed": [
+            -103.57010045462994,
+            952.7129772965827,
+            819.1743509740973
+          ],
+          "mean": 556.10574260535,
+          "stdev": 575.1845830841571,
+          "n": 90
+        }
+      },
+      "lat02_lon06": {
+        "within_1km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 97
+        },
+        "within_25km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 97
+        },
+        "within_200km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 97
+        },
+        "mean_km": {
+          "per_seed": [
+            1463.4629572652902,
+            -774.8847673265864,
+            -674.3291738609432
+          ],
+          "mean": 4.749672025920215,
+          "stdev": 1264.2828770669496,
+          "n": 97
+        },
+        "median_km": {
+          "per_seed": [
+            1844.6746514822607,
+            -322.7893915699633,
+            -205.55604194723128
+          ],
+          "mean": 438.7764059883554,
+          "stdev": 1218.9537817645394,
+          "n": 97
+        }
+      },
+      "lat02_lon07": {
+        "within_1km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 73
+        },
+        "within_25km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 73
+        },
+        "within_200km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 73
+        },
+        "mean_km": {
+          "per_seed": [
+            735.6293339502936,
+            461.0734854916682,
+            58.741015072284426
+          ],
+          "mean": 418.4812781714154,
+          "stdev": 340.4482650149401,
+          "n": 73
+        },
+        "median_km": {
+          "per_seed": [
+            889.2924868414048,
+            1208.161602075309,
+            212.90064799887296
+          ],
+          "mean": 770.118245638529,
+          "stdev": 508.2203916629038,
+          "n": 73
+        }
+      },
+      "lat02_lon09": {
+        "within_1km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 20
+        },
+        "within_25km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 20
+        },
+        "within_200km": {
+          "per_seed": [
+            0.0,
+            -5.0,
+            0.0
+          ],
+          "mean": -1.6666666666666667,
+          "stdev": 2.8867513459481287,
+          "n": 20
+        },
+        "mean_km": {
+          "per_seed": [
+            -410.8951176269202,
+            -1110.2901190925622,
+            -2546.7385865110136
+          ],
+          "mean": -1355.9746077434986,
+          "stdev": 1088.911145074043,
+          "n": 20
+        },
+        "median_km": {
+          "per_seed": [
+            -2044.2028796606028,
+            -4515.17483949212,
+            -7824.56181229282
+          ],
+          "mean": -4794.646510481847,
+          "stdev": 2900.2957881360326,
+          "n": 20
+        }
+      },
+      "lat02_lon10": {
+        "within_1km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 40
+        },
+        "within_25km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 40
+        },
+        "within_200km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 40
+        },
+        "mean_km": {
+          "per_seed": [
+            540.6717175118338,
+            -1872.3102948376636,
+            -1167.4946327932976
+          ],
+          "mean": -833.0444033730424,
+          "stdev": 1240.7712379604886,
+          "n": 40
+        },
+        "median_km": {
+          "per_seed": [
+            4227.982088044826,
+            -1010.5124829846391,
+            -3854.488044261172
+          ],
+          "mean": -212.3394797336617,
+          "stdev": 4099.925727039899,
+          "n": 40
+        }
+      },
+      "lat02_lon11": {
+        "within_1km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 25
+        },
+        "within_25km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 25
+        },
+        "within_200km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 25
+        },
+        "mean_km": {
+          "per_seed": [
+            -1322.1889798622742,
+            -1292.316744153044,
+            387.23656314274376
+          ],
+          "mean": -742.4230536241915,
+          "stdev": 978.4279354822619,
+          "n": 25
+        },
+        "median_km": {
+          "per_seed": [
+            -1399.9556766643063,
+            -1454.2624378316068,
+            722.1888581962376
+          ],
+          "mean": -710.6764187665585,
+          "stdev": 1241.1947802506154,
+          "n": 25
+        }
+      },
+      "lat03_lon00": {
+        "within_1km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        },
+        "within_25km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        },
+        "within_200km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        },
+        "mean_km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        },
+        "median_km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        }
+      },
+      "lat03_lon02": {
+        "within_1km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 21
+        },
+        "within_25km": {
+          "per_seed": [
+            0.0,
+            -4.761904761904762,
+            -4.761904761904762
+          ],
+          "mean": -3.1746031746031744,
+          "stdev": 2.749286996141075,
+          "n": 21
+        },
+        "within_200km": {
+          "per_seed": [
+            0.0,
+            -4.761904761904762,
+            -4.761904761904762
+          ],
+          "mean": -3.1746031746031744,
+          "stdev": 2.749286996141075,
+          "n": 21
+        },
+        "mean_km": {
+          "per_seed": [
+            131.39355983996575,
+            2811.0497628815556,
+            3535.008787510724
+          ],
+          "mean": 2159.1507034107485,
+          "stdev": 1793.0082103304096,
+          "n": 21
+        },
+        "median_km": {
+          "per_seed": [
+            1980.9701556746095,
+            2031.5817789600587,
+            6254.543577550008
+          ],
+          "mean": 3422.3651707282256,
+          "stdev": 2452.868989602497,
+          "n": 21
+        }
+      },
+      "lat03_lon03": {
+        "within_1km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 70
+        },
+        "within_25km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 70
+        },
+        "within_200km": {
+          "per_seed": [
+            1.4285714285714288,
+            -5.714285714285714,
+            1.4285714285714286
+          ],
+          "mean": -0.9523809523809523,
+          "stdev": 4.123930494211613,
+          "n": 70
+        },
+        "mean_km": {
+          "per_seed": [
+            -377.02030367795123,
+            1816.3692896732846,
+            1617.071812029506
+          ],
+          "mean": 1018.8069326749464,
+          "stdev": 1212.922143609069,
+          "n": 70
+        },
+        "median_km": {
+          "per_seed": [
+            -718.7877720960605,
+            3238.9155177005778,
+            3760.399947512763
+          ],
+          "mean": 2093.5092310390933,
+          "stdev": 2449.4381657874856,
+          "n": 70
+        }
+      },
+      "lat03_lon04": {
+        "within_1km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        },
+        "within_25km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        },
+        "within_200km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        },
+        "mean_km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        },
+        "median_km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        }
+      },
+      "lat03_lon05": {
+        "within_1km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 68
+        },
+        "within_25km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 68
+        },
+        "within_200km": {
+          "per_seed": [
+            -1.4705882352941178,
+            1.4705882352941178,
+            -1.4705882352941178
+          ],
+          "mean": -0.4901960784313726,
+          "stdev": 1.698089027028311,
+          "n": 68
+        },
+        "mean_km": {
+          "per_seed": [
+            1134.0133835406432,
+            229.25558713952705,
+            836.1289155789427
+          ],
+          "mean": 733.1326287530377,
+          "stdev": 461.08875920162484,
+          "n": 68
+        },
+        "median_km": {
+          "per_seed": [
+            1252.8266569620014,
+            684.3942340259937,
+            747.7526006573153
+          ],
+          "mean": 894.9911638817701,
+          "stdev": 311.50963185193234,
+          "n": 68
+        }
+      },
+      "lat03_lon06": {
+        "within_1km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 91
+        },
+        "within_25km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 91
+        },
+        "within_200km": {
+          "per_seed": [
+            1.098901098901099,
+            -1.098901098901099,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 1.098901098901099,
+          "n": 91
+        },
+        "mean_km": {
+          "per_seed": [
+            -599.0767463887332,
+            -464.78929166626494,
+            554.4146663304991
+          ],
+          "mean": -169.81712390816634,
+          "stdev": 630.786845628685,
+          "n": 91
+        },
+        "median_km": {
+          "per_seed": [
+            198.4290033932657,
+            -186.95763457413068,
+            456.5486890877137
+          ],
+          "mean": 156.00668596894957,
+          "stdev": 323.8438464907627,
+          "n": 91
+        }
+      },
+      "lat03_lon07": {
+        "within_1km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 48
+        },
+        "within_25km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 48
+        },
+        "within_200km": {
+          "per_seed": [
+            2.0833333333333335,
+            0.0,
+            -2.0833333333333335
+          ],
+          "mean": 0.0,
+          "stdev": 2.0833333333333335,
+          "n": 48
+        },
+        "mean_km": {
+          "per_seed": [
+            327.53716630031613,
+            184.21128857238728,
+            -542.173626840673
+          ],
+          "mean": -10.141723989323205,
+          "stdev": 466.2928651023318,
+          "n": 48
+        },
+        "median_km": {
+          "per_seed": [
+            59.660585166515375,
+            -218.21764711425294,
+            -306.29408452233747
+          ],
+          "mean": -154.9503821566917,
+          "stdev": 191.00462082938475,
+          "n": 48
+        }
+      },
+      "lat03_lon08": {
+        "within_1km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 49
+        },
+        "within_25km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 49
+        },
+        "within_200km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            -2.0408163265306123
+          ],
+          "mean": -0.6802721088435374,
+          "stdev": 1.1782658554890322,
+          "n": 49
+        },
+        "mean_km": {
+          "per_seed": [
+            2453.404184747058,
+            -1317.3064175700556,
+            -728.1686813738688
+          ],
+          "mean": 135.97636193437788,
+          "stdev": 2028.4537469492202,
+          "n": 49
+        },
+        "median_km": {
+          "per_seed": [
+            2999.738745590695,
+            -505.68257660938525,
+            -721.0240509341811
+          ],
+          "mean": 591.0107060157096,
+          "stdev": 2088.796558814946,
+          "n": 49
+        }
+      },
+      "lat03_lon09": {
+        "within_1km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 79
+        },
+        "within_25km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            -1.2658227848101267
+          ],
+          "mean": -0.4219409282700422,
+          "stdev": 0.7308231255564883,
+          "n": 79
+        },
+        "within_200km": {
+          "per_seed": [
+            -1.2658227848101267,
+            -2.531645569620253,
+            -2.531645569620253
+          ],
+          "mean": -2.109704641350211,
+          "stdev": 0.7308231255564881,
+          "n": 79
+        },
+        "mean_km": {
+          "per_seed": [
+            1024.4067960281018,
+            -361.0902610375597,
+            -434.9951637244176
+          ],
+          "mean": 76.10712375537484,
+          "stdev": 822.0825293026908,
+          "n": 79
+        },
+        "median_km": {
+          "per_seed": [
+            1795.3611035473314,
+            71.68090850064982,
+            607.6118579721442
+          ],
+          "mean": 824.8846233400418,
+          "stdev": 882.1416805859485,
+          "n": 79
+        }
+      },
+      "lat03_lon10": {
+        "within_1km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 28
+        },
+        "within_25km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 28
+        },
+        "within_200km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 28
+        },
+        "mean_km": {
+          "per_seed": [
+            -1337.1463388531683,
+            -2757.976605046917,
+            -218.0631517875172
+          ],
+          "mean": -1437.7286985625342,
+          "stdev": 1272.9405704217108,
+          "n": 28
+        },
+        "median_km": {
+          "per_seed": [
+            -1548.5747559444917,
+            -3807.9062145792086,
+            -624.8778888544421
+          ],
+          "mean": -1993.7862864593808,
+          "stdev": 1637.552231462896,
+          "n": 28
+        }
+      },
+      "lat03_lon11": {
+        "within_1km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        },
+        "within_25km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        },
+        "within_200km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        },
+        "mean_km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        },
+        "median_km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        }
+      },
+      "lat04_lon00": {
+        "within_1km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        },
+        "within_25km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        },
+        "within_200km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        },
+        "mean_km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        },
+        "median_km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        }
+      },
+      "lat04_lon01": {
+        "within_1km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        },
+        "within_25km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        },
+        "within_200km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        },
+        "mean_km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        },
+        "median_km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        }
+      },
+      "lat04_lon02": {
+        "within_1km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 202
+        },
+        "within_25km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 202
+        },
+        "within_200km": {
+          "per_seed": [
+            0.49504950495049505,
+            -0.9900990099009901,
+            -0.49504950495049505
+          ],
+          "mean": -0.33003300330033003,
+          "stdev": 0.7562006097286864,
+          "n": 202
+        },
+        "mean_km": {
+          "per_seed": [
+            -287.56278680984997,
+            1088.1954504335622,
+            -410.0990846665036
+          ],
+          "mean": 130.17785965240287,
+          "stdev": 831.9267180814103,
+          "n": 202
+        },
+        "median_km": {
+          "per_seed": [
+            -131.2131913629787,
+            566.1195142024992,
+            -105.15401738909304
+          ],
+          "mean": 109.91743515014248,
+          "stdev": 395.2973853136647,
+          "n": 202
+        }
+      },
+      "lat04_lon03": {
+        "within_1km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 101
+        },
+        "within_25km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 101
+        },
+        "within_200km": {
+          "per_seed": [
+            0.0,
+            -2.9702970297029703,
+            4.9504950495049505
+          ],
+          "mean": 0.6600660066006601,
+          "stdev": 4.00143750923503,
+          "n": 101
+        },
+        "mean_km": {
+          "per_seed": [
+            -95.06149531390565,
+            1236.2691143514276,
+            -153.7822104949355
+          ],
+          "mean": 329.1418028475288,
+          "stdev": 786.1437527927455,
+          "n": 101
+        },
+        "median_km": {
+          "per_seed": [
+            407.60234240434374,
+            401.2398419250785,
+            -1100.997791374561
+          ],
+          "mean": -97.38520234837961,
+          "stdev": 869.1598195912898,
+          "n": 101
+        }
+      },
+      "lat04_lon05": {
+        "within_1km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 49
+        },
+        "within_25km": {
+          "per_seed": [
+            -2.0408163265306123,
+            0.0,
+            0.0
+          ],
+          "mean": -0.6802721088435374,
+          "stdev": 1.1782658554890322,
+          "n": 49
+        },
+        "within_200km": {
+          "per_seed": [
+            4.081632653061224,
+            -2.0408163265306123,
+            0.0
+          ],
+          "mean": 0.6802721088435372,
+          "stdev": 3.117398431942748,
+          "n": 49
+        },
+        "mean_km": {
+          "per_seed": [
+            758.9174254880172,
+            919.8767368755698,
+            1312.5126024434621
+          ],
+          "mean": 997.102254935683,
+          "stdev": 284.762603701438,
+          "n": 49
+        },
+        "median_km": {
+          "per_seed": [
+            2352.876030735526,
+            105.02819778151388,
+            3101.2063229661408
+          ],
+          "mean": 1853.0368504943935,
+          "stdev": 1559.3749529977747,
+          "n": 49
+        }
+      },
+      "lat04_lon06": {
+        "within_1km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 60
+        },
+        "within_25km": {
+          "per_seed": [
+            1.6666666666666667,
+            0.0,
+            -1.6666666666666667
+          ],
+          "mean": 0.0,
+          "stdev": 1.6666666666666667,
+          "n": 60
+        },
+        "within_200km": {
+          "per_seed": [
+            0.0,
+            3.333333333333333,
+            0.0
+          ],
+          "mean": 1.111111111111111,
+          "stdev": 1.9245008972987523,
+          "n": 60
+        },
+        "mean_km": {
+          "per_seed": [
+            -190.07426789520105,
+            -607.4705727716819,
+            -851.5882311886858
+          ],
+          "mean": -549.7110239518562,
+          "stdev": 334.51801897351635,
+          "n": 60
+        },
+        "median_km": {
+          "per_seed": [
+            -275.1847468972742,
+            -768.4750068599787,
+            -1386.7635759186392
+          ],
+          "mean": -810.141109891964,
+          "stdev": 556.959532990083,
+          "n": 60
+        }
+      },
+      "lat04_lon07": {
+        "within_1km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 158
+        },
+        "within_25km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 158
+        },
+        "within_200km": {
+          "per_seed": [
+            1.8987341772151893,
+            1.8987341772151893,
+            0.0
+          ],
+          "mean": 1.2658227848101262,
+          "stdev": 1.0962346883347323,
+          "n": 158
+        },
+        "mean_km": {
+          "per_seed": [
+            482.8557446976183,
+            -258.3348160361056,
+            -1053.7294784971637
+          ],
+          "mean": -276.402849945217,
+          "stdev": 768.4519356616555,
+          "n": 158
+        },
+        "median_km": {
+          "per_seed": [
+            -467.86936436616634,
+            -381.92897541093816,
+            -768.9533755741572
+          ],
+          "mean": -539.5839051170873,
+          "stdev": 203.2343551094684,
+          "n": 158
+        }
+      },
+      "lat04_lon08": {
+        "within_1km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 123
+        },
+        "within_25km": {
+          "per_seed": [
+            0.0,
+            -0.8130081300813008,
+            0.0
+          ],
+          "mean": -0.27100271002710025,
+          "stdev": 0.46939046275579327,
+          "n": 123
+        },
+        "within_200km": {
+          "per_seed": [
+            -3.252032520325203,
+            -2.439024390243903,
+            0.8130081300813004
+          ],
+          "mean": -1.6260162601626018,
+          "stdev": 2.151017326068773,
+          "n": 123
+        },
+        "mean_km": {
+          "per_seed": [
+            1575.4341743595933,
+            -328.38726926625077,
+            -1105.0273375779561
+          ],
+          "mean": 47.33985583846212,
+          "stdev": 1379.1651944742598,
+          "n": 123
+        },
+        "median_km": {
+          "per_seed": [
+            2181.3386037785203,
+            407.8761944298194,
+            -823.1808640803356
+          ],
+          "mean": 588.6779780426681,
+          "stdev": 1510.3977197757902,
+          "n": 123
+        }
+      },
+      "lat04_lon09": {
+        "within_1km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 66
+        },
+        "within_25km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 66
+        },
+        "within_200km": {
+          "per_seed": [
+            -3.0303030303030307,
+            3.0303030303030307,
+            1.5151515151515156
+          ],
+          "mean": 0.5050505050505052,
+          "stdev": 3.1540393931305046,
+          "n": 66
+        },
+        "mean_km": {
+          "per_seed": [
+            1574.4370217285032,
+            -1010.7957409087521,
+            -1718.8916483155508
+          ],
+          "mean": -385.08345583193324,
+          "stdev": 1733.5340579306699,
+          "n": 66
+        },
+        "median_km": {
+          "per_seed": [
+            1576.1943364373883,
+            -219.41795509672193,
+            -1244.9523647696979
+          ],
+          "mean": 37.27467219032284,
+          "stdev": 1427.9830202458818,
+          "n": 66
+        }
+      },
+      "lat04_lon10": {
+        "within_1km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 41
+        },
+        "within_25km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 41
+        },
+        "within_200km": {
+          "per_seed": [
+            0.0,
+            -4.878048780487805,
+            0.0
+          ],
+          "mean": -1.6260162601626016,
+          "stdev": 2.8163427765347597,
+          "n": 41
+        },
+        "mean_km": {
+          "per_seed": [
+            855.5737617628947,
+            -722.9740792812727,
+            18.147376574564078
+          ],
+          "mean": 50.249019685395375,
+          "stdev": 789.7633874991369,
+          "n": 41
+        },
+        "median_km": {
+          "per_seed": [
+            1316.2062809053114,
+            -1701.319685674951,
+            2734.1697151436374
+          ],
+          "mean": 783.0187701246659,
+          "stdev": 2265.305332054126,
+          "n": 41
+        }
+      },
+      "lat05_lon00": {
+        "within_1km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        },
+        "within_25km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        },
+        "within_200km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        },
+        "mean_km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        },
+        "median_km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        }
+      },
+      "lat05_lon01": {
+        "within_1km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 67
+        },
+        "within_25km": {
+          "per_seed": [
+            0.0,
+            1.492537313432836,
+            1.492537313432836
+          ],
+          "mean": 0.9950248756218906,
+          "stdev": 0.8617168196860087,
+          "n": 67
+        },
+        "within_200km": {
+          "per_seed": [
+            0.0,
+            1.4925373134328352,
+            1.492537313432836
+          ],
+          "mean": 0.9950248756218903,
+          "stdev": 0.8617168196860084,
+          "n": 67
+        },
+        "mean_km": {
+          "per_seed": [
+            -27.750822484703804,
+            252.27863498429087,
+            -1854.448016251487
+          ],
+          "mean": -543.3067345839667,
+          "stdev": 1144.081605320248,
+          "n": 67
+        },
+        "median_km": {
+          "per_seed": [
+            -979.7009139563575,
+            206.10297799821683,
+            -1617.014067397235
+          ],
+          "mean": -796.8706677851252,
+          "stdev": 925.2076061561187,
+          "n": 67
+        }
+      },
+      "lat05_lon02": {
+        "within_1km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 123
+        },
+        "within_25km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 123
+        },
+        "within_200km": {
+          "per_seed": [
+            1.6260162601626016,
+            -0.8130081300813012,
+            -3.2520325203252036
+          ],
+          "mean": -0.8130081300813011,
+          "stdev": 2.439024390243903,
+          "n": 123
+        },
+        "mean_km": {
+          "per_seed": [
+            -816.9618864201157,
+            1006.5259253849595,
+            -1175.7370726578383
+          ],
+          "mean": -328.7243445643315,
+          "stdev": 1170.1922368203948,
+          "n": 123
+        },
+        "median_km": {
+          "per_seed": [
+            -576.9163485507723,
+            515.302080314287,
+            -520.2566710384012
+          ],
+          "mean": -193.95697975829555,
+          "stdev": 614.889331900655,
+          "n": 123
+        }
+      },
+      "lat05_lon03": {
+        "within_1km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 73
+        },
+        "within_25km": {
+          "per_seed": [
+            0.0,
+            1.36986301369863,
+            0.0
+          ],
+          "mean": 0.45662100456621,
+          "stdev": 0.7908907797118161,
+          "n": 73
+        },
+        "within_200km": {
+          "per_seed": [
+            -5.479452054794521,
+            1.3698630136986312,
+            1.3698630136986312
+          ],
+          "mean": -0.9132420091324196,
+          "stdev": 3.9544538985590814,
+          "n": 73
+        },
+        "mean_km": {
+          "per_seed": [
+            1106.5762289229601,
+            987.9797949892586,
+            -580.220759348173
+          ],
+          "mean": 504.77842152134855,
+          "stdev": 941.5060782603039,
+          "n": 73
+        },
+        "median_km": {
+          "per_seed": [
+            1767.2706276900458,
+            283.80510633219455,
+            -1010.1194033366619
+          ],
+          "mean": 346.9854435618595,
+          "stdev": 1389.7725218074268,
+          "n": 73
+        }
+      },
+      "lat05_lon04": {
+        "within_1km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        },
+        "within_25km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        },
+        "within_200km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        },
+        "mean_km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        },
+        "median_km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        }
+      },
+      "lat05_lon05": {
+        "within_1km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 69
+        },
+        "within_25km": {
+          "per_seed": [
+            0.0,
+            -1.4492753623188406,
+            0.0
+          ],
+          "mean": -0.4830917874396135,
+          "stdev": 0.836739520564675,
+          "n": 69
+        },
+        "within_200km": {
+          "per_seed": [
+            -1.4492753623188408,
+            0.0,
+            4.3478260869565215
+          ],
+          "mean": 0.9661835748792269,
+          "stdev": 3.016907245603091,
+          "n": 69
+        },
+        "mean_km": {
+          "per_seed": [
+            717.1459887505252,
+            -730.7321887880221,
+            -48.25998982874489
+          ],
+          "mean": -20.615396622080578,
+          "stdev": 724.3348479110043,
+          "n": 69
+        },
+        "median_km": {
+          "per_seed": [
+            609.2939481108235,
+            -561.9095871192238,
+            -10.3390321048862
+          ],
+          "mean": 12.348442962237831,
+          "stdev": 585.931285542538,
+          "n": 69
+        }
+      },
+      "lat05_lon06": {
+        "within_1km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 269
+        },
+        "within_25km": {
+          "per_seed": [
+            -0.37174721189591076,
+            -0.37174721189591076,
+            0.0
+          ],
+          "mean": -0.24783147459727384,
+          "stdev": 0.21462835285859694,
+          "n": 269
+        },
+        "within_200km": {
+          "per_seed": [
+            -1.4869888475836426,
+            2.6022304832713763,
+            -1.1152416356877328
+          ],
+          "mean": 2.9605947323337506e-16,
+          "stdev": 2.261250011263279,
+          "n": 269
+        },
+        "mean_km": {
+          "per_seed": [
+            525.6877661331605,
+            -694.414276879223,
+            -62.34871215876501
+          ],
+          "mean": -77.0250743016092,
+          "stdev": 610.1834113978017,
+          "n": 269
+        },
+        "median_km": {
+          "per_seed": [
+            553.7625958202821,
+            -254.87942089113528,
+            103.20452633444302
+          ],
+          "mean": 134.02923375452994,
+          "stdev": 405.20130767117166,
+          "n": 269
+        }
+      },
+      "lat05_lon07": {
+        "within_1km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 148
+        },
+        "within_25km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 148
+        },
+        "within_200km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            2.027027027027027
+          ],
+          "mean": 0.6756756756756758,
+          "stdev": 1.170304599708701,
+          "n": 148
+        },
+        "mean_km": {
+          "per_seed": [
+            349.7013779175659,
+            -1024.223704938298,
+            -534.4459405637531
+          ],
+          "mean": -402.9894225281617,
+          "stdev": 696.3319218775299,
+          "n": 148
+        },
+        "median_km": {
+          "per_seed": [
+            322.093453773281,
+            -459.9091451646009,
+            -194.62868297492923
+          ],
+          "mean": -110.81479145541637,
+          "stdev": 397.68152144037816,
+          "n": 148
+        }
+      },
+      "lat05_lon08": {
+        "within_1km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 88
+        },
+        "within_25km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 88
+        },
+        "within_200km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 88
+        },
+        "mean_km": {
+          "per_seed": [
+            452.85477545208505,
+            -432.0743985526251,
+            769.3734371975552
+          ],
+          "mean": 263.384604699005,
+          "stdev": 622.7306277284738,
+          "n": 88
+        },
+        "median_km": {
+          "per_seed": [
+            2270.0249766392253,
+            -1242.8135254032222,
+            1685.4317652220252
+          ],
+          "mean": 904.2144054860095,
+          "stdev": 1882.2151863489573,
+          "n": 88
+        }
+      },
+      "lat05_lon09": {
+        "within_1km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        },
+        "within_25km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        },
+        "within_200km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        },
+        "mean_km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        },
+        "median_km": {
+          "per_seed": [],
+          "mean": null,
+          "stdev": null,
+          "n": null
+        }
+      },
+      "lat05_lon10": {
+        "within_1km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 45
+        },
+        "within_25km": {
+          "per_seed": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "mean": 0.0,
+          "stdev": 0.0,
+          "n": 45
+        },
+        "within_200km": {
+          "per_seed": [
+            2.2222222222222223,
+            0.0,
+            0.0
+          ],
+          "mean": 0.7407407407407408,
+          "stdev": 1.2830005981991683,
+          "n": 45
+        },
+        "mean_km": {
+          "per_seed": [
+            -931.2124743431614,
+            -67.77821000739641,
+            -426.10038307695777
+          ],
+          "mean": -475.03035580917185,
+          "stdev": 433.7917575069198,
+          "n": 45
+        },
+        "median_km": {
+          "per_seed": [
+            -563.1786075830923,
+            -552.4363181887402,
+            255.360104083019
+          ],
+          "mean": -286.75160722960453,
+          "stdev": 469.513237142558,
+          "n": 45
+        }
+      }
+    }
+  },
+  "interpretation": "Descriptive paired evaluation on the specified test CSV. It does not imply causal superiority or generalization beyond this dataset."
+}
