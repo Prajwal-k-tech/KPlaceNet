@@ -107,20 +107,20 @@ class SamplingEvaluationTests(unittest.TestCase):
         balanced = run(42, "cell-balanced")
         baseline["metrics"]["regional_distance"] = {"regions": {
             "lat00_lon00": {"n": 30, "metrics": {"mean_km": 500.0, "median_km": 400.0,
-                                                        "within_1km": 0.0, "within_25km": 0.1,
-                                                        "within_200km": 0.4}},
+                                                        "within_1km": 0.0, "within_25km": 10.0,
+                                                        "within_200km": 40.0}},
             "lat00_lon01": {"n": 2, "metrics": None},
         }}
         balanced["metrics"]["regional_distance"] = {"regions": {
             "lat00_lon00": {"n": 30, "metrics": {"mean_km": 450.0, "median_km": 350.0,
-                                                        "within_1km": 0.0, "within_25km": 0.2,
-                                                        "within_200km": 0.5}},
+                                                        "within_1km": 0.0, "within_25km": 20.0,
+                                                        "within_200km": 50.0}},
             "lat00_lon01": {"n": 2, "metrics": None},
         }}
         summary = summarize_runs([baseline, balanced])
         regional = summary["regional_paired_delta_cell_balanced_minus_uniform"]
         self.assertEqual(regional["lat00_lon00"]["mean_km"]["mean"], -50.0)
-        self.assertAlmostEqual(regional["lat00_lon00"]["within_200km"]["mean"], 0.1)
+        self.assertAlmostEqual(regional["lat00_lon00"]["within_200km"]["mean"], 10.0)
         self.assertEqual(regional["lat00_lon00"]["within_200km"]["n"], 30)
         self.assertEqual(regional["lat00_lon01"]["within_200km"]["mean"], None)
 

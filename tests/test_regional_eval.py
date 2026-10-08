@@ -24,8 +24,8 @@ class SpatialStratifiedMetricsTests(unittest.TestCase):
         self.assertEqual(equatorial["n"], 2)
         self.assertAlmostEqual(equatorial["metrics"]["mean_km"], 55.597, places=2)
         self.assertAlmostEqual(equatorial["metrics"]["median_km"], 55.597, places=2)
-        self.assertEqual(equatorial["metrics"]["within_200km"], 1.0)
-        self.assertEqual(equatorial["metrics"]["within_25km"], 0.5)
+        self.assertEqual(equatorial["metrics"]["within_200km"], 100.0)
+        self.assertEqual(equatorial["metrics"]["within_25km"], 50.0)
         self.assertIsNone(result["regions"]["lat01_lon03"]["metrics"])
 
     def test_geodesic_strata_validates_coordinate_alignment(self):

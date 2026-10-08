@@ -237,9 +237,9 @@ def spatial_distance_metrics(
             "metrics": {
                 "mean_km": sum(distances) / n,
                 "median_km": median,
-                "within_1km": sum(distance <= 1.0 for distance in distances) / n,
-                "within_25km": sum(distance <= 25.0 for distance in distances) / n,
-                "within_200km": sum(distance <= 200.0 for distance in distances) / n,
+                "within_1km": 100.0 * sum(distance <= 1.0 for distance in distances) / n,
+                "within_25km": 100.0 * sum(distance <= 25.0 for distance in distances) / n,
+                "within_200km": 100.0 * sum(distance <= 200.0 for distance in distances) / n,
             },
         }
     return {
