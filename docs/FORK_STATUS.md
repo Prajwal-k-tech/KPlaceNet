@@ -56,8 +56,9 @@ cell-definition hash, initialization source (and Places365 checkpoint hash),
 seed, training arguments, and runtime versions. The checkpoint and metrics
 record the manifest hash for cross-artifact verification.
 The L2 runner validates generated fraction-CSV and cell-definition caches
-against the source CSV hash, settings, and artifact hash before reusing them;
-stale or modified caches are regenerated. Fraction CSVs retain source columns.
+against the source CSV hash, settings, generator source hash, and artifact hash
+before reusing them; stale or modified caches are regenerated. Fraction CSVs
+retain source columns.
 
 ## Validation and limitations
 

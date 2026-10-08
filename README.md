@@ -139,9 +139,9 @@ python scripts/run_l2_experiments.py --run --fractions 0.01 0.10 --inits imagene
 
 The runner writes a `.manifest.json` sidecar for generated subset CSVs and cell
 definitions. It reuses these artifacts only when the source CSV hash, settings,
-and generated-file hash still match; otherwise it regenerates them. Fraction
-CSVs preserve source columns so training provenance can identify the selected
-examples.
+generator source hash, and generated-file hash still match; otherwise it
+regenerates them. Fraction CSVs preserve source columns so training provenance
+can identify the selected examples.
 
 ### L2 Checkpoint Structure
 

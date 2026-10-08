@@ -188,6 +188,7 @@ def make_subset_csv(
         "fraction": fraction,
         "seed": seed,
         "sampling_algorithm": "numpy.RandomState.choice(sorted_indices)",
+        "generator_sha256": _sha256_file(Path(__file__).resolve()),
     }
     cached = _valid_generated_cache(out_path, expected)
     if cached is not None:
@@ -260,6 +261,7 @@ def build_cells_from_csv(
         "source_csv_sha256": source_csv_sha256 or _sha256_file(csv_path),
         "requested_num_cells": num_cells,
         "algorithm": "quad_tree",
+        "generator_sha256": _sha256_file(ROOT / "src" / "cells.py"),
     }
     if _valid_generated_cache(cells_json_path, expected) is not None:
         print(f"  verified cells cache: {cells_json_path}")

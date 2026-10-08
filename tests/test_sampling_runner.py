@@ -75,6 +75,7 @@ class SamplingRunnerTests(unittest.TestCase):
             first_manifest = json.loads(
                 Path(str(subset) + ".manifest.json").read_text(encoding="utf-8")
             )
+            self.assertTrue(first_manifest["generator_sha256"])
 
             # Same inputs reuse a validated artifact.
             self.assertEqual(make_subset_csv(source, 0.5, 42, 2), (subset, 5))
@@ -126,6 +127,7 @@ class SamplingRunnerTests(unittest.TestCase):
             first_manifest = json.loads(
                 Path(str(cells_path) + ".manifest.json").read_text(encoding="utf-8")
             )
+            self.assertTrue(first_manifest["generator_sha256"])
             first_artifact = cells_path.read_bytes()
 
             # Unchanged inputs validate and reuse the same cell artifact.
