@@ -37,11 +37,13 @@ def run(seed, mode, offset=0.0):
     }
 
 
-def training(seed, mode, sample_hash="same-samples", cell_hash="same-cells"):
+def training(seed, mode, sample_hash="same-samples", cell_hash="same-cells", csv_hash="same-dataset"):
     return {
         "seed": seed,
-        "training_csv_sha256": "same-dataset",
+        "training_csv_sha256": csv_hash,
         "training_dataset_sample_count": 100,
+        "training_source_csv_sha256": "same-source-dataset",
+        "training_source_sample_count": 100,
         "selected_sample_count": 100,
         "selected_sample_ids_sha256": sample_hash,
         "cells_sha256": cell_hash,
@@ -61,6 +63,60 @@ def training(seed, mode, sample_hash="same-samples", cell_hash="same-cells"):
 
 
 class SamplingEvaluationTests(unittest.TestCase):
+    def test_comparison_allows_seed_specific_csvs_from_same_source(self):
+        runs = [
+            {"seed": seed, "sampling_mode": "uniform", "training": training(
+                seed, "uniform", sample_hash=f"samples-{seed}", csv_hash=f"csv-{seed}"
+            )}
+            for seed in (42, 43, 44)
+        ]
+        validate_training_comparison(runs)
+
+    def test_training_provenance_verifies_generated_subset_source(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            csv_path = root / "train.csv"
+            csv_bytes = b"id\na\nb\n"
+            csv_path.write_bytes(csv_bytes)
+            csv_hash = hashlib.sha256(csv_bytes).hexdigest()
+            source_hash = hashlib.sha256(b"source").hexdigest()
+            (root / "train.csv.manifest.json").write_text(json.dumps({
+                "format_version": 1,
+                "source_csv_sha256": source_hash,
+                "fraction": 0.5,
+                "seed": 42,
+                "sampling_algorithm": "test",
+                "generator_sha256": "0" * 64,
+                "source_row_count": 4,
+                "row_count": 2,
+                "selected_source_indices": [0, 2],
+                "artifact_sha256": csv_hash,
+            }), encoding="utf-8")
+            run_dir = root / "checkpoints" / "run"
+            run_dir.mkdir(parents=True)
+            manifest = {
+                "dataset_csv_sha256": csv_hash,
+                "dataset_sample_count": 2,
+                "selected_sample_ids": ["a", "b"],
+                "cells_sha256": "c" * 64,
+                "cell_count": 1,
+                "seed": 42,
+                "config": {"csv": str(csv_path), "seed": 42, "sampling_mode": "uniform"},
+                "initialization": {"kind": "imagenet"},
+                "software": {"torch": "test"},
+            }
+            canonical = json.dumps(manifest, sort_keys=True, separators=(",", ":"))
+            manifest["manifest_sha256"] = hashlib.sha256(canonical.encode()).hexdigest()
+            (run_dir / "run_manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+
+            provenance = load_training_provenance(run_dir / "last.pt")
+
+        self.assertEqual(provenance["training_csv_sha256"], csv_hash)
+        self.assertEqual(provenance["training_source_csv_sha256"], source_hash)
+        self.assertEqual(provenance["training_source_sample_count"], 4)
+        self.assertEqual(provenance["training_effective_fraction"], 0.5)
+        self.assertEqual(provenance["training_source_manifest"]["fraction"], 0.5)
+
     def test_evaluation_sample_manifest_binds_csv_rows_and_split(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)

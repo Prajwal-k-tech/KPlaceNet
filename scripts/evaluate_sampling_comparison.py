@@ -90,12 +90,62 @@ def load_training_provenance(checkpoint: Path) -> dict[str, Any]:
     if not sample_ids or len(sample_ids) > manifest["dataset_sample_count"]:
         raise ValueError(f"Training manifest has an invalid selected sample count: {manifest_path}")
     sample_ids_payload = json.dumps(sample_ids, separators=(",", ":"))
+    training_csv = Path(config["csv"]).expanduser() if isinstance(config.get("csv"), str) else None
+    if training_csv is not None and not training_csv.is_absolute():
+        training_csv = ROOT / training_csv
+    source_csv_sha256 = manifest["dataset_csv_sha256"]
+    source_sample_count = manifest["dataset_sample_count"]
+    source_manifest_info: dict[str, Any] | None = None
+    if training_csv is not None and training_csv.is_file():
+        if sha256_file(training_csv) != manifest["dataset_csv_sha256"]:
+            raise ValueError(f"Training CSV hash mismatch: {training_csv}")
+        cache_manifest_path = training_csv.with_name(training_csv.name + ".manifest.json")
+        if cache_manifest_path.is_file():
+            cache_manifest = json.loads(cache_manifest_path.read_text(encoding="utf-8"))
+            indices = cache_manifest.get("selected_source_indices")
+            fraction = cache_manifest.get("fraction")
+            source_count = cache_manifest.get("source_row_count")
+            if (
+                cache_manifest.get("artifact_sha256") != manifest["dataset_csv_sha256"]
+                or cache_manifest.get("row_count") != manifest["dataset_sample_count"]
+                or cache_manifest.get("seed") != manifest["seed"]
+                or isinstance(fraction, bool)
+                or not isinstance(fraction, (int, float))
+                or not math.isfinite(fraction)
+                or not 0 < fraction <= 1
+                or isinstance(source_count, bool)
+                or not isinstance(source_count, int)
+                or source_count < manifest["dataset_sample_count"]
+                or not isinstance(indices, list)
+                or len(indices) != manifest["dataset_sample_count"]
+                or any(isinstance(index, bool) or not isinstance(index, int) for index in indices)
+                or len(indices) != len(set(indices))
+                or any(index < 0 or index >= source_count for index in indices)
+                or len(indices) != max(1, int(source_count * fraction))
+                or not isinstance(cache_manifest.get("source_csv_sha256"), str)
+                or len(cache_manifest["source_csv_sha256"]) != 64
+            ):
+                raise ValueError(f"Generated training CSV manifest is invalid: {cache_manifest_path}")
+            source_csv_sha256 = cache_manifest["source_csv_sha256"]
+            source_sample_count = source_count
+            source_manifest_info = {
+                "path": portable_path(cache_manifest_path),
+                "sha256": sha256_file(cache_manifest_path),
+                "fraction": fraction,
+                "selected_source_indices_sha256": hashlib.sha256(
+                    json.dumps(indices, separators=(",", ":")).encode("utf-8")
+                ).hexdigest(),
+            }
     return {
         "manifest_path": portable_path(manifest_path),
         "manifest_file_sha256": sha256_file(manifest_path),
         "manifest_sha256": declared_hash,
         "training_csv_sha256": manifest["dataset_csv_sha256"],
         "training_dataset_sample_count": manifest["dataset_sample_count"],
+        "training_source_csv_sha256": source_csv_sha256,
+        "training_source_sample_count": source_sample_count,
+        "training_effective_fraction": len(sample_ids) / source_sample_count,
+        "training_source_manifest": source_manifest_info,
         "selected_sample_count": len(sample_ids),
         "selected_sample_ids_sha256": hashlib.sha256(sample_ids_payload.encode("utf-8")).hexdigest(),
         "cells_sha256": manifest["cells_sha256"],
@@ -164,8 +214,9 @@ def validate_training_comparison(runs: list[dict[str, Any]]) -> None:
         key: value for key, value in reference["config"].items() if key not in variable_config
     }
     invariant_fields = (
-        "training_csv_sha256",
         "training_dataset_sample_count",
+        "training_source_csv_sha256",
+        "training_source_sample_count",
         "cells_sha256",
         "initialization",
         "software",
@@ -192,6 +243,8 @@ def validate_training_comparison(runs: list[dict[str, Any]]) -> None:
         if uniform is None or balanced is None:
             continue
         if (
+            uniform["training_csv_sha256"] != balanced["training_csv_sha256"]
+            or
             uniform["selected_sample_ids_sha256"] != balanced["selected_sample_ids_sha256"]
             or uniform["selected_sample_count"] != balanced["selected_sample_count"]
         ):

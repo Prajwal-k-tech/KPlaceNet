@@ -73,14 +73,24 @@ def compare_reports(smaller: dict[str, Any], larger: dict[str, Any], root: Path 
                 raise ValueError("run manifest file hash differs from report")
             if training["training_dataset_sample_count"] != verified["training_dataset_sample_count"]:
                 raise ValueError("training dataset count differs from manifest")
+            for field in (
+                "training_source_csv_sha256",
+                "training_source_sample_count",
+                "training_effective_fraction",
+            ):
+                if training.get(field) != verified[field]:
+                    raise ValueError(f"training source provenance differs for {field}")
             if (
                 training["training_csv_sha256"] != verified["training_csv_sha256"]
                 or training["cells_sha256"] != verified["cells_sha256"]
                 or training["selected_sample_ids_sha256"] != verified["selected_sample_ids_sha256"]
             ):
                 raise ValueError("training provenance differs from report")
-            expected_count = int(verified["training_dataset_sample_count"] * report["comparison"]["fraction"])
-            if verified["selected_sample_count"] != expected_count:
+            expected_count = int(verified["training_source_sample_count"] * report["comparison"]["fraction"])
+            if (
+                verified["selected_sample_count"] != expected_count
+                or verified["training_dataset_sample_count"] != expected_count
+            ):
                 raise ValueError("selected sample count does not match the reported fraction")
             if training.get("manifest_sha256") != verified["manifest_sha256"]:
                 raise ValueError("run manifest hash differs from report")
@@ -113,7 +123,12 @@ def compare_reports(smaller: dict[str, Any], larger: dict[str, Any], root: Path 
         small = small_runs[seed]
         large = large_runs[seed]
         left, right = small["manifest"], large["manifest"]
-        if left["dataset_csv_sha256"] != right["dataset_csv_sha256"]:
+        if (
+            small["run"]["training"]["training_source_csv_sha256"]
+            != large["run"]["training"]["training_source_csv_sha256"]
+            or small["run"]["training"]["training_source_sample_count"]
+            != large["run"]["training"]["training_source_sample_count"]
+        ):
             raise ValueError("paired runs do not use the same source training CSV")
         if left["cells_sha256"] != right["cells_sha256"]:
             raise ValueError("paired runs do not use the same geographic cells")
@@ -138,7 +153,8 @@ def compare_reports(smaller: dict[str, Any], larger: dict[str, Any], root: Path 
         "small_fraction": small_fraction,
         "large_fraction": large_fraction,
         "evaluation_csv_sha256": smaller["evaluation_csv_sha256"],
-        "training_csv_sha256": small_runs[next(iter(small_runs))]["manifest"]["dataset_csv_sha256"],
+        "training_source_csv_sha256": small_runs[next(iter(small_runs))]["run"]["training"]["training_source_csv_sha256"],
+        "training_source_sample_count": small_runs[next(iter(small_runs))]["run"]["training"]["training_source_sample_count"],
         "cells_sha256": small_runs[next(iter(small_runs))]["manifest"]["cells_sha256"],
         "delta_direction": "larger data fraction minus smaller data fraction",
         "per_seed": per_seed,
