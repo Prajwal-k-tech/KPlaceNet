@@ -360,6 +360,13 @@ def main() -> None:
         ).stdout.strip()
     except (OSError, subprocess.CalledProcessError):
         revision = None
+    try:
+        working_tree_dirty = bool(subprocess.run(
+            ["git", "status", "--porcelain", "--untracked-files=no"],
+            cwd=ROOT, capture_output=True, text=True, check=True,
+        ).stdout.strip())
+    except (OSError, subprocess.CalledProcessError):
+        working_tree_dirty = None
     report = {
         "schema_version": 1,
         "comparison": {
@@ -382,6 +389,18 @@ def main() -> None:
         "evaluation_csv": portable_path(args.csv),
         "evaluation_csv_sha256": sha256_file(args.csv),
         "evaluator_revision": revision,
+        "evaluator_working_tree_dirty": working_tree_dirty,
+        "training_code_sha256": {
+            name: sha256_file(ROOT / path)
+            for name, path in {
+                "train": "src/train.py",
+                "model": "src/model.py",
+                "dataset": "src/dataset.py",
+                "cells": "src/cells.py",
+                "reproducibility": "src/reproducibility.py",
+                "l2_runner": "scripts/run_l2_experiments.py",
+            }.items()
+        },
         "runtime": {
             "python": sys.version.split()[0],
             "torch": package_version("torch"),
