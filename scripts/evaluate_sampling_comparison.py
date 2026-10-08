@@ -378,10 +378,39 @@ def load_majority_cell_baseline(training: dict[str, Any], evaluation_csv: Path) 
     return baseline
 
 
+def load_evaluation_sample_manifest(evaluation_csv: Path, manifest_path: Path) -> dict[str, Any]:
+    """Verify sample identity and split metadata for an evaluation CSV."""
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    if not isinstance(manifest, dict) or manifest.get("split") != "test":
+        raise ValueError("evaluation sample manifest must describe the test split")
+    ids = []
+    splits = set()
+    with evaluation_csv.open("r", newline="", encoding="utf-8") as stream:
+        reader = csv.DictReader(stream)
+        if not reader.fieldnames or not {"id", "split"}.issubset(reader.fieldnames):
+            raise ValueError("evaluation CSV must contain id and split columns")
+        for row in reader:
+            ids.append(row["id"])
+            splits.add(row["split"])
+    id_hash = hashlib.sha256("\n".join(sorted(ids)).encode("utf-8")).hexdigest()
+    if (
+        not ids
+        or len(ids) != len(set(ids))
+        or splits != {"test"}
+        or manifest.get("final_sample_count") != len(ids)
+        or manifest.get("metadata_sha256") != sha256_file(evaluation_csv)
+        or manifest.get("final_id_set_sha256") != id_hash
+    ):
+        raise ValueError("evaluation sample manifest does not match its CSV")
+    return {"path": portable_path(manifest_path), **manifest}
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--csv", type=Path, default=ROOT / "data/osv5m_test/metadata.csv",
                         help="Fixed, untouched evaluation CSV")
+    parser.add_argument("--sample-manifest", type=Path,
+                        help="Optional manifest that identifies the held-out CSV rows and split")
     parser.add_argument("--checkpoint-root", type=Path, default=ROOT / "checkpoints")
     parser.add_argument("--output", type=Path, default=ROOT / "checkpoints/sampling_comparison.json")
     parser.add_argument("--init", choices=["imagenet", "places365"], default="imagenet")
@@ -429,6 +458,9 @@ def main() -> None:
         raise SystemExit("--modes and --seeds must not contain duplicates")
     if not 0.0 < args.fraction <= 1.0:
         raise SystemExit("--fraction must be in (0, 1]")
+    sample_manifest = None
+    if args.sample_manifest:
+        sample_manifest = load_evaluation_sample_manifest(args.csv, args.sample_manifest)
 
     selected_runs: list[dict[str, Any]] = []
     for seed in args.seeds:
@@ -530,6 +562,7 @@ def main() -> None:
         },
         "evaluation_csv": portable_path(args.csv),
         "evaluation_csv_sha256": sha256_file(args.csv),
+        "evaluation_sample_manifest": sample_manifest,
         "evaluator_revision": revision,
         "evaluator_working_tree_dirty": working_tree_dirty,
         "training_code_sha256": {

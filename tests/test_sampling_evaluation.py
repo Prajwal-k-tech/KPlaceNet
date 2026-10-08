@@ -10,6 +10,7 @@ from pathlib import Path
 
 from scripts.evaluate_sampling_comparison import (
     ROOT,
+    load_evaluation_sample_manifest,
     load_training_provenance,
     load_training_metrics,
     load_majority_cell_baseline,
@@ -60,6 +61,28 @@ def training(seed, mode, sample_hash="same-samples", cell_hash="same-cells"):
 
 
 class SamplingEvaluationTests(unittest.TestCase):
+    def test_evaluation_sample_manifest_binds_csv_rows_and_split(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            csv_path = root / "test.csv"
+            csv_bytes = b"id,split\na,test\nb,test\n"
+            csv_path.write_bytes(csv_bytes)
+            ids_hash = hashlib.sha256(b"a\nb").hexdigest()
+            manifest_path = root / "sample.json"
+            manifest_path.write_text(json.dumps({
+                "split": "test",
+                "final_sample_count": 2,
+                "metadata_sha256": hashlib.sha256(csv_bytes).hexdigest(),
+                "final_id_set_sha256": ids_hash,
+            }), encoding="utf-8")
+
+            manifest = load_evaluation_sample_manifest(csv_path, manifest_path)
+            self.assertEqual(manifest["final_id_set_sha256"], ids_hash)
+
+            csv_path.write_text("id,split\na,train\nb,test\n", encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "does not match"):
+                load_evaluation_sample_manifest(csv_path, manifest_path)
+
     def test_majority_cell_baseline_uses_highest_count_and_reports_geodesic_metrics(self):
         cells = [
             {"cell_id": 0, "count": 2, "centroid_lat": 0.0, "centroid_lon": 0.0},

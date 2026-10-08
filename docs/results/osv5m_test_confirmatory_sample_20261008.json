@@ -1,0 +1,18 @@
+{
+  "split": "test",
+  "original_sample_seed": 314159,
+  "original_sample_count": 3000,
+  "overlap_replacements": 42,
+  "replacement_seed": 314160,
+  "replacement_quota_by_test_shard": {
+    "00": 10,
+    "01": 10,
+    "02": 10,
+    "03": 10,
+    "04": 2
+  },
+  "final_sample_count": 3000,
+  "final_id_set_sha256": "8d395ced80b84d0d4c5e2f7d47dc420d590c94c54aa5aeda94b90d9e3ffd7701",
+  "metadata_sha256": "92753639fa943c6f76ad2331651dabd593e80faf0714c3b66b450a3a2e5f2934",
+  "disjoint_from_previous_test_sample": true
+}

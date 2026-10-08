@@ -26,7 +26,7 @@ def compare_reports(smaller: dict[str, Any], larger: dict[str, Any], root: Path 
     if any(isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value)
            for value in (small_fraction, large_fraction)) or not (0 < small_fraction < large_fraction <= 1):
         raise ValueError("reports must describe increasing data fractions")
-    for field in ("evaluation_csv_sha256", "evaluation", "training_code_sha256"):
+    for field in ("evaluation_csv_sha256", "evaluation_sample_manifest", "evaluation", "training_code_sha256"):
         if smaller.get(field) != larger.get(field):
             raise ValueError(f"reports use different {field}")
     for field in ("init", "regime", "modes", "seeds"):
