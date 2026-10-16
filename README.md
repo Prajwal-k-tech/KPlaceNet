@@ -2,10 +2,6 @@
 
 PlaNet-inspired coarse image geolocation with a ResNet-50 classifier over geographic cells. This fork's bounded CUDA experiments run on an RTX 3050 laptop GPU (6GB VRAM); KPlaceNet is not a reproduction of PlaNet's model, data scale, or benchmark results.
 
-> Locked plan: `docs/implementation_plan.md` — L0→L4, solo + 4050 constraints. Do not add new datasets/backbones without re-plan.
-
-> **Learning the project:** start a separate teaching conversation with [`docs/CLASSROOM_PROMPT.md`](docs/CLASSROOM_PROMPT.md). It walks through the model, our fork-specific evaluation work, the experiments, and their limitations.
-
 ## Fork contribution and measured results
 
 This fork adds strict checkpoint/evaluation validation, hash-bound training and evaluation manifests, paired geographic metrics, and a finite-sample conformal order-statistic correction. Its real-data evidence is deliberately bounded: on one exploratory OSV-5M test sample, training with 20k rather than 10k images reduced mean geodesic error by 456 km and increased within-200-km accuracy by 1.54 percentage points across three paired seeds. The 20k model still averages 5,522 km error, and the training pool uses only four of 98 train archives. The [data-scale report](docs/results/l2_data_scale_osv_test_20261009.md) and [L3 calibration report](docs/results/l3_uncertainty_osv_test_20261009.md) separate these measured results from inherited upstream results and document their limits. See [fork status](docs/FORK_STATUS.md) for the exact scope and validation.
@@ -24,8 +20,6 @@ pip install -r requirements.txt
 # 3. Verify imports (no GPU needed for import check)
 python -c "import src.dataset, src.cells, src.model, src.train, src.eval, src.uncertainty; print('imports ok')"
 ```
-
-> No `pip install` is run by the scaffold — install manually when ready.
 
 ## Data Layout (gitignored subsets)
 
@@ -56,7 +50,8 @@ data/
 ## How to Run — Smoke Test (L0 exit gate)
 
 ```powershell
-# 1) Create a tiny dummy CSV (50 rows) for overfit check
+# 1) Create 50 synthetic images and coordinates for a software-path smoke test.
+#    These synthetic labels are not geolocation evidence.
 python scripts/download_subset.py --dataset flickr_geo_tiny --output-dir data/flickr_geo_tiny --max-samples 50 --dry-run
 
 # 2) Real OSV-5M subset — SAFE downloader (never fetches the ~259GB repo).
@@ -99,7 +94,6 @@ checked against the exact run provenance.
 
 ```
 KPlaceNet/
-  docs/implementation_plan.md
   src/dataset.py  cells.py  model.py  train.py  eval.py  uncertainty.py
   scripts/download_subset.py
   notebooks/01_data_explore.ipynb

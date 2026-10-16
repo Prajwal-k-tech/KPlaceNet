@@ -1,10 +1,18 @@
 # Fork work status
 
-**Checked:** 2026-10-09 (Asia/Kolkata)
+**Checked:** 2026-10-17 (Asia/Kolkata)
 **Fork:** [Prajwal-k-tech/KPlaceNet](https://github.com/Prajwal-k-tech/KPlaceNet)  
 **Work branch:** `prajwal/eval-integrity`  
 **Work:** evaluation integrity and provenance, controlled OSV-5M data-scale and
 sampling studies, split-conformal calibration evaluation, and a runnable demo
+
+**17 October front-door review:** the GitHub description now identifies this
+as evaluation-integrity and reproducibility work on a PlaNet-inspired
+ResNet-50 research fork and says OSV-5M results are exploratory and
+sample-limited. The README no longer links to agent-facing planning/teaching
+prompts, removes a stale scaffold note, and labels the synthetic smoke data as
+software-path evidence rather than geolocation evidence. The README-only
+change is being checked on this branch; no upstream PR is planned.
 
 ## What this project implements
 
@@ -136,9 +144,9 @@ CUDA execution remains unverified.
   works when invoked as a script. Twenty focused evaluation/comparator tests
   pass.
 
-## Final validation in progress
+## Final validation
 
-- The complete local unittest suite passed: 70 tests, including the synthetic
+- The complete local unittest suite passed on commit `fc746a2`: 70 tests, including the synthetic
   train/evaluate integration, evaluation provenance, comparison CLI, and
   conformal order-statistic cases.
 - The L3 output-path option was exercised by a real run. Its final report was
@@ -146,14 +154,16 @@ CUDA execution remains unverified.
   `working_tree_dirty: false`.
 - The demo loaded the saved calibration artifact and matched its checkpoint
   SHA-256. Its synthetic-image smoke is only an execution check.
-- GitHub Actions passed on commit `302b1d5` (run `37825707468`); the later
-  report-only commits are awaiting final workflow confirmation.
+- GitHub Actions passed on the current pre-edit documentation head `28df31a`
+  (run [37837367699](https://github.com/Prajwal-k-tech/KPlaceNet/actions/runs/37837367699)).
+  The workflow was the dependency-free checks; the 70-test CPU-model suite was
+  last run locally on `fc746a2`. No model or evaluation code changed after it.
 
-## Next steps
+## Current limits
 
-1. Verify GitHub Actions on the final fork head and confirm the worktree is
-   clean.
-2. Recheck external-organization PR comments for new requests.
-3. Remove only the task-specific virtualenv and package cache after validation;
-   retain the bounded dataset and checkpoints needed to reproduce and demo the
-   contribution.
+The clean clone contains neither restricted image datasets nor trained
+checkpoints, so it can run the synthetic software-path test but cannot
+reproduce the real-data geolocation metrics without separately obtaining the
+data and artifacts under their terms. CUDA behavior was not tested in the
+CPU-only environment. The branch is a personal fork contribution; it has not
+been proposed as an upstream change.
