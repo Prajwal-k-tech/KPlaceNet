@@ -359,7 +359,76 @@ Same pattern as L2 but for cell methods:
 
 ---
 
-## 10. The Complete Data Flow
+## 10. L5 — Kerala Pinpoint Mode (Region Specialization)
+
+The application target of the project is geolocating photos from Kerala, India. The global model fails there almost completely: on the official Kerala test split its median error is 6,330 km and 0% of predictions land within 25 km. L5 is the planned application phase — an approved extension after the L0–L4 exit gates — and it turns this failure into useful localization by specializing the pipeline on Kerala data with Kerala-specific cells. Global L2/L3/L4 numbers are untouched; L5 is additive.
+
+### 10.1 Data — `extract_kerala_osv5m.py`
+
+`scripts/extract_kerala_osv5m.py` extracts the OSV-5M Kerala slice (bbox 8.0–12.8N, 74.5–77.5E, CC-BY-SA-4.0): 16,939 train + 357 official test images. `scripts/run_l5_kerala.py --phase prep` then creates the split CSVs: 15,939 train / 1,000 seeded val holdout / 357 official test, columns `image_path,lat,lon,town,osv_id`. Towns: `kochi`, `kottayam`, `munnar`, `trivandrum`, `other_kerala`.
+
+The 1,000 val images are carved out of the extracted train set (15,939 + 1,000 = 16,939); the official 357-image test set is never touched.
+
+**Why a seeded val holdout:** it gives a fast in-region sanity check during development. The honest headline number is still the official test split.
+
+### 10.2 Cells — 300 Kerala K-Means Cells
+
+The global 300-cell quad-tree partitions the whole Earth, so a single global cell covers far more than Kerala. L5 therefore builds 300 k-means cells from **train-only** Kerala coordinates (no val/test leakage into cell geometry), using the same equal-area k-means builder that the L4 comparison selected as the project default (seed 42). Only the input coordinates differ from the L4 comparison: train-only Kerala points instead of the global 10k subset.
+
+| Property | Value |
+|---|---|
+| Nearest-centroid distance p10 / median / p90 | 3.29 / 5.71 / 14.98 km |
+| Cell size mean / median | 53.1 / 46.5 |
+| Cell size min / max | 6 / 253 |
+| Cell size Gini | 0.3406 |
+
+A median nearest-centroid distance of ~5.7 km makes these cells far finer than any global partition over the same region.
+
+### 10.3 Warm Start — `--init-backbone-from`
+
+The key mechanism: L5 does not train from scratch. The new `--init-backbone-from` flag / `load_backbone_from_checkpoint()` in `src/train.py` loads ONLY the `backbone.*` keys from the L2 winner (`l2_imagenet_1.0_layer4`) — 318/318 loaded, 0 mismatched — and re-initializes the head for the new 300 Kerala cells.
+
+**Why backbone-only:** the global backbone already learned transferable visual features (buildings, vegetation, street scenes); only the head and the last block need to adapt from "planet-scale cell" to "Kerala cell". Loading the global head would be wrong — it is a 300-way classifier over global quad-tree cells, not Kerala cells.
+
+Trainable parameters: 15,579,436 of 24,122,732 (head + layer4).
+
+### 10.4 Training
+
+- Regime: layer4 + head fine-tuned
+- 10 epochs, batch 16, AMP
+- LR 3e-4, lower than L2's 1e-3 — narrower adaptation, lower overfit risk
+- ~49 s/epoch on the 4050 (~500 s total)
+
+Train curve (loss / train top-1 cell accuracy): 3.614 / 23.9% at epoch 1 → 0.109 / 97.6% at epoch 10 — monotonic, no instability.
+
+### 10.5 Evaluation
+
+Before (L2 global) vs after (L5) on identical splits. With 300 cells, top-1 chance is 0.33% and a random cell guess lands ~150–200 km away, so the discriminative metrics are @1km, @25km, median, and top-1; mean distance alone is misleading for a Kerala-only model.
+
+| Split | Model | Mean km | Median km | p90 km | @1km | @25km | @200km | Top-1 |
+|---|---|---:|---:|---:|---:|---:|---:|---:|
+| VAL (1,000) | before (L2 global) | 7,632.8 | 6,253.1 | — | — | 0.0% | 14.7% | 20.4% |
+| VAL (1,000) | after (L5) | 47.6 | **7.0** | 165.7 | 8.4% | **64.6%** | 92.9% | 43.1% |
+| TEST (357) | before (L2 global) | 7,644.5 | 6,330.0 | — | — | 0.0% | 7.6% | 16.2% |
+| TEST (357) | after (L5) | 102.8 | **42.1** | 291.6 | 0.6% | **41.2%** | 80.1% | 17.9% |
+
+Per-town (test, after; mean km / @25km / n): kochi 14.1 / 77.8% / 9; kottayam 85.6 / 38.9% / 18; munnar 47.2 / 61.5% / 13; other_kerala 106.5 / 39.9% / 306; trivandrum 168.5 / 27.3% / 11.
+
+The town breakdown follows the honest notes below: Kochi is the strongest town on both splits; Trivandrum is the weakest (test: 168.5 km mean, 27.3% within 25 km).
+
+**Honest notes:**
+
+- The val holdout is optimistic: OSV-5M images cluster along streets, so a random split can share streets/locations between train and val. The official test split (median 42.1 km vs 7.0 km val) is the honest number.
+- The weakest cluster is the far south (Trivandrum) on both splits. Observed failure mode: far-south images (lat ≈ 8.1–8.2) predicted ~500 km north.
+- No L3 calibration was fitted for this model; the demo shows raw confidence for Kerala mode.
+
+### 10.6 Demo — Region Toggle
+
+`demo/app.py` gains a region toggle ("World · global model" / "Kerala · regional model"). Kerala mode shows a zoomed Kerala map, uncalibrated confidence, and curated Kerala examples. Global mode is unchanged; L5 is additive, and the global checkpoints and L2/L3/L4 results are untouched.
+
+---
+
+## 11. The Complete Data Flow
 
 ```text
 Raw OSV-5M images + metadata.csv (image_path, lat, lon)
@@ -385,9 +454,11 @@ Checkpoint: model_state + cells + args + loss
 eval.py — argmax → cell_id → centroid (lat,lon) → haversine distance
 ```
 
+**Region branch (L5):** the same pipeline with `--init-backbone-from` (backbone-only warm start) and Kerala cells produces the region model: extract the region slice, build region cells from train-only coordinates, warm-start from the L2 winner, then train and eval with the identical loop shown above. Only the cells JSON, CSV, and initial checkpoint differ.
+
 ---
 
-## 11. All Decisions and Why
+## 12. All Decisions and Why
 
 | Decision | Choice | Why |
 |---|---|---|
@@ -408,3 +479,7 @@ eval.py — argmax → cell_id → centroid (lat,lon) → haversine distance
 | Default cell method | K-means | Best within-200km (4.07%), best balance (Gini 0.324) |
 | Windows safety | pathlib, num_workers=0 | Developed on Windows 4050; no multiprocessing forks |
 | Plan-only default | All scripts | Prevents accidental GPU use; review before execution |
+| Region specialization | Warm-start from L2 winner, not scratch | Keeps global visual features; only head + layer4 adapt |
+| L5 cells | k-means (L4 default) from train-only coords | consistent with L4 recommendation; no val/test leakage |
+| L5 learning rate | 3e-4 (vs L2's 1e-3) | narrower adaptation; lower overfit risk |
+| L5 evaluation | before/after on identical splits | isolates the region fine-tune effect |

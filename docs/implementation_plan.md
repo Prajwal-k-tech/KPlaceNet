@@ -1,6 +1,7 @@
 # KPlaceNet / GeoNet — Implementation Plan (Locked)
 
 > Evolutionary, layer-by-layer. Solo builder + RTX 4050. No scope creep.
+> Application target: geolocating photos from Kerala — the region L5 specializes in.
 
 ## 0. Constraints (why this plan looks like this)
 
@@ -15,6 +16,7 @@
 2. **Gap 4 Data-Efficient Training** — do first. Tier 1, ★★★★★ fit. Proves 10x data saving. Medium / Medium.
 3. **Gap 3 Uncertainty-Aware Geolocation** — do second. Tier 1, high novelty, cheap compute. Temperature scaling + conformal + abstention. Medium / High.
 4. **Gap 1 Adaptive Cell Construction** — do third. k-means / DBSCAN vs quad-tree on same backbone/data. Medium / Medium.
+5. **L5 Kerala Pinpoint Mode (Region Specialization)** — planned application phase (approved extension after L1–L4 gates): warm-start the L2 winner on the OSV-5M Kerala slice with 300 train-only k-means cells. Same dataset family, same backbone — no new backbone.
 
 ### REMOVED (deferred, not in build)
 - **Gap 2 Multi-Modal Fusion — REMOVED.** Needs YFCC100M captions/tags + temporal + CLIP contrastive training. High difficulty, OOM risk on 4050, 3-4 weeks with full team. Revisit only after L1-L4 done.
@@ -30,6 +32,7 @@
 | Train | OSV-5M subset | 10k (stratified) | main training |
 | Eval | IM2GPS3k | 3k | benchmark only, never train |
 | Transfer init | Places365 / ImageNet | pretrained weights only | backbone init |
+| Region (L5) | OSV-5M Kerala slice | 16.3k (15,939 train + 357 test) | application-region training |
 
 - OSV-5M train/test spatial separation (1km) respected. Never mix IM2GPS3k into train.
 - Full OSV-5M / YFCC100M explicitly out of scope for this plan.
@@ -97,11 +100,23 @@
 
 **Exit:** Comparison table + cell maps + regional analysis. Pick final cell method as project default.
 
+### L5 — Kerala Pinpoint Mode (Application Phase)
+**Do:**
+- Extract Kerala slice (`scripts/extract_kerala_osv5m.py`)
+- Split 15,939 train / 1,000 seeded val / 357 official test
+- Build 300 k-means cells from **train-only** coordinates
+- Warm-start from the L2 winner via `--init-backbone-from` in `src/train.py`
+- Fine-tune layer4 + head (10 epochs, lr 3e-4, batch 16, AMP, seed 42)
+- Before/after evaluation (global model vs Kerala model) with per-town breakdown
+
+**Exit:** before/after table + regional analysis + demo Kerala toggle. **Completed** — see `docs/results/l5_kerala_pinpoint.md`.
+
 ## 5. Evaluation Protocol (locked)
 
 - **Primary:** within X km (1 / 25 / 200km) via haversine, on IM2GPS3k + OSV-5M-subset test split
 - **L3 adds:** ECE, coverage-accuracy, abstention rate
 - **L4 adds:** cell balance, regional split
+- **L5 adds:** before/after global-vs-region model comparison + per-town breakdown on the Kerala val/test splits
 - No new metrics without re-plan.
 
 ## 6. Repo Layout (target)
@@ -123,6 +138,8 @@ KPlaceNet/
   scripts/
     download_subset.py
     make_cells.py
+    extract_kerala_osv5m.py  # L5: OSV-5M Kerala slice
+    run_l5_kerala.py         # L5: Kerala pinpoint train/cells/eval runner
   notebooks/
     01_data_explore.ipynb
     02_baseline_eval.ipynb

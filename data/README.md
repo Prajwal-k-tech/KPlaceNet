@@ -2,7 +2,7 @@
 
 This folder is **gitignored** (`data/` is in `.gitignore`). Only this README and `.gitkeep` are committed.
 
-## Layout (after `scripts/download_subset.py`)
+## Layout (after `scripts/download_subset.py` / `scripts/extract_kerala_osv5m.py`)
 
 ```
 data/
@@ -17,6 +17,12 @@ data/
   osv5m_test/
     metadata.csv      # official OSV TEST split — eval-only, never train
     images/
+  kerala_osv5m/
+    train/images/     # OSV-5M Kerala slice (L5)
+    test/images/      # official Kerala test images
+    kerala_train.csv  # splits with town labels: image_path,lat,lon,town,osv_id
+    kerala_val.csv    # 1,000 seeded holdout, same columns
+    kerala_test.csv   # 357 official test rows, same columns
   im2gps3k/
     metadata.csv      # 3k eval-only, never train (manual download)
     images/
@@ -44,6 +50,11 @@ python scripts/download_subset.py --dataset osv5m --split test --output-dir data
 
 # IM2GPS3k — manual only: download from the authors, place images + metadata.csv
 # (header image_path,lat,lon) under data/im2gps3k/.
+
+# Kerala slice for L5 — idempotent, resumable; downloads only the needed
+# train/test image zips (CC-BY-SA-4.0, HF revision pin
+# cff33609b56b54d8743b7ee7a416eb8433e9a681; 16,939 + 357 images):
+python scripts/extract_kerala_osv5m.py
 ```
 
 - CSV format: header `image_path,lat,lon` plus `id,split` provenance (+country/region if the source has them). `image_path` may be absolute or relative to the CSV file.
@@ -51,6 +62,7 @@ python scripts/download_subset.py --dataset osv5m --split test --output-dir data
 - Full train.csv (~2.92GB) is never fetched unless you pass the explicit opt-in `--allow-full-train-csv`; otherwise train rows are found by a SINGLE capped Range streaming pass (`--csv-scan-cap-mb`, default 512MB) over a seeded shard-balanced candidate union (per-shard quotas summing to `--max-samples`), and the script aborts honestly instead of silently downloading huge files or falling back to first-rows/file-order sampling.
 - Row counts are honest: if fewer than `--max-samples` are extracted the script says so and never claims '10k'.
 - Full OSV-5M (5.1M) / YFCC100M are **out of scope** for this plan.
+- The Kerala slice (`kerala_osv5m/`) is CC-BY-SA-4.0: attribution is required for any published outputs that use these images.
 
 ## .gitignore
 

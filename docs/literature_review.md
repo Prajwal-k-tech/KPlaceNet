@@ -275,6 +275,12 @@ Standard metrics for photo geolocation:
 
 ---
 
+## Application Note
+
+The reviewed ideas — cell-based classification, transfer learning, and calibration — are applied in this project to a concrete target region: Kerala, India (L5 — Kerala Pinpoint Mode). The before/after regional comparison and full results are in `docs/results/l5_kerala_pinpoint.md`.
+
+---
+
 ## References
 
 1. Weyand, T., Kostrikov, I., & Philbin, J. (2016). PlaNet - Photo Geolocation with Convolutional Neural Networks. ECCV.

@@ -21,7 +21,7 @@
 > A deep learning system that predicts where a photo was taken using only its visual content.
 
 ### Full Description
-GeoNet is a research project exploring efficient and uncertainty-aware photo geolocation using convolutional neural networks. The system takes a single photograph as input and predicts its geographic coordinates (latitude, longitude) without relying on GPS metadata or EXIF data.
+GeoNet is a research project exploring efficient and uncertainty-aware photo geolocation using convolutional neural networks. The system takes a single photograph as input and predicts its geographic coordinates (latitude, longitude) without relying on GPS metadata or EXIF data. The project's application target is geolocating personal and social photos from Kerala, India — a region where the global model fails (0% within 25 km, median error ~6,300 km) and where the region-specialization phase (L5) reaches 41% within 25 km (median 42 km) on the official test split.
 
 Building on the foundational PlaNet architecture (Weyand et al., 2016), our project investigates three key research directions:
 
@@ -30,6 +30,7 @@ Building on the foundational PlaNet architecture (Weyand et al., 2016), our proj
 3. **Uncertainty Quantification** — Providing calibrated confidence estimates for geolocation predictions
 
 ### Applications
+- **Personal photo mapping — Kerala (target use case)**: geolocating photos from Kerala, India
 - **Travel & Tourism**: Automatic photo organization by location
 - **Content Moderation**: Verifying location claims in social media
 - **Forensics**: Geolocating images for investigative purposes
@@ -207,6 +208,7 @@ snapshot_download(repo_id="osv5m/osv5m", local_dir="datasets/osv5m", repo_type='
 3. **Publication Potential** — Novel contributions in cell construction, uncertainty
 4. **Practical Impact** — Real-world applications
 5. **Learning Value** — Covers CV, DL, research methodology
+6. **Application-grounded** — The final phase specializes the pipeline for a concrete target region (Kerala) and reports before/after region metrics.
 
 ---
 

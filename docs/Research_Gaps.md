@@ -292,6 +292,12 @@ Real-world applications (travel apps, autonomous vehicles) need fast inference.
 
 ---
 
+### Applied Track: Region Specialization (Kerala)
+
+After completing the Tier-1 gaps, the project applies the pipeline to its target region: Kerala, India. This is not a new literature gap — it is the application of the gap work (cell construction, transfer/data efficiency) to a concrete deployment region. The approach warm-starts the global L2 winner and fine-tunes it with region-specific k-means cells built from train-only Kerala coordinates. Measured effect on the official Kerala test split: 0% → 41.2% within 25 km, median 42.1 km. Details in `docs/results/l5_kerala_pinpoint.md`.
+
+---
+
 ## Synthesis: Cross-Cutting Themes
 
 | Gap | Primary Impact | Secondary Impact | Difficulty | Novelty | Group Project Fit |

@@ -64,6 +64,10 @@ def parse_args() -> argparse.Namespace:
                         "When --cells-json is supplied, cells are NOT rebuilt.")
     p.add_argument("--places365-checkpoint", type=str, default=None,
                    help="Path to Places365 resnet50_places365.pth.tar for L2 init comparison.")
+    p.add_argument("--init-backbone-from", type=str, default=None,
+                   help="GeoClassifier checkpoint (e.g. L2 winner last.pt) whose backbone.* "
+                        "tensors initialize this model's backbone. Head is never loaded "
+                        "(cells differ across runs). L5 Kerala warm-start.")
     p.add_argument("--run-tag", type=str, default=None,
                    help="Optional run identifier for metrics JSON filename (e.g. 'l2_places365_0.01_frozen')")
     return p.parse_args()
@@ -73,6 +77,78 @@ def resolve_device(pref: str) -> torch.device:
     if pref == "auto":
         return torch.device("cuda" if torch.cuda.is_available() else "cpu")
     return torch.device(pref)
+
+
+def load_backbone_from_checkpoint(model, checkpoint_path: str | Path) -> dict:
+    """Warm-start model.backbone from a GeoClassifier checkpoint.
+
+    Loads only backbone tensors (keys prefixed "backbone." — or raw Sequential
+    keys for older checkpoints); head.*/fc.* tensors are always skipped since
+    cell definitions differ across runs. Raises if zero backbone tensors match
+    (prevents silently training from scratch).
+    """
+    checkpoint_path = Path(checkpoint_path)
+    if not checkpoint_path.exists():
+        raise FileNotFoundError(f"Init checkpoint not found: {checkpoint_path}")
+
+    ckpt = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
+    source_epoch = None
+    if isinstance(ckpt, dict) and isinstance(ckpt.get("model_state"), dict):
+        sd = ckpt["model_state"]
+        source_epoch = ckpt.get("epoch")
+    elif isinstance(ckpt, dict):
+        sd = ckpt
+    else:
+        raise RuntimeError(
+            f"Init checkpoint at {checkpoint_path} is not a dict (type={type(ckpt).__name__})."
+        )
+
+    backbone_state = model.backbone.state_dict()
+    loaded, skipped = 0, 0
+    loaded_targets: set = set()
+    mismatched: list = []
+
+    for raw_key, tensor in sd.items():
+        key = raw_key[len("module."):] if raw_key.startswith("module.") else raw_key
+        if key.startswith("head.") or key.startswith("fc."):
+            skipped += 1
+            continue
+        target_key = key[len("backbone."):] if key.startswith("backbone.") else key
+        if target_key not in backbone_state:
+            skipped += 1
+            continue
+        if tuple(tensor.shape) != tuple(backbone_state[target_key].shape):
+            mismatched.append(
+                f"{raw_key}: ckpt {tuple(tensor.shape)} vs model {tuple(backbone_state[target_key].shape)}"
+            )
+            continue
+        backbone_state[target_key] = tensor
+        loaded += 1
+        loaded_targets.add(target_key)
+
+    missing = sorted(set(backbone_state.keys()) - loaded_targets)
+    model.backbone.load_state_dict(backbone_state, strict=False)
+
+    print(f"[init] source: {checkpoint_path} (epoch={source_epoch})")
+    print(f"[init] backbone tensors loaded: {loaded}/{len(backbone_state)} | "
+          f"skipped: {skipped} | mismatched: {len(mismatched)} | missing: {len(missing)}")
+    if mismatched:
+        print(f"[init] WARNING shape mismatches (first 5): {mismatched[:5]}")
+    if missing:
+        print(f"[init] WARNING {len(missing)} backbone tensors missing from init "
+              f"(kept as-is); first 5: {missing[:5]}")
+    if loaded == 0:
+        raise RuntimeError(
+            f"Zero backbone tensors loaded from {checkpoint_path}; refusing to continue silently."
+        )
+    return {
+        "checkpoint": str(checkpoint_path),
+        "source_epoch": source_epoch,
+        "loaded": loaded,
+        "skipped": skipped,
+        "mismatched": len(mismatched),
+        "missing": len(missing),
+    }
 
 
 def main() -> None:
@@ -182,6 +258,12 @@ def main() -> None:
         if args.pretrained:
             print("[train] note: --pretrained was True but Places365 checkpoint loaded; "
                   "ImageNet weights were overwritten by Places365 backbone weights.")
+
+    # L5: optional backbone warm-start from a previous GeoClassifier checkpoint
+    init_info = None
+    if args.init_backbone_from is not None:
+        print(f"[train] initializing backbone from: {args.init_backbone_from}")
+        init_info = load_backbone_from_checkpoint(model, args.init_backbone_from)
 
     if args.unfreeze_last_block:
         model.unfreeze_backbone(last_block_only=True)
@@ -359,6 +441,7 @@ def main() -> None:
         "subset_size": len(subset_indices) if subset_indices is not None else full_len,
         "cells_json": args.cells_json,
         "places365_checkpoint": args.places365_checkpoint,
+        "init_backbone_from": args.init_backbone_from,
         "run_tag": args.run_tag,
         "device": str(device),
         "total_elapsed_sec": total_elapsed,
@@ -369,6 +452,8 @@ def main() -> None:
         run_meta["places365_loaded"] = places365_info["loaded"]
         run_meta["places365_skipped"] = places365_info["skipped"]
         run_meta["places365_mismatched"] = places365_info["mismatched"]
+    if init_info is not None:
+        run_meta["backbone_init"] = init_info
 
     metrics = {
         "run": run_meta,

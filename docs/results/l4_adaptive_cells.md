@@ -108,6 +108,9 @@ a ResNet-50 backbone, the cell construction method is not the primary
 bottleneck.  Performance is limited by the coarse cell granularity and the
 10k training subset size relative to global geography.
 
+The k-means default selected here is reused as the cell builder for the L5
+Kerala model (`docs/results/l5_kerala_pinpoint.md`).
+
 ## Files Produced
 
 ```

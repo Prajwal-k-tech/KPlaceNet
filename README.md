@@ -30,6 +30,8 @@ data/
   osv5m_subset_10k/  # train-split subset — via --dataset osv5m --split train (plan first, then --yes)
   osv5m_test/        # official OSV test, eval-only — via --split test (never train)
   im2gps3k/          # 3k eval only — never train — via --dataset im2gps3k
+  kerala_osv5m/      # OSV-5M Kerala slice (bbox 8.0-12.8N, 74.5-77.5E) — L5 region model, via scripts/extract_kerala_osv5m.py
+  .gitkeep
   .gitkeep
 ```
 
@@ -80,7 +82,7 @@ KPlaceNet/
 
 - Windows paths safe — uses `pathlib.Path`, no hardcoded absolute paths.
 - Imports use `src.*` absolute form; `src` is a package (`src/__init__.py`).
-- L0, L1, and the full L2 matrix are complete. Results are recorded in `docs/results/l1_baseline.md` and `docs/results/l2_data_efficiency.md`; generated datasets/checkpoints remain gitignored.
+- L0-L5 are complete. Results are recorded in `docs/results/` (l1 through l5); generated datasets/checkpoints remain gitignored.
 
 ## L2 — Data-Efficient Training (Gap 4)
 
@@ -230,9 +232,45 @@ training point count > median are "urban" (dense), count <= median are "rural"
 
 Full results in `docs/results/l4_adaptive_cells.md`.
 
+## L5 — Kerala Pinpoint Mode (Region Specialization)
+
+L5 is an approved addendum to the L0-L4 base plan (same dataset family, no new
+backbone): fine-tune the L2 winner into a region specialist instead of training
+from scratch. 300 k-means cells are built from **train-only** Kerala
+coordinates; layer4 + head are warm-started from the L2 winner backbone via the
+new `--init-backbone-from` flag in `src/train.py`.
+
+Data: OSV-5M Kerala slice (CC-BY-SA-4.0) — 15,939 train / 1,000 seeded val /
+357 official test.
+
+```powershell
+# Extract the Kerala slice (idempotent, resumable; needs the 1.02 GB train image zips)
+python scripts/extract_kerala_osv5m.py
+
+# Phases: prep, cells, train, eval (or all)
+python scripts/run_l5_kerala.py --phase all
+```
+
+### Results (before = L2 global, after = L5 Kerala)
+
+| Split | Median | @1km | @25km | @200km |
+|-------|--------|------|-------|--------|
+| Val (1,000) before | 6,253 km | 0.0% | 0.0% | 14.7% |
+| Val (1,000) after | **7.0 km** | 8.4% | **64.6%** | 92.9% |
+| Test (357) before | 6,330 km | 0.0% | 0.0% | 7.6% |
+| Test (357) after | **42.1 km** | 0.6% | **41.2%** | 80.1% |
+
+Best around Kochi/Kottayam; weakest in the far south (Trivandrum). The random
+val holdout is optimistic (street-level images share streets); the official
+test split is the honest number. Full results and caveats:
+`docs/results/l5_kerala_pinpoint.md`.
+
 ## Demo
 
-Quick interactive Gradio demo of the L2 winner (`l2_imagenet_1.0_layer4`) with L3 calibration (temperature + conformal + abstention at 0.5). Single file: `demo/app.py`.
+Quick interactive Gradio demo with two modes (`demo/app.py`, single file). Lazy, separately cached loads; one-image inference per mode.
+
+- **World · global model** — L2 winner (`l2_imagenet_1.0_layer4`) with L3 calibration (temperature + conformal + abstention at 0.5).
+- **Kerala · regional model** — L5 (`l5_kerala_kmeans300`), raw softmax confidence (no calibration was fitted for this checkpoint), zoomed Kerala map.
 
 ```powershell
 # Launch (no commit, demo only)
@@ -240,7 +278,7 @@ python demo/app.py
 # or: python -m demo.app
 ```
 
-Upload a photo → global + zoomed (+/-5 deg) matplotlib map of the predicted cell, plus calibrated vs raw confidence, temperature T, conformal set size, and an ACCEPT / ABSTAIN verdict. Haversine distance is only measurable on the labeled test set (no ground truth for uploads).
+Pick a mode, upload a photo (or pick a curated example — examples select their matching mode, including one honest failure case), and run. You get a plotly map of the predicted cell (region dots + cell bounds + centroid marker), confidence details, and in global mode an ACCEPT / ABSTAIN verdict. Haversine distance is only measurable on the labeled test set (no ground truth for uploads).
 
 ### GeoGuessr game (`demo/geoguessr.py`, recommended)
 
