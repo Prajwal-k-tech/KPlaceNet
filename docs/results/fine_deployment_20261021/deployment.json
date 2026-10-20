@@ -1,0 +1,18 @@
+{
+  "release": "https://github.com/Prajwal-k-tech/KPlaceNet/releases/tag/kerala-fine-l10-20261021",
+  "assets": {
+    "fine_train_bank.pt": {
+      "destination": "checkpoints/fine_retrieval/bank.pt",
+      "sha256": "3c7e02c24bfcad9169dc17ba14c9d3c1bb337d3376cff36d88900d7cc9629a88",
+      "bytes": 78186381
+    },
+    "dinov2-source.zip": {
+      "destination": "checkpoints/fine_retrieval/dinov2-source.zip",
+      "sha256": "04276715cddb29d45d05bff3a6fc132224dc27749b279ac98ad2ce4620e20d48",
+      "bytes": 3001681
+    }
+  },
+  "dino_url": "https://dl.fbaipublicfiles.com/dinov2/dinov2_vits14/dinov2_vits14_pretrain.pth",
+  "dino_sha256": "b938bf1bc15cd2ec0feacfe3a1bb553fe8ea9ca46a7e1d8d00217f29aef60cd9",
+  "source_commit": "7764ea0f912e53c92e82eb78a2a1631e92725fc8"
+}

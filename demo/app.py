@@ -221,7 +221,7 @@ def render_map(lat: float, lon: float, cell):
     return _style_map(fig)
 
 
-def render_kerala_map(lat: float, lon: float, cell):
+def render_kerala_map(lat: float, lon: float, cell, fine=False):
     """Kerala map: same style as the world map, zoomed to the state.
 
     300 cell centroids + predicted cell box + prediction star. The geo axis
@@ -239,7 +239,7 @@ def render_kerala_map(lat: float, lon: float, cell):
         customdata=[int(c.cell_id) for c in res["cells"]],
     )]
     # Predicted cell bounding box as a red outline (skip if degenerate).
-    if (cell.lon_max - cell.lon_min) > 0 and (cell.lat_max - cell.lat_min) > 0:
+    if not fine and (cell.lon_max - cell.lon_min) > 0 and (cell.lat_max - cell.lat_min) > 0:
         box_lon = [cell.lon_min, cell.lon_max, cell.lon_max, cell.lon_min, cell.lon_min]
         box_lat = [cell.lat_min, cell.lat_min, cell.lat_max, cell.lat_max, cell.lat_min]
         traces.append(go.Scattergeo(
@@ -319,7 +319,7 @@ def _style_map(fig, kerala=False):
     return fig
 
 
-def _predict_kerala(image, use_knn=True) -> dict:
+def _predict_kerala(image, use_knn=True, use_fine=True) -> dict:
     """Raw softmax (no calibration) -> top cell centroid + Kerala map."""
     import math
     import torch
@@ -348,11 +348,22 @@ def _predict_kerala(image, use_knn=True) -> dict:
     cell = cells[pred_id]
     lat, lon = float(cell.centroid_lat), float(cell.centroid_lon)
 
-    fig = render_kerala_map(lat, lon, cell)
+    fine = None
+    if use_fine and (ROOT / "checkpoints/fine_retrieval/bank.pt").is_file():
+        from src.fine_inference import load_fine_resources, predict_fine
+        if "fine_resources" not in res:
+            from src.demo_config import sha256_file
+            res["fine_resources"] = load_fine_resources(ROOT, device, sha256_file(KERALA_CHECKPOINT))
+        fine = predict_fine(x, features, res["fine_resources"])
+        lat, lon = fine["lat"], fine["lon"]
+    fig = render_kerala_map(lat, lon, cell, fine=bool(fine))
     return {
+        "fine": bool(fine), "similarity": fine["similarity"] if fine else None,
+        "reference_id": fine["reference_id"] if fine else None,
+        "reference_path": str(ROOT / "data/kerala_osv5m/train/images" / (fine["reference_id"] + ".jpg")) if fine else None,
         "mode": MODE_KERALA,
         "hybrid": hybrid, "hybrid_conf": float(combined.max().item()),
-        "pipeline": "ResNet + KNN (80/20)" if hybrid else "ResNet classifier",
+        "pipeline": "Fine retrieval: ResNet + DINOv2" if fine else "ResNet + KNN (80/20)" if hybrid else "ResNet classifier",
         "lat": lat, "lon": lon, "cell_id": pred_id,
         "cal_conf": None, "raw_conf": raw_conf, "T": None,
         "set_size": None, "K": int(K),
@@ -363,7 +374,7 @@ def _predict_kerala(image, use_knn=True) -> dict:
     }
 
 
-def predict_one(image, mode=MODE_GLOBAL, use_knn=True):
+def predict_one(image, mode=MODE_GLOBAL, use_knn=True, use_fine=True):
     """Run inference on one PIL image. Returns dict with scalars + figure.
 
     mode: "global" (calibrated L2/L3) or "kerala" (raw L5, uncalibrated).
@@ -373,7 +384,7 @@ def predict_one(image, mode=MODE_GLOBAL, use_knn=True):
           and verdict = "RAW" (no threshold is applied).
     """
     if _mode_key(mode) == MODE_KERALA:
-        return _predict_kerala(image, use_knn=use_knn)
+        return _predict_kerala(image, use_knn=use_knn, use_fine=use_fine)
 
     import math
     import torch
@@ -420,6 +431,16 @@ def predict_one(image, mode=MODE_GLOBAL, use_knn=True):
 
 
 def _format_markdown(d: dict) -> str:
+    if d.get("fine"):
+        return (f"### Fine-coordinate retrieval\n\n"
+                f"- Position: **{d['lat']:.6f}, {d['lon']:.6f}**\n"
+                f"- Pipeline: {d['pipeline']}\n"
+                f"- Retrieved training image ID: {d['reference_id']}\n"
+                f"- Cosine similarity: {d['similarity']:.4f} (not calibrated confidence)\n\n"
+                "The output is the matched training photograph's coordinate, not a cell center. "
+                "Descriptors combine normalized ResNet and DINOv2 features equally. "
+                "The bank excludes validation/test images. Fine does not mean verified accuracy; "
+                "outside-region images can still retrieve a wrong match.")
     lat0, lat1, lon0, lon1 = d["box"]
     if d.get("mode") == MODE_KERALA:
         return (
@@ -537,14 +558,21 @@ def _result_html(d=None):
         note = "ResNet + training-only KNN, weighted 80/20. Combined score is uncalibrated, not probability of correctness."
     if kerala:
         note += " Assumes a scene from the Kerala-area dataset; outside-region images also receive a prediction. The training rectangle includes neighboring areas."
+    fine = bool(d.get("fine"))
+    if fine:
+        score_label = "Appearance similarity (cosine)"
+        note = "ResNet + DINOv2 retrieves a training photograph's coordinate. Similarity is not probability of correctness. Regional input is assumed; wrong distant matches remain possible."
+    score_text = f"{d['similarity']:.3f}" if fine else f"{confidence:.1%}"
+    title = "Retrieved location" if fine else f"{'Kerala area' if kerala else 'Global'} · predicted cell {d['cell_id']}"
+    coordinate_note = "Marker: retrieved training-photo coordinate." if fine else "The marker represents a cell centroid."
     return (
-        f'<div class="eyebrow" style="color:#B84F2D">{status.upper()}</div>'
-        f'<h2>{"Kerala area" if kerala else "Global"} · predicted cell {d["cell_id"]}</h2>'
+        f'<div class="eyebrow" style="color:#B84F2D">{status.upper()}</div>' 
+        f'<h2>{title}</h2>'
         '<div class="result-grid">'
         f'<div><span>Latitude</span><strong>{d["lat"]:.4f}°</strong></div>'
         f'<div><span>Longitude</span><strong>{d["lon"]:.4f}°</strong></div>'
-        f'<div><span>{score_label}</span><strong>{confidence:.1%}</strong></div>'
-        f'</div><p class="result-note">{note} The marker represents a cell centroid.</p>'
+        f'<div><span>{score_label}</span><strong>{score_text}</strong></div>'
+        f'</div><p class="result-note">{note} {coordinate_note}</p>'
         f'<a class="maps-link" href="https://www.google.com/maps/search/?api=1&amp;query={d["lat"]:.8f}%2C{d["lon"]:.8f}" '
         'target="_blank" rel="noopener noreferrer">Open in Google Maps ↗</a>'
     )
@@ -602,20 +630,24 @@ def _demo_theme(gr):
 def build_ui():
     import gradio as gr
 
-    def run_prediction(img, mode, use_knn):
+    def run_prediction(img, mode, method):
         if img is None:
             gr.Warning("Choose a photo before running the model.")
-            return _empty_map(mode), _result_html(), "Upload a photo to see model details."
+            return _empty_map(mode), _result_html(), "Upload a photo to see model details.", gr.update(value=[], visible=False)
         try:
-            d = predict_one(img, mode, use_knn=use_knn)
-            if use_knn and d.get("mode") == MODE_KERALA and not d.get("hybrid"):
+            d = predict_one(img, mode, use_knn=method != "classifier", use_fine=method == "fine")
+            if method == "fine" and d.get("mode") == MODE_KERALA and not d.get("fine"):
+                gr.Warning("Fine retrieval assets are missing; showing the available regional model.")
+            if method == "hybrid" and d.get("mode") == MODE_KERALA and not d.get("hybrid"):
                 gr.Warning("The matching KNN bank is not installed; this result uses ResNet alone.")
         except Exception as exc:
             raise gr.Error("Prediction could not complete. Check the model checkpoint and try again.") from exc
-        return d["figure"], _result_html(d), _format_markdown(d)
+        path = d.get("reference_path")
+        references = [(path, "Training reference " + d["reference_id"])] if path and Path(path).is_file() else []
+        return d["figure"], _result_html(d), _format_markdown(d), gr.update(value=references, visible=bool(references))
 
     def reset_result(mode):
-        return _empty_map(mode), _result_html(), "Run a prediction to inspect calibration and cell bounds."
+        return _empty_map(mode), _result_html(), "Run a prediction to inspect calibration and cell bounds.", gr.update(value=[], visible=False)
 
     # Gradio 6 moved theme/css from Blocks to launch; retain older releases.
     style = {} if int(gr.__version__.split(".")[0]) >= 6 else {
@@ -623,7 +655,7 @@ def build_ui():
     }
     with gr.Blocks(title="KPlaceNet | Visual geolocation", fill_width=True, **style) as demo:
         gr.HTML('<h1>KPlaceNet</h1>'
-                '<p>Photo geolocation · Choose a street scene, predict a region, and inspect the model confidence.</p>', elem_id="hero")
+                '<p>Photo geolocation · Choose a street scene, retrieve a location, and inspect the visual match.</p>', elem_id="hero")
         with gr.Row(equal_height=False, elem_id="workspace"):
             with gr.Column(scale=4, min_width=300, elem_id="photo-panel"):
                 gr.Markdown("### Photograph and model")
@@ -633,15 +665,22 @@ def build_ui():
                 img_in = gr.Image(type="pil", format="png", label="Street scene", height=250,
                                   sources=["upload", "clipboard"], interactive=True, elem_id="street-image")
                 gr.HTML('<p role="status" aria-live="polite"></p>', elem_id="drop-status")
-                use_knn_in = gr.Checkbox(label="Refine with training-photo neighbors (KNN)", value=True)
+                method_in = gr.Radio(choices=[("Fine coordinates · ResNet + DINOv2", "fine"),
+                                              ("Regional cells · ResNet + KNN", "hybrid"),
+                                              ("Regional cells · classifier only", "classifier")],
+                                         value="fine" if (ROOT / "checkpoints/fine_retrieval/bank.pt").is_file() else "hybrid",
+                                         label="Regional prediction method")
                 run = gr.Button("Locate photo →", variant="primary", elem_id="run-button")
-                gr.Markdown("One of 300 geographic cells; the marker is a cell center. Regional mode assumes Kerala-area input, includes nearby border areas, and cannot reject outside-region photos.")
+                gr.Markdown("Fine retrieval returns a matched training-photo coordinate. Cell methods return one of 300 centers. Regional mode assumes Kerala-area input and cannot reject outside-region photos.")
             with gr.Column(scale=6, min_width=300, elem_id="map-panel"):
                 gr.Markdown("### Predicted region")
                 map_out = gr.Plot(value=_empty_map(MODE_KERALA), label="Location map", show_label=False, elem_id="location-map")
             with gr.Column(scale=3, min_width=260, elem_id="summary-panel"):
                 gr.Markdown("### Prediction")
                 result_out = gr.HTML(_result_html(), elem_id="result")
+        reference_out = gr.Gallery(label="Retrieved training reference (different from the uploaded test photo)",
+                                   columns=1, height=230, object_fit="contain", visible=False,
+                                   allow_preview=True, interactive=False)
         gr.Markdown("### Demo photographs", elem_id="examples-heading")
         gr.Markdown("Choose a photograph, then select **Locate photo**. "
                     "Selected test-set photos; these examples do not represent average performance.")
@@ -682,16 +721,17 @@ def build_ui():
                                        show_progress="hidden")
         with gr.Accordion("Prediction details", open=False):
             info_out = gr.Markdown("Run a prediction to inspect calibration and cell bounds.")
-            gr.Markdown("Kerala-area scores are uncalibrated. Optional KNN uses training photographs only and blends votes 80/20 with the classifier; neither pipeline detects outside-region input. "
+            gr.Markdown("Fine retrieval combines ResNet and DINOv2 descriptors and returns the matched training photo coordinate. Cosine similarity is not a probability. Kerala-area scores are uncalibrated. Optional KNN uses training photographs only and blends votes 80/20 with the classifier; none of these regional methods detects outside-region input. "
                         "Global mode uses temperature scaling and conformal prediction. "
                         "Cell bounding boxes are geographic extents, not confidence intervals. "
                         "Distance error requires a known reference location.")
-        gr.Markdown("**KPlaceNet** · ResNet-50 visual geolocation · Street imagery: OSV-5M (CC-BY-SA-4.0)")
-        outputs = [map_out, result_out, info_out]
-        run.click(run_prediction, inputs=[img_in, mode_in, use_knn_in], outputs=outputs)
+        gr.Markdown("**KPlaceNet** · ResNet-50 + DINOv2 visual geolocation · Street imagery: OSV-5M (CC-BY-SA-4.0)")
+        outputs = [map_out, result_out, info_out, reference_out]
+        run.click(run_prediction, inputs=[img_in, mode_in, method_in], outputs=outputs)
         img_in.change(reset_result, inputs=[mode_in], outputs=outputs)
         mode_in.change(reset_result, inputs=[mode_in], outputs=outputs)
-        use_knn_in.change(reset_result, inputs=[mode_in], outputs=outputs)
+        method_in.change(reset_result, inputs=[mode_in], outputs=outputs)
+        mode_in.change(lambda mode: gr.update(visible=_mode_key(mode) == MODE_KERALA), inputs=[mode_in], outputs=[method_in])
     return demo
 
 

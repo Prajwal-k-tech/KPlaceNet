@@ -1,0 +1,37 @@
+{
+  "compact_bank_validation": {
+    "n": 1000,
+    "within_1km": 48.8,
+    "within_5km": 71.1,
+    "within_25km": 83.3,
+    "within_200km": 97.0,
+    "median_km": 1.0722135665398174,
+    "mean_km": 22.462972319880464,
+    "p90_km": 68.19997479872089
+  },
+  "new_data_protocol": "Manual outdoor review of first 144; exclude within 1km of existing validation/test; thin new reference locations within100m. Frozen encoders; candidate bank expansion only. No model fitting on test.",
+  "reviewed_candidates": 118,
+  "new_references_after_filters": 24,
+  "augmented_validation": {
+    "n": 1000,
+    "within_1km": 48.8,
+    "within_5km": 71.1,
+    "within_25km": 83.3,
+    "within_200km": 97.0,
+    "median_km": 1.0722135665398174,
+    "mean_km": 22.462972319880464,
+    "p90_km": 68.19997479872089
+  },
+  "promotion_eligible": false,
+  "new_data_used_in_deployed_bank": false,
+  "compact_bank_test": {
+    "n": 357,
+    "within_1km": 0.0,
+    "within_5km": 17.366946778711483,
+    "within_25km": 63.02521008403361,
+    "within_200km": 90.75630252100841,
+    "median_km": 15.920501530441191,
+    "mean_km": 61.21480233994892,
+    "p90_km": 197.74524800829607
+  }
+}
