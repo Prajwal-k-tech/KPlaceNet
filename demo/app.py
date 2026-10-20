@@ -508,15 +508,18 @@ def _result_html(d=None):
     confidence = d["raw_conf"] if kerala else d["cal_conf"]
     status = "Regional estimate" if kerala else ("Accepted estimate" if d["verdict"] == "ACCEPT" else "Uncertain estimate · abstained")
     calibrated = not kerala and d.get("temperature_fitted", False)
+    verified = calibrated and d.get("calibration_matches_checkpoint", False)
+    score_label = ("Calibrated confidence" if verified else "Temperature-scaled score" if calibrated else "Raw model score")
     note = ("Raw model score · uncalibrated; this is not a measured probability of correctness."
-            if not calibrated else "Calibrated model score · the model abstains below 50% confidence.")
+            if not calibrated else "Calibrated model score · the model abstains below 50% confidence."
+            if verified else "Historical temperature scaling · calibration artifact identity unverified. The model abstains below a 50% score.")
     return (
         f'<div class="eyebrow" style="color:#B84F2D">{status.upper()}</div>'
         f'<h2>{"Kerala" if kerala else "Global"} · predicted cell {d["cell_id"]}</h2>'
         '<div class="result-grid">'
         f'<div><span>Latitude</span><strong>{d["lat"]:.4f}°</strong></div>'
         f'<div><span>Longitude</span><strong>{d["lon"]:.4f}°</strong></div>'
-        f'<div><span>{"Calibrated confidence" if calibrated else "Raw model score"}</span><strong>{confidence:.1%}</strong></div>'
+        f'<div><span>{score_label}</span><strong>{confidence:.1%}</strong></div>'
         f'</div><p class="result-note">{note} The marker represents a cell centroid.</p>'
         f'<a class="maps-link" href="https://www.google.com/maps/search/?api=1&amp;query={d["lat"]:.8f}%2C{d["lon"]:.8f}" '
         'target="_blank" rel="noopener noreferrer">Open in Google Maps ↗</a>'
