@@ -1,4 +1,25 @@
 # KPlaceNet: presentation study guide
+
+## Final L7 improvement: ResNet plus training-only KNN
+
+The live regional demo now defaults to a hybrid when its matching feature bank is installed. ResNet produces a 2,048-dimensional feature vector. We compare its direction (cosine similarity) with features from the 15,939 training photographs, take five neighbors, and softmax-weight their cell votes with temperature 0.07. The final cell scores are 80% L6 classifier softmax plus 20% neighbor votes. Argmax chooses a saved cell centroid. The KNN checkbox lets you compare with L6 alone. Neither pipeline learns from an uploaded photograph.
+
+The fixed blend passed validation: within 25 km rose from 70.9% to 74.4%, and median error fell from 4.78 to 4.02 km. The training bank excludes all validation and official test IDs. Its checkpoint hash must match the L6 model. The blend, k and temperature were fixed before this follow-up evaluation; they were not chosen using test performance.
+
+| Method | Within 25 km, official test | Median error | Mean error |
+| --- | --- | --- | --- |
+| L5 baseline | 41.18% (147/357) | 42.08 km | 102.85 km |
+| L6 geographic head | 47.62% (170/357) | 28.41 km | 85.33 km |
+| L7 fixed 80/20 hybrid | 53.50% (191/357) | 21.84 km | 80.65 km |
+
+The same 357 test images were already inspected for L6, so L7 is a follow-up on a reused benchmark, not fresh independent confirmation. Hybrid p90 error worsened from 230.99 to 239.82 km even though median and mean improved. KNN alone was also recorded as a diagnostic (53.78% within 25 km, 18.90-km median); we did not replace the predeclared hybrid based on this test result. One run and spatially optimistic validation limit the conclusion.
+
+The combined score is uncalibrated and is not probability of correctness. Retrieval does not detect outside-region inputs. A Great Wall image can still get a regional answer, and the regional data rectangle (8.0-12.8 latitude, 74.5-77.5 longitude) includes neighboring territory such as parts of Karnataka. This is a Kerala-area experiment, not a guarantee that every output lies inside Kerala's administrative boundary. Do not clamp coordinates to hide errors.
+
+Source: docs/results/l7_kerala_knn_20261020/results.json; scripts/evaluate_l7_knn.py; src/retrieval.py.
+
+<!-- PAGE -->
+
 Updated 20 October 2026. Use this guide for the final L6 demo and tomorrow's viva.
 
 ## Your opening explanation
@@ -35,7 +56,7 @@ K-means groups training coordinates around centers. The implementation scales lo
 When assigning labels, the implementation first checks cell bounds, resolves overlaps using nearest-centroid haversine distance, and falls back to the nearest centroid if no bounds contain the coordinate. That matters because K-means cluster boxes can overlap.
 
 ## K-means, KNN and neural classification
-K-means constructs geographic groups during preparation. KNN would predict by searching a stored database of nearby image descriptors. The live KPlaceNet model does not use KNN: it feeds an image through a learned neural classifier. A hypothetical retrieval extension would be a different method and should be labeled as such.
+K-means constructs geographic groups during preparation. KNN searches a stored bank of similar image descriptors. L6 alone uses the neural classifier. The final optional L7 extension uses five cosine-nearest training-only ResNet descriptors and blends their votes with L6, as described at the start of this guide.
 
 ## Why centroids limit precision
 The network chooses a class, not a unique house or camera position. Every image predicted into the same class receives the same centroid. Even a correct class can produce nonzero distance error. More displayed decimal places do not make the model GPS-accurate. More cells can improve resolution but leave fewer examples per class and can make learning harder.
@@ -228,7 +249,7 @@ Where are labels created? Which weights change in L5 and L6? What is the model i
 # 10. Viva practice and rehearsal
 
 ## Short answers
-Why not KNN? We use a trained neural classifier. K-means builds training-coordinate cells. A retrieval extension would be separate.
+Do we use KNN? Yes, the final optional L7 refinement searches five training-only ResNet feature neighbors and blends votes 80/20 with L6. K-means separately constructs the geographic classes.
 
 Why Kerala? Restricting the region lets training focus on finer local distinctions. The user supplies that regional assumption. The app does not prove a photograph comes from Kerala.
 

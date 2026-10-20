@@ -1,0 +1,13 @@
+{
+  "k": 5,
+  "similarity": "cosine of L5/L6 frozen ResNet features",
+  "neighbor_weight_temperature": 0.07,
+  "blend_knn_weight": 0.2,
+  "bank": "15,939 training images only; never validation/test",
+  "selection": "Fixed 80% L6 softmax + 20% KNN vote; validation improvement >= .5pp within25 and median <= 1.02 baseline required",
+  "caveats": [
+    "Random validation is spatially optimistic.",
+    "Does not detect outside-region inputs.",
+    "Official test already reported in L6; any later reporting is a reused benchmark, not fresh confirmation."
+  ]
+}

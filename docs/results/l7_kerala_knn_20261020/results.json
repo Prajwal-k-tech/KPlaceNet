@@ -1,0 +1,81 @@
+{
+  "protocol": {
+    "k": 5,
+    "similarity": "cosine of L5/L6 frozen ResNet features",
+    "neighbor_weight_temperature": 0.07,
+    "blend_knn_weight": 0.2,
+    "bank": "15,939 training images only; never validation/test",
+    "selection": "Fixed 80% L6 softmax + 20% KNN vote; validation improvement >= .5pp within25 and median <= 1.02 baseline required",
+    "caveats": [
+      "Random validation is spatially optimistic.",
+      "Does not detect outside-region inputs.",
+      "Official test already reported in L6; any later reporting is a reused benchmark, not fresh confirmation."
+    ]
+  },
+  "validation": {
+    "l6": {
+      "n": 1000,
+      "cell_top1_pct": 49.6,
+      "within_1km": 10.299999999999999,
+      "within_25km": 70.89999999999999,
+      "within_200km": 94.5,
+      "mean_km": 38.08300852981874,
+      "median_km": 4.777566971266394,
+      "p90_km": 141.60283237078855
+    },
+    "knn_only": {
+      "n": 1000,
+      "cell_top1_pct": 58.5,
+      "within_1km": 12.2,
+      "within_25km": 79.4,
+      "within_200km": 94.89999999999999,
+      "mean_km": 32.11754817770601,
+      "median_km": 3.164415201103794,
+      "p90_km": 122.9531351652216
+    },
+    "hybrid": {
+      "n": 1000,
+      "cell_top1_pct": 53.6,
+      "within_1km": 10.9,
+      "within_25km": 74.4,
+      "within_200km": 95.0,
+      "mean_km": 33.955912132550615,
+      "median_km": 4.024782874932935,
+      "p90_km": 125.4517684772396
+    }
+  },
+  "promotion_eligible": true,
+  "device": "cuda",
+  "reused_official_test": {
+    "l6": {
+      "n": 357,
+      "cell_top1_pct": 20.72829131652661,
+      "within_1km": 0.5602240896358543,
+      "within_25km": 47.61904761904761,
+      "within_200km": 84.31372549019608,
+      "mean_km": 85.32770164333718,
+      "median_km": 28.40558392282621,
+      "p90_km": 230.9850458406496
+    },
+    "knn_only": {
+      "n": 357,
+      "cell_top1_pct": 27.170868347338935,
+      "within_1km": 0.8403361344537815,
+      "within_25km": 53.78151260504202,
+      "within_200km": 87.11484593837535,
+      "mean_km": 77.66577181507714,
+      "median_km": 18.89504564994411,
+      "p90_km": 235.3780064968434
+    },
+    "hybrid": {
+      "n": 357,
+      "cell_top1_pct": 25.210084033613445,
+      "within_1km": 0.5602240896358543,
+      "within_25km": 53.50140056022409,
+      "within_200km": 85.15406162464986,
+      "mean_km": 80.64828075152087,
+      "median_km": 21.84416612436229,
+      "p90_km": 239.8238186882608
+    }
+  }
+}

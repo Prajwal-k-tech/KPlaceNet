@@ -1,0 +1,11 @@
+{
+  "release": "https://github.com/Prajwal-k-tech/KPlaceNet/releases/tag/kerala-l7-hybrid-20261020",
+  "requires_l6": "d5588854830b8fcdf2c35b1f1d21d19c7628183b4004aa76b5e1c535fd753107",
+  "assets": {
+    "l7_kerala_train_bank.pt": {
+      "destination": "checkpoints/l7_kerala_hybrid/train_bank.pt",
+      "sha256": "387aa462c74dea7a9f20650253f377e3c4fe0d0d2ee4021fc8ffcff77e7659a0",
+      "bytes": 131103741
+    }
+  }
+}

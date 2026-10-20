@@ -42,7 +42,7 @@ MODE_GLOBAL = "global"
 MODE_KERALA = "kerala"
 MODE_LABELS = {
     MODE_GLOBAL: "World · global model",
-    MODE_KERALA: "Kerala · regional model",
+    MODE_KERALA: "Kerala area · regional model",
 }
 MODE_KEYS = {label: key for key, label in MODE_LABELS.items()}
 MODE_KEYS.update({key: key for key in MODE_LABELS})
@@ -162,7 +162,15 @@ def _load_kerala_resources():
     model.to(device)
     model.eval()
 
-    _KERALA_CACHE.update(model=model, cells=cells, device=device,
+    bank_path = ROOT / "checkpoints/l7_kerala_hybrid/train_bank.pt"
+    bank = None
+    if bank_path.is_file():
+        from src.demo_config import sha256_file
+        bank = torch.load(bank_path, map_location="cpu", weights_only=True)
+        if bank["checkpoint_sha256"] != sha256_file(KERALA_CHECKPOINT):
+            raise ValueError("KNN bank belongs to a different checkpoint; remove it or install its matching L6 pack")
+        bank = {"x": bank["x"].to(device), "labels": bank["labels"].to(device)}
+    _KERALA_CACHE.update(model=model, cells=cells, device=device, bank=bank,
                          K=num_cells, T=None, quantile=None)
     return _KERALA_CACHE
 
@@ -311,7 +319,7 @@ def _style_map(fig, kerala=False):
     return fig
 
 
-def _predict_kerala(image) -> dict:
+def _predict_kerala(image, use_knn=True) -> dict:
     """Raw softmax (no calibration) -> top cell centroid + Kerala map."""
     import math
     import torch
@@ -327,16 +335,24 @@ def _predict_kerala(image) -> dict:
     tfm = get_transforms(IMAGE_SIZE, train=False)
     x = tfm(image.convert("RGB")).unsqueeze(0).to(device)
     with torch.no_grad():
-        logits = model(x)
-        raw_probs = F.softmax(logits, dim=1)
+        features = model.backbone(x).flatten(1)
+        raw_probs = F.softmax(model.head(features), dim=1)
+        combined = raw_probs
+        hybrid = bool(use_knn and res.get("bank") is not None)
+        if hybrid:
+            from src.retrieval import knn_prob
+            votes = knn_prob(features, res["bank"]["x"], res["bank"]["labels"], num_cells=K)
+            combined = .8 * raw_probs + .2 * votes
     raw_conf = float(raw_probs.max().item())
-    pred_id = int(raw_probs.argmax(dim=1).item())
+    pred_id = int(combined.argmax(dim=1).item())
     cell = cells[pred_id]
     lat, lon = float(cell.centroid_lat), float(cell.centroid_lon)
 
     fig = render_kerala_map(lat, lon, cell)
     return {
         "mode": MODE_KERALA,
+        "hybrid": hybrid, "hybrid_conf": float(combined.max().item()),
+        "pipeline": "ResNet + KNN (80/20)" if hybrid else "ResNet classifier",
         "lat": lat, "lon": lon, "cell_id": pred_id,
         "cal_conf": None, "raw_conf": raw_conf, "T": None,
         "set_size": None, "K": int(K),
@@ -347,7 +363,7 @@ def _predict_kerala(image) -> dict:
     }
 
 
-def predict_one(image, mode=MODE_GLOBAL):
+def predict_one(image, mode=MODE_GLOBAL, use_knn=True):
     """Run inference on one PIL image. Returns dict with scalars + figure.
 
     mode: "global" (calibrated L2/L3) or "kerala" (raw L5, uncalibrated).
@@ -357,7 +373,7 @@ def predict_one(image, mode=MODE_GLOBAL):
           and verdict = "RAW" (no threshold is applied).
     """
     if _mode_key(mode) == MODE_KERALA:
-        return _predict_kerala(image)
+        return _predict_kerala(image, use_knn=use_knn)
 
     import math
     import torch
@@ -407,13 +423,15 @@ def _format_markdown(d: dict) -> str:
     lat0, lat1, lon0, lon1 = d["box"]
     if d.get("mode") == MODE_KERALA:
         return (
-            f"### Prediction (Kerala mode)\n\n"
+            f"### Prediction (Kerala-area mode)\n\n"
+            f"- Pipeline: {d.get('pipeline', 'ResNet classifier')}\n"
+            f"- Selected-cell score: {d.get('hybrid_conf', d['raw_conf']):.2%} (uncalibrated)\n"
             f"- Predicted lat/lon: **{d['lat']:.4f}, {d['lon']:.4f}**\n"
             f"- Cell id: **{d['cell_id']}** (box lat [{lat0:.2f}, {lat1:.2f}], "
             f"lon [{lon0:.2f}, {lon1:.2f}])\n"
             f"- Raw confidence: **{d['raw_conf'] * 100:.2f}%** (uncalibrated)\n"
             f"- Conformal set: n/a — Kerala mode is uncalibrated\n"
-            f"- Calibration: none — raw softmax argmax, no temperature applied\n"
+            f"- Calibration: none; optional KNN blends 80% classifier with 20% training-only neighbor votes.\n"
             f"- Decision: raw confidence only (no ACCEPT/ABSTAIN threshold)\n\n"
             f"_Note: haversine distance cannot be known for an uploaded photo "
             f"(no ground truth) — distance is only measurable on the labeled test set._"
@@ -505,17 +523,23 @@ def _result_html(d=None):
                 '<h2>Where was this photo taken?</h2>'
                 '<p class="result-note">Upload a street scene or choose an example, then select Locate photo.</p>')
     kerala = d.get("mode") == MODE_KERALA
-    confidence = d["raw_conf"] if kerala else d["cal_conf"]
-    status = "Regional estimate" if kerala else ("Accepted estimate" if d["verdict"] == "ACCEPT" else "Uncertain estimate · abstained")
+    confidence = d.get("hybrid_conf", d["raw_conf"]) if kerala else d["cal_conf"]
+    status = "Regional assumption · not verified" if kerala else ("Accepted estimate" if d["verdict"] == "ACCEPT" else "Uncertain estimate · abstained")
     calibrated = not kerala and d.get("temperature_fitted", False)
     verified = calibrated and d.get("calibration_matches_checkpoint", False)
     score_label = ("Calibrated confidence" if verified else "Temperature-scaled score" if calibrated else "Raw model score")
+    if d.get("hybrid"):
+        score_label = "Combined retrieval score"
     note = ("Raw model score · uncalibrated; this is not a measured probability of correctness."
             if not calibrated else "Calibrated model score · the model abstains below 50% confidence."
             if verified else "Historical temperature scaling · calibration artifact identity unverified. The model abstains below a 50% score.")
+    if d.get("hybrid"):
+        note = "ResNet + training-only KNN, weighted 80/20. Combined score is uncalibrated, not probability of correctness."
+    if kerala:
+        note += " Assumes a scene from the Kerala-area dataset; outside-region images also receive a prediction. The training rectangle includes neighboring areas."
     return (
         f'<div class="eyebrow" style="color:#B84F2D">{status.upper()}</div>'
-        f'<h2>{"Kerala" if kerala else "Global"} · predicted cell {d["cell_id"]}</h2>'
+        f'<h2>{"Kerala area" if kerala else "Global"} · predicted cell {d["cell_id"]}</h2>'
         '<div class="result-grid">'
         f'<div><span>Latitude</span><strong>{d["lat"]:.4f}°</strong></div>'
         f'<div><span>Longitude</span><strong>{d["lon"]:.4f}°</strong></div>'
@@ -578,12 +602,12 @@ def _demo_theme(gr):
 def build_ui():
     import gradio as gr
 
-    def run_prediction(img, mode):
+    def run_prediction(img, mode, use_knn):
         if img is None:
             gr.Warning("Choose a photo before running the model.")
             return _empty_map(mode), _result_html(), "Upload a photo to see model details."
         try:
-            d = predict_one(img, mode)
+            d = predict_one(img, mode, use_knn=use_knn)
         except Exception as exc:
             raise gr.Error("Prediction could not complete. Check the model checkpoint and try again.") from exc
         return d["figure"], _result_html(d), _format_markdown(d)
@@ -607,8 +631,9 @@ def build_ui():
                 img_in = gr.Image(type="pil", label="Street scene", height=250,
                                   sources=["upload", "clipboard"], interactive=True, elem_id="street-image")
                 gr.HTML('<p role="status" aria-live="polite"></p>', elem_id="drop-status")
+                use_knn_in = gr.Checkbox(label="Refine with training-photo neighbors (KNN)", value=True)
                 run = gr.Button("Locate photo →", variant="primary", elem_id="run-button")
-                gr.Markdown("One of 300 geographic cells. The marker shows a cell center, so predictions are regional.")
+                gr.Markdown("One of 300 geographic cells; the marker is a cell center. Regional mode assumes Kerala-area input, includes nearby border areas, and cannot reject outside-region photos.")
             with gr.Column(scale=6, min_width=300, elem_id="map-panel"):
                 gr.Markdown("### Predicted region")
                 map_out = gr.Plot(value=_empty_map(MODE_KERALA), label="Location map", show_label=False, elem_id="location-map")
@@ -655,15 +680,16 @@ def build_ui():
                                        show_progress="hidden")
         with gr.Accordion("Prediction details", open=False):
             info_out = gr.Markdown("Run a prediction to inspect calibration and cell bounds.")
-            gr.Markdown("Kerala uses raw softmax scores without calibration or an abstention threshold. "
+            gr.Markdown("Kerala-area scores are uncalibrated. Optional KNN uses training photographs only and blends votes 80/20 with the classifier; neither pipeline detects outside-region input. "
                         "Global mode uses temperature scaling and conformal prediction. "
                         "Cell bounding boxes are geographic extents, not confidence intervals. "
                         "Distance error requires a known reference location.")
         gr.Markdown("**KPlaceNet** · ResNet-50 visual geolocation · Street imagery: OSV-5M (CC-BY-SA-4.0)")
         outputs = [map_out, result_out, info_out]
-        run.click(run_prediction, inputs=[img_in, mode_in], outputs=outputs)
+        run.click(run_prediction, inputs=[img_in, mode_in, use_knn_in], outputs=outputs)
         img_in.change(reset_result, inputs=[mode_in], outputs=outputs)
         mode_in.change(reset_result, inputs=[mode_in], outputs=outputs)
+        use_knn_in.change(reset_result, inputs=[mode_in], outputs=outputs)
     return demo
 
 

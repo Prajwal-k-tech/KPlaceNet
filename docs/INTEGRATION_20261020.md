@@ -1,31 +1,27 @@
-# Contribution integration on 20 October 2026
+# Final integration and verification, 20 October 2026
 
-This integration combines Asterisk-Hunter main `bab61f9` with Prajwal Kumar K's complete contribution branch `c02d320`. Both parent histories are retained. It preserves Kerala L5, the Plotly demo and GeoGuessr alongside conformal correctness, three-way fitting splits, provenance, strict evaluation, sampling comparisons, and the recorded 10k versus 20k follow-up.
+Prajwal's fork main and both contribution branches contain the integrated original history, evaluation corrections, responsive Atlas frontend, browser image-link drops, Google Maps links and the measured L6 Kerala follow-up. PR 1 into Asterisk-Hunter/KPlaceNet remains the maintainer merge route; direct writes to the original repository are unavailable. No original history or baseline checkpoint was overwritten.
 
-README and demo conflicts were resolved to retain both modes. The global demo retains configurable checkpoint and calibration paths, verifies a supplied calibration checkpoint hash, and labels missing calibration as raw confidence. `KPLACENET_CELLS` can override the global sidecar. Sidecar bounds are applied only to matching centroids. Kerala loading now validates class metadata, matches sidecar centroids to the checkpoint, and loads weights strictly. Kerala still has no fitted calibration and reports raw confidence.
+## Current measured model
 
-The cross-platform report path formatter now recognizes foreign Windows and POSIX absolute paths. A regression assertion covers Windows paths, and three demo integration tests cover global raw fallback, verified global calibration, and uncalibrated Kerala output. Gradio and Plotly are included in requirements because both are needed by the demos.
+L6 freezes the existing regional backbone and cells and trains a geographic-smoothed classifier head. It improves the same 357-image official-test within-25-km rate from 41.18% to 47.62% and median error from 42.08 to 28.41 km. Validation chooses the recipe and epoch before test evaluation. One seed, spatially optimistic random validation and uncalibrated Kerala scores remain important limits. See docs/results/l6_kerala_20261020.md and its JSON/CSV evidence.
 
 ## Validation
 
-- Full unit test discovery: 73 tests run, 72 passed, one CUDA-only test skipped on CPU. Includes a synthetic image train-checkpoint-evaluate smoke test.
-- L2 plan-only and L3 plan-only commands pass without image data or model downloads.
-- Python byte compilation passes for src, scripts, demo, and tests.
-- Gradio UI builds with 22 blocks without launching a server. Gradio 6 reports a theme/CSS constructor deprecation warning; model inference was not tested without the original artifacts.
-- Synthetic conformal diagnostic: 20,000 trials, seed 2026, n=9, alpha=.01. Correct rank 10 returns infinity and coverage 1.0000; historical clamped maximum gives .9037. This is a mathematical software diagnostic, not geolocation evidence.
+- CPU environment: 80 tests run, 79 passed, one CUDA-only skip.
+- Separate CUDA environment: all 80 tests passed.
+- Full source images restored: 16,939 official-training records and 357 official-test records, with size and CRC checks on newly downloaded images.
+- Reconstructed train/validation/test image IDs are disjoint. A coordinate audit measures 982/1,000 validation rows and zero of 357 test rows within 1 km of the recovered training rows.
+- Both actual trained models infer on all ten configured gallery photos. The L6 browser prediction and Google Maps destination are verified.
+- Published model assets match SHA-256 and size records. The L6 checkpoint loads with weights_only=True. Source model tensors are unchanged by the metadata compatibility repack.
+- Frontend desktop and phone layouts were inspected. File and browser image-URL drop formats were exercised, with clear feedback for blocked or non-image links.
 
-These CPU checks use Python 3.12 and PyTorch 2.14.1+cpu. They do not rerun or independently reproduce the dated CUDA image experiments. Images and trained checkpoints remain local, gitignored prerequisites.
+## Installed artifacts and fallback
 
-The classroom report and viva guide are in `docs/classroom/`. The report preserves separate sample identities and attribution for historical global, controlled fork, and Kerala studies. Title page institution, instructor, department, and roll numbers still need confirmation.
+The demo prefers checkpoints/l6_kerala_geographic/selected.pt and its cells.json when present, otherwise legacy L5. Install L6 using python scripts/download_kerala_l6.py. The verified release is https://github.com/Prajwal-k-tech/KPlaceNet/releases/tag/kerala-l6-20261020-verified . The historical global calibration lacks an identity hash and is labeled unverified. The later corrected 20k global study is a separate model and protocol.
 
-## Demo preparation follow-up
+The task launcher prefers the isolated GPU environment and otherwise uses CPU. Matching workspace-local NVIDIA libraries fix the running 610.57.04 module's userspace mismatch without modifying system drivers. Kaggle authentication and available quota were checked, but the experiment ran locally.
 
-The fork main and both contribution branches were published after Git Credential Manager browser authentication. Direct upstream push is denied to Prajwal-k-tech; PR 1 is updated for maintainer merge. The upload UI was opened in a browser, mode switching and research details inspected, and the Gradio 6 launcher now preserves theme and CSS. `scripts/check_demo_ready.py` reports missing model and data files before rehearsal. The seven-page live demo playbook documents controls, inference, design rationale, an exact artifact transfer list, and a timed script.
+## Preparation and data research
 
-Full follow-up validation: 74 tests run, 73 passed, one CUDA-only skip. No original checkpoints or demonstration images were found in the Windows project locations checked or Ubuntu home. File readiness is not verified inference; real-image demo verification remains pending those artifacts.
-
-## Release artifact restoration
-
-Upstream be4ea66 adds the weights-v1 release downloader. All eight release assets were installed locally and checked against their GitHub release SHA-256 digests. The ten configured example photos were fetched individually from the official OSV-5M test archives using bounded HTTP ranges, without downloading the full dataset. Both models loaded successfully and produced finite predictions on all ten photos, five per scope. Kerala sidecar/checkpoint centroid checks pass. This is an inference smoke check, not a benchmark rerun.
-
-The release global calibration is historical (T=3.9387) and contains no checkpoint hash; its identity remains explicitly unverified. It predates the revised three-way fitting protocol and should not be described using the fork 20k model calibration metrics. The separate GeoGuessr game still requires its test metadata; the upload interface can use the restored photos without a dataset CSV. Weights, images, and downloads remain gitignored.
+The updated report retains all 13 required sections. The study guide and live-demo playbook reflect L6, the current controls, limits and exact artifact paths. The additional-data collector produced 350 Commons candidate metadata records; these were not used for training or evaluation and still need image/coordinate/duplicate review. The confirmed ETH paper is a later improvement reference, not a claim of reproduction.
