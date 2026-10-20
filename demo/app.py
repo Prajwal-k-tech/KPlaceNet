@@ -296,7 +296,7 @@ def _style_map(fig, kerala=False):
             trace.name = "Predicted location"
             trace.hovertemplate = "%{lat:.4f}° N, %{lon:.4f}° E<extra>Prediction</extra>"
     fig.update_layout(
-        height=490, autosize=True, title=None,
+        height=380, autosize=True, title=None,
         paper_bgcolor="#f3f7f9", plot_bgcolor="#f3f7f9",
         font={"family": "Georgia, serif", "color": "#243e53", "size": 12},
         margin={"l": 8, "r": 8, "t": 12, "b": 58},
@@ -455,23 +455,31 @@ def build_predict_fn():
 
 
 DEMO_CSS = """
-.gradio-container {max-width: 1440px !important; background: #f5f7f8;}
-.gradio-container label, .gradio-container label span {color: #243e53 !important;}
-.gradio-container .block-title, .gradio-container legend {color: #243e53 !important;}
-#hero {background: #132e42; padding: 30px 36px; border-radius: 14px; margin-bottom: 18px;}
-#hero h1 {font-family: Georgia, serif; color: #fff; font-size: 38px; font-weight: 400; margin: 6px 0 10px;}
-#hero p {color: #c4d8e2; font-size: 16px; max-width: 780px;}
-.eyebrow {color: #7fd4cb; letter-spacing: 2px; font-size: 11px; font-weight: 700;}
-#result {background: #fff; border: 1px solid #dbe4e9; border-radius: 12px; padding: 22px; min-height: 145px;}
-#result h2 {font-family: Georgia, serif; font-size: 27px; color: #183b50; margin: 6px 0 12px;}
-.result-grid {display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;}
-.result-grid span {display: block; color: #617789; font-size: 12px; margin-bottom: 5px;}
-.result-grid strong {font-size: 20px; color: #143b50;}
-.result-note {color: #617789; font-size: 12px; margin: 14px 0 0;}
-#run-button {background: #146f76; color: white; border: 0; min-height: 48px;}
-#metrics {padding: 14px 20px; border-left: 3px solid #1c8589; background: #eaf2f3; margin: 14px 0;}
-#metrics p {color: #345566; font-size: 14px;}
-@media(max-width: 700px) {#hero {padding: 22px;} #hero h1 {font-size: 30px;} .result-grid {grid-template-columns: 1fr;} }
+html, body {background: #f4f7f8 !important; color-scheme: light;}
+html body .gradio-container {width: calc(100% - 64px) !important; max-width: 1480px !important; margin: 0 auto !important; padding: 24px 0 !important; background: #f4f7f8; color: #243e53;}
+.gradio-container .main {padding: 0 !important;}
+#hero {background: #153747; padding: 20px 28px; border-radius: 10px; margin-bottom: 16px;}
+#hero h1 {font-family: Georgia, serif; color: #fff; font-size: 30px; font-weight: 400; margin: 0 0 5px;}
+#hero p {color: #c9dde1; font-size: 14px; margin: 0; max-width: 850px;}
+.eyebrow {color: #146f76; letter-spacing: 1.5px; font-size: 11px; font-weight: 700;}
+#result {background: #fff; border: 1px solid #d5e1e5; border-radius: 10px; padding: 18px 22px; min-height: 130px;}
+#result h2 {font-family: Georgia, serif; font-size: 25px; color: #183b50; margin: 6px 0 12px;}
+.result-grid {display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; font-variant-numeric: tabular-nums;}
+.result-grid span {display: block; color: #526b7b; font-size: 12px; margin-bottom: 5px;}
+.result-grid strong {font-size: 22px; color: #143b50;}
+.result-note {color: #526b7b; font-size: 12px; margin: 12px 0 0;}
+#run-button {background: #146f76; color: white; border: 0; min-height: 44px; font-weight: 600;}
+#run-button:hover {background: #105d63;}
+#metrics {padding: 8px 16px; border-left: 3px solid #1c8589; background: #e8f1f1; margin: 10px 0;}
+#metrics p {color: #345566; font-size: 13px;}
+.demo-gallery {background: transparent !important; height: auto !important;}
+.demo-gallery .grid-wrap {height: auto !important;}
+.demo-gallery .grid-container {grid-template-columns: repeat(5, minmax(0, 1fr)) !important; grid-auto-rows: 155px !important;}
+.demo-gallery .gallery-item, .demo-gallery .thumbnail-item {min-width: 0 !important; height: 155px !important;}
+.demo-gallery .caption-label {display: block !important; opacity: 1 !important; position: absolute !important; bottom: 0 !important; left: 0 !important; right: 0 !important; color: #183b50 !important; background: rgba(255,255,255,.96) !important; padding: 7px 8px !important; font-size: 11px !important; line-height: 1.3 !important; white-space: normal !important;}
+button:focus-visible {outline: 3px solid #22929a !important; outline-offset: 3px;}
+@media(max-width: 1050px) {.demo-gallery .grid-container {grid-template-columns: repeat(3, minmax(0, 1fr)) !important;}}
+@media(max-width: 760px) {html body .gradio-container.gradio-container {width: calc(100% - 28px) !important; padding: 14px 0 !important;} #hero {padding: 18px;} #hero h1 {font-size: 26px;} .result-grid {grid-template-columns: 1fr 1fr; gap: 14px;} .result-grid strong {font-size: 19px;} .demo-gallery .grid-container {grid-template-columns: repeat(2, minmax(0, 1fr)) !important;} }
 """
 
 
@@ -498,26 +506,52 @@ def _result_html(d=None):
 
 
 def _empty_map(mode):
-    fig = go.Figure(go.Scattergeo(lat=[], lon=[], showlegend=False))
+    kerala = _mode_key(mode) == MODE_KERALA
+    path = KERALA_CELLS if kerala else SIDECAR_CELLS
+    fig = go.Figure()
+    if path.is_file():
+        cells = json.loads(path.read_text(encoding="utf-8"))["cells"]
+        fig.add_trace(go.Scattergeo(
+            lat=[c["centroid_lat"] for c in cells],
+            lon=[c["centroid_lon"] for c in cells],
+            mode="markers", name="Model regions",
+            marker={"size": 4, "color": "#4b9196"},
+            hovertemplate="Training-derived cell center<extra></extra>",
+        ))
     fig.update_layout(geo={"projection": {"type": "equirectangular"},
                            "showland": True, "showocean": True, "showcountries": True})
-    if _mode_key(mode) == MODE_KERALA:
-        fig.update_geos(lataxis_range=[7.7, 13.1], lonaxis_range=[72.6, 80.2])
-    return _style_map(fig)
+    if kerala:
+        fig.update_geos(lataxis_range=[7.7, 13.1], lonaxis_range=[73.5, 79.0])
+        fig.add_trace(go.Scattergeo(
+            lat=[11.26, 9.93, 9.59, 8.52], lon=[75.78, 76.27, 76.52, 76.94],
+            text=["Kozhikode", "Kochi", "Kottayam", "Thiruvananthapuram"],
+            mode="text", textposition="middle right", textfont={"size": 11},
+            showlegend=False, hoverinfo="skip",
+        ))
+    fig.add_annotation(text="Model regions · select a photo to predict", x=0.5, y=1,
+                       xref="paper", yref="paper", showarrow=False,
+                       font={"size": 12, "color": "#345566"})
+    return _style_map(fig, kerala=kerala)
 
 
 def _demo_theme(gr):
-    return gr.themes.Soft(primary_hue="teal", neutral_hue="slate").set(
-        body_background_fill_dark="#f5f7f8", body_text_color_dark="#243e53",
-        body_text_color_subdued_dark="#617789", block_background_fill_dark="#ffffff",
-        block_label_background_fill_dark="#eaf2f3", block_label_text_color_dark="#243e53",
-        background_fill_primary_dark="#ffffff", background_fill_secondary_dark="#eef3f5",
-        input_background_fill_dark="#ffffff", border_color_primary_dark="#dbe4e9",
-        checkbox_label_background_fill_dark="#eaf2f3",
-        checkbox_label_background_fill_selected_dark="#cfe9e7",
-        checkbox_label_text_color_dark="#243e53",
-        checkbox_label_text_color_selected_dark="#243e53",
+    # The interface is intentionally light even with a dark OS preference.
+    # Mirror every theme token instead of mixing dark components with light CSS.
+    import inspect
+    theme = gr.themes.Soft(primary_hue="teal", neutral_hue="slate").set(
+        body_background_fill="#f4f7f8", body_text_color="#243e53",
+        body_text_color_subdued="#526b7b", block_background_fill="#ffffff",
+        block_label_background_fill="#eaf2f3", block_label_text_color="#243e53",
+        background_fill_primary="#ffffff", background_fill_secondary="#eef3f5",
+        input_background_fill="#ffffff", border_color_primary="#d5e1e5",
+        checkbox_label_background_fill="#eaf2f3",
+        checkbox_label_background_fill_selected="#cfe9e7",
+        checkbox_label_text_color="#243e53", checkbox_label_text_color_selected="#183b50",
     )
+    values = theme.to_dict()["theme"]
+    allowed = inspect.signature(theme.set).parameters
+    return theme.set(**{key: values[key[:-5]] for key in values
+                        if key.endswith("_dark") and key in allowed and key[:-5] in values})
 
 
 def build_ui():
@@ -540,28 +574,26 @@ def build_ui():
     style = {} if int(gr.__version__.split(".")[0]) >= 6 else {
         "css": DEMO_CSS, "theme": _demo_theme(gr),
     }
-    with gr.Blocks(title="KPlaceNet | Visual geolocation", **style) as demo:
-        gr.HTML('<div class="eyebrow">COMPUTER VISION / VISUAL GEOLOCATION</div>'
-                '<h1>A place, from a photograph.</h1>'
-                '<p>KPlaceNet learns geographic cues from street scenes. Explore a global model '
-                'and a model specialized for Kerala, one photograph at a time.</p>', elem_id="hero")
+    with gr.Blocks(title="KPlaceNet | Visual geolocation", fill_width=True, **style) as demo:
+        gr.HTML('<h1>KPlaceNet</h1>'
+                '<p>Photo geolocation · Choose a street scene, predict a region, and inspect the model confidence.</p>', elem_id="hero")
         with gr.Row(equal_height=False):
             with gr.Column(scale=4, min_width=300):
-                gr.Markdown("### 01 / Choose your view")
+                gr.Markdown("### Photograph and model")
                 mode_in = gr.Radio(choices=[(MODE_LABELS[MODE_KERALA], MODE_KERALA),
                                             (MODE_LABELS[MODE_GLOBAL], MODE_GLOBAL)],
                                    value=MODE_KERALA, label="Geographic scope")
-                img_in = gr.Image(type="pil", label="Street scene", height=340,
+                img_in = gr.Image(type="pil", label="Street scene", height=260,
                                   sources=["upload", "clipboard"])
                 run = gr.Button("Locate photo →", variant="primary", elem_id="run-button")
                 gr.Markdown("The model predicts one of 300 geographic cells. Its marker shows the cell's center, so estimates are regional.")
             with gr.Column(scale=7, min_width=380):
-                gr.Markdown("### 02 / Explore the prediction")
+                gr.Markdown("### Predicted region")
                 map_out = gr.Plot(value=_empty_map(MODE_KERALA), label="Location map", show_label=False)
                 result_out = gr.HTML(_result_html(), elem_id="result")
         gr.Markdown("**Kerala benchmark** · 42 km median error · 41% within 25 km · 357 held-out test photos. "
                     "These are dataset results, not the accuracy of the uploaded photo.", elem_id="metrics")
-        gr.Markdown("### 03 / Try a demonstration photo")
+        gr.Markdown("### Try a demo photograph")
         gr.Markdown("Examples select their matching model. Select **Locate photo** to reveal the prediction. "
                     "These are curated examples, including a failure case; they do not represent average performance.")
         groups = [
@@ -583,8 +615,20 @@ def build_ui():
             examples = [[str(folder / filename), mode, caption]
                         for filename, caption in photos if (folder / filename).exists()]
             if examples:
-                gr.Examples(examples=examples, inputs=[img_in, mode_in, example_label],
-                            label=label, examples_per_page=5)
+                gallery = gr.Gallery(
+                    value=[(row[0], row[2]) for row in examples], label=label,
+                    columns=5, rows=1, height=175, object_fit="cover", buttons=[],
+                    allow_preview=False, interactive=False, elem_classes=["demo-gallery"],
+                )
+
+                def select_example(evt: gr.SelectData, items=examples):
+                    path, selected_mode, caption = items[evt.index]
+                    from PIL import Image
+                    return Image.open(path).convert("RGB"), selected_mode, caption
+
+                select_example.__annotations__["evt"] = gr.SelectData
+                gallery.select(select_example, outputs=[img_in, mode_in, example_label],
+                               show_progress="hidden")
         with gr.Accordion("Research details · confidence, calibration & cell bounds", open=False):
             info_out = gr.Markdown("Run a prediction to inspect calibration and cell bounds.")
             gr.Markdown("Kerala uses raw softmax scores without calibration or an abstention threshold. "
@@ -606,6 +650,16 @@ def launch_demo(**kwargs):
     if int(gr.__version__.split(".")[0]) >= 6:
         kwargs.setdefault("css", DEMO_CSS)
         kwargs.setdefault("theme", _demo_theme(gr))
+        # Gradio scopes selectors inside media rules; root layout must be global.
+        kwargs.setdefault("head", "<style>" + DEMO_CSS + "</style>")
+        kwargs.setdefault("js", """() => {
+            let timer;
+            window.addEventListener('resize', () => {
+                clearTimeout(timer);
+                timer = setTimeout(() => document.querySelectorAll('.js-plotly-plot').forEach(
+                    plot => window.Plotly && window.Plotly.Plots.resize(plot)), 150);
+            });
+        }""")
     return build_ui().launch(**kwargs)
 
 

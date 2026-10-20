@@ -46,3 +46,24 @@ class DemoIntegrationTests(unittest.TestCase):
         self.assertEqual(ui.launch.call_args.kwargs['css'], DEMO_CSS)
         self.assertIn('theme', ui.launch.call_args.kwargs)
         self.assertEqual(ui.launch.call_args.kwargs['server_name'], '127.0.0.1')
+
+    @unittest.skipUnless(importlib.util.find_spec('gradio'), 'install gradio')
+    def test_dark_system_preference_keeps_readable_light_surfaces(self):
+        import gradio as gr
+        from demo.app import _demo_theme
+        tokens = _demo_theme(gr).to_dict()['theme']
+        for name in ('body_text_color', 'body_background_fill', 'block_label_text_color',
+                     'checkbox_label_background_fill'):
+            self.assertEqual(tokens[name], tokens[name + '_dark'])
+
+    def test_initial_map_shows_cells_without_loading_neural_model(self):
+        import tempfile, json
+        from pathlib import Path
+        from demo.app import _empty_map
+        with tempfile.TemporaryDirectory() as tmp:
+            cells = Path(tmp) / 'cells.json'
+            cells.write_text(json.dumps({'cells': [dict(centroid_lat=10, centroid_lon=76)]}))
+            with patch('demo.app.KERALA_CELLS', cells), patch('demo.app._load_kerala_resources',
+                    side_effect=AssertionError('initial view must not load weights')):
+                figure = _empty_map('kerala')
+        self.assertEqual(list(figure.data[0].lat), [10])
