@@ -91,7 +91,7 @@ def main():
     model.load_state_dict(checkpoint['model_state'],strict=True);model.to(DEVICE).eval()
     protocol=dict(seed=42, source_checkpoint=str(ARGS.checkpoint), checkpoint_sha256=sha(ARGS.checkpoint),
         cells_sha256=sha(ROOT/'checkpoints/l5_kerala_kmeans300/cells.json'),
-        train_n=15939, val_n=1000, test_n=357, device=str(DEVICE), torch_version=torch.__version__,
+        train_n=15939, val_n=1000, test_n=357, device=str(DEVICE), torch_version=str(torch.__version__),
         gpu_name=torch.cuda.get_device_name(0) if DEVICE.type=='cuda' else None,
         algorithm='Frozen L5 backbone; paired head-only smoothing recipes',
         recipes=['uniform_smoothing','geographic_smoothing'], geographic_scale_km=15.0,

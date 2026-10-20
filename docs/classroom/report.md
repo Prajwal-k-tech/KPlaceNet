@@ -39,7 +39,7 @@ The project contains several distinct experiments. Historical global experiments
 
 For the seed 42 model trained on 20,000 images, three disjoint subsets are used for temperature fitting, conformal calibration, and final evaluation. Expected calibration error decreases from 0.4171 to 0.0453. Empirical conformal coverage is 90.8%, but the average set contains 159.7 of 300 classes. Better confidence estimates therefore coexist with weak geographic precision. The correction to the finite sample conformal rank and recorded sample provenance make this evaluation auditable. [R4]
 
-A separate Kerala specialist uses regional training images and regional cells. Its reported official test accuracy within 25 km is 41.2%, with median error 42.1 km. These figures describe a restricted task and cannot be compared directly with global results. The overall contribution is a working visual geolocation pipeline, controlled experimental comparisons, and a clear account of what confidence and evaluation results do and do not establish. [R5]
+A separate Kerala specialist uses regional training images and regional cells. The L5 baseline obtains 41.2% within 25 km and median error 42.1 km. A final frozen-feature geographic smoothing follow-up increases these to 47.6% within 25 km and median error 28.4 km on the same 357 official test images, after selection on validation. [R6] These figures describe a restricted task and cannot be compared directly with global results. The overall contribution is a working visual geolocation pipeline, controlled experimental comparisons, and a clear account of what confidence and evaluation results do and do not establish. [R5]
 
 Keywords: visual geolocation, ResNet 50, transfer learning, geographic cells, temperature scaling, conformal prediction.
 
@@ -253,6 +253,33 @@ The regional official test mean error is 102.8 km, with 0.6% within 1 km. This i
 
 All values above are the dated repository's recorded experiment results. The integration validates software compatibility and report consistency; it does not newly rerun these image experiments without their data and model artifacts.
 
+
+<!-- PAGE -->
+# 10 Results and Evaluation continued
+## 10 3 Final Kerala improvement: L6
+
+On 20 October 2026, the L5 backbone and all 300 regional cells were frozen. Deterministic 2,048-dimensional image features were cached. Two prespecified classifier-training recipes were compared from the same initial head: uniform label smoothing 0.1 and geographic smoothing. Both used AdamW, learning rate 0.0001, weight decay 0.01, batch 256, twelve epochs and seed 42. The 614,700-parameter head was the only updated component. No new training images were added. [R6]
+
+Geographic targets mix 0.9 of the original class label with 0.1 of a distribution proportional to exp(-distance/15 km) over saved centroids. Distances use training-image coordinates only. This encourages geographic neighborhood awareness while retaining image-only inference. L6 uses deterministic center-cropped features rather than fresh stochastic L5 crops, so the experiment is not an isolated attribution of the gain to a single ingredient.
+
+Validation within-25-km rate, with median distance as a tie-breaker, selects geographic smoothing at epoch twelve. Validation increases from 64.6% to 70.9% within 25 km. Selection was saved before evaluating the official test.
+
+| Metric | L5 baseline | Selected L6 |
+|---|---:|---:|
+| Official test count | 357 | 357 |
+| Within 25 km | 41.18% | 47.62% |
+| Median distance | 42.08 km | 28.41 km |
+| Mean distance | 102.85 km | 85.33 km |
+| Within 200 km | 80.11% | 84.31% |
+| Exact cell accuracy | 17.93% | 20.73% |
+| Within 1 km | 0.56% | 0.56% |
+
+Forty-one images become correct within 25 km and eighteen regress, a net gain of twenty-three. This is one seeded run with spatially dependent examples, not a significance claim. Fine precision remains weak. L6 runs on an RTX 3050 laptop GPU with 6 GB VRAM; the original L5 run used an RTX 4050.
+
+A recovered-subset audit finds disjoint image IDs but 982 of 1,000 random validation images within 1 km of training, versus zero of the 357 official test images. Median nearest-training distances are 99 m and 2.520 km respectively. This supports the optimistic-validation caveat. The original Kerala extraction is a bounding-box slice rather than a state-polygon audit.
+
+The ETH Zurich/Google/Politecnico di Milano paper Scaling Image Geo-Localization to Continent Level combines ground prototypes with aerial embeddings and geographic interpolation. L6 adapts broad geographic-boundary awareness through soft labels. It does not reproduce that paper's aerial system, interpolation rule, losses, scale or benchmark. [3]
+
 <!-- PAGE -->
 # 11 Discussion
 ## Comparison with existing methods
@@ -273,6 +300,8 @@ Privacy and deployment also constrain usefulness. Visual localization can expose
 
 <!-- PAGE -->
 # 12 Conclusion
+
+The final L6 follow-up improves the same regional official-test within-25-km rate to 47.6% and median error to 28.4 km through a frozen-backbone classifier update. It retains the limits of regional assumptions, centroid decoding, raw scores and optimistic random validation. A separate search collected 350 Commons candidate metadata records; they were not used for training or evaluation. [R6]
 
 KPlaceNet implements the complete chain from image preprocessing to geographic classification, coordinate decoding, and geodesic evaluation. Transfer learning makes the experiment feasible on laptop hardware, while saved class definitions keep model outputs geographically meaningful. The project goes beyond producing a map marker by testing data scale, sampling, cell geometry, and uncertainty under explicit controls.
 
@@ -316,3 +345,7 @@ Project implementation and experiment records accessed 20 October 2026
 [R6] KPlaceNet Adaptive Cell Construction. docs/results/l4_adaptive_cells.md. Upstream revision bab61f9.
 
 R2 to R4 source revision c02d320 on branch prajwal/eval-integrity at https://github.com/Prajwal-k-tech/KPlaceNet. Historical and follow up results use distinct evaluation subsets. Source code examined includes src/dataset.py, src/model.py, src/train.py, src/cells.py, src/eval.py, src/uncertainty.py, and experiment runners. Measurements are cited to the recorded reports rather than represented as newly reproduced runs.
+
+[R6] Project run record, docs/results/l6_kerala_20261020.md and associated protocol, selection, split audit and per-image predictions, 20 October 2026.
+
+[3] Lindenberger et al. Scaling Image Geo-Localization to Continent Level. NeurIPS 2025. https://arxiv.org/abs/2510.26795 .
