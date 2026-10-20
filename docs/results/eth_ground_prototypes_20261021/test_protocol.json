@@ -1,0 +1,11 @@
+{
+  "recipe": {
+    "spacing_km": 2.0,
+    "epoch": 0,
+    "kind": "prototype_reranked_reference",
+    "rerank_weight": 0.1
+  },
+  "decision": "Frozen before evaluation. No test tuning. Deploy only if within5/25 lose no more than.5pp and median <=1.02x current.",
+  "test_caveat": "Already reused official benchmark; exploratory follow-up, not independent confirmation",
+  "selection_amendment": "Corrected candidate-level guardrail filtering after validation inspection and before test. Original highest-within5 candidate failed median guardrail. This is an exploratory amendment, not a pristine preregistration."
+}

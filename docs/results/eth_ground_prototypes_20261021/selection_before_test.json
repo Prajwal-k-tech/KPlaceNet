@@ -1,0 +1,394 @@
+{
+  "protocol": {
+    "inspiration": "Scaling Image Geo-Localization to Continent Level: ground prototypes, boundary interpolation, multi-similarity ground-prototype edge",
+    "differences": "Frozen ResNet-DINO input; no encoder optimization, no aerial imagery/encoder or S2; local regular 2/5km grids; no full ETH reproduction",
+    "recipes": {
+      "spacing_km": [
+        2.0,
+        5.0
+      ],
+      "epochs": [
+        0,
+        4,
+        8
+      ],
+      "rerank_weight": [
+        0.0,
+        0.1,
+        0.25
+      ]
+    },
+    "training": {
+      "seed": 42,
+      "epochs": 8,
+      "optimizer": "AdamW",
+      "lr": 0.003,
+      "weight_decay": 0.0,
+      "batch": 256,
+      "positive": "bilinear normalized prototype mixture",
+      "negative": "nodes farther than2x spacing",
+      "loss_alpha": 2.0,
+      "loss_beta": 50.0,
+      "loss_margin": 0.5
+    },
+    "selection": "Apply all safety conditions to each candidate before ranking eligible candidates by within5, median and within25; current retrieval eligible",
+    "selection_amendment": "Corrected candidate-level guardrail filtering after validation inspection and before test. Original highest-within5 candidate failed median guardrail. This is an exploratory amendment, not a pristine preregistration.",
+    "promotion": "within5 improves >=.5pp; within25 no worse by >.5pp; median <=1.02x current",
+    "test": "Only evaluate after promotion gate; benchmark reused, not independent confirmation",
+    "storage": "reuse cached frozen descriptors; no raw image download"
+  },
+  "baseline_validation": {
+    "n": 1000,
+    "within_1km": 48.8,
+    "within_5km": 71.1,
+    "within_25km": 83.3,
+    "within_200km": 97.0,
+    "median_km": 1.0722135305404663,
+    "mean_km": 22.462221145629883,
+    "p90_km": 68.1999740600586
+  },
+  "selected_recipe": {
+    "spacing_km": 2.0,
+    "epoch": 0,
+    "kind": "prototype_reranked_reference",
+    "rerank_weight": 0.1
+  },
+  "selected_validation": {
+    "n": 1000,
+    "within_1km": 49.3,
+    "within_5km": 71.8,
+    "within_25km": 84.2,
+    "within_200km": 97.0,
+    "median_km": 1.0378963947296143,
+    "mean_km": 22.490446090698242,
+    "p90_km": 66.27581787109375
+  },
+  "promotion_eligible": true,
+  "all_validation": [
+    {
+      "recipe": {
+        "spacing_km": 2.0,
+        "epoch": 0,
+        "kind": "prototype_coordinate",
+        "rerank_weight": 0.0
+      },
+      "validation": {
+        "n": 1000,
+        "within_1km": 20.200000000000003,
+        "within_5km": 60.5,
+        "within_25km": 76.9,
+        "within_200km": 95.3,
+        "median_km": 2.509788783945914,
+        "mean_km": 30.542001051671594,
+        "p90_km": 107.69874410271404
+      }
+    },
+    {
+      "recipe": {
+        "spacing_km": 2.0,
+        "epoch": 0,
+        "kind": "prototype_reranked_reference",
+        "rerank_weight": 0.1
+      },
+      "validation": {
+        "n": 1000,
+        "within_1km": 49.3,
+        "within_5km": 71.8,
+        "within_25km": 84.2,
+        "within_200km": 97.0,
+        "median_km": 1.0378963947296143,
+        "mean_km": 22.490446090698242,
+        "p90_km": 66.27581787109375
+      }
+    },
+    {
+      "recipe": {
+        "spacing_km": 2.0,
+        "epoch": 0,
+        "kind": "prototype_reranked_reference",
+        "rerank_weight": 0.25
+      },
+      "validation": {
+        "n": 1000,
+        "within_1km": 49.2,
+        "within_5km": 71.7,
+        "within_25km": 84.1,
+        "within_200km": 96.7,
+        "median_km": 1.0378963947296143,
+        "mean_km": 23.49301528930664,
+        "p90_km": 77.75958251953125
+      }
+    },
+    {
+      "recipe": {
+        "spacing_km": 2.0,
+        "epoch": 4,
+        "kind": "prototype_coordinate",
+        "rerank_weight": 0.0
+      },
+      "validation": {
+        "n": 1000,
+        "within_1km": 27.400000000000002,
+        "within_5km": 56.49999999999999,
+        "within_25km": 75.1,
+        "within_200km": 95.19999999999999,
+        "median_km": 3.1652132426657724,
+        "mean_km": 34.41186050378141,
+        "p90_km": 118.86307030095728
+      }
+    },
+    {
+      "recipe": {
+        "spacing_km": 2.0,
+        "epoch": 4,
+        "kind": "prototype_reranked_reference",
+        "rerank_weight": 0.1
+      },
+      "validation": {
+        "n": 1000,
+        "within_1km": 48.6,
+        "within_5km": 71.3,
+        "within_25km": 83.89999999999999,
+        "within_200km": 97.3,
+        "median_km": 1.0722135305404663,
+        "mean_km": 22.481359481811523,
+        "p90_km": 69.7804183959961
+      }
+    },
+    {
+      "recipe": {
+        "spacing_km": 2.0,
+        "epoch": 4,
+        "kind": "prototype_reranked_reference",
+        "rerank_weight": 0.25
+      },
+      "validation": {
+        "n": 1000,
+        "within_1km": 46.400000000000006,
+        "within_5km": 71.1,
+        "within_25km": 82.89999999999999,
+        "within_200km": 97.1,
+        "median_km": 1.2263762950897217,
+        "mean_km": 23.007780075073242,
+        "p90_km": 69.06129455566406
+      }
+    },
+    {
+      "recipe": {
+        "spacing_km": 2.0,
+        "epoch": 8,
+        "kind": "prototype_coordinate",
+        "rerank_weight": 0.0
+      },
+      "validation": {
+        "n": 1000,
+        "within_1km": 28.299999999999997,
+        "within_5km": 56.89999999999999,
+        "within_25km": 74.2,
+        "within_200km": 96.0,
+        "median_km": 3.158334994902942,
+        "mean_km": 33.28937856618603,
+        "p90_km": 123.20482702471801
+      }
+    },
+    {
+      "recipe": {
+        "spacing_km": 2.0,
+        "epoch": 8,
+        "kind": "prototype_reranked_reference",
+        "rerank_weight": 0.1
+      },
+      "validation": {
+        "n": 1000,
+        "within_1km": 48.6,
+        "within_5km": 70.89999999999999,
+        "within_25km": 84.0,
+        "within_200km": 97.1,
+        "median_km": 1.0807225704193115,
+        "mean_km": 22.544464111328125,
+        "p90_km": 68.37389373779297
+      }
+    },
+    {
+      "recipe": {
+        "spacing_km": 2.0,
+        "epoch": 8,
+        "kind": "prototype_reranked_reference",
+        "rerank_weight": 0.25
+      },
+      "validation": {
+        "n": 1000,
+        "within_1km": 46.0,
+        "within_5km": 69.69999999999999,
+        "within_25km": 82.3,
+        "within_200km": 96.7,
+        "median_km": 1.2965798377990723,
+        "mean_km": 24.145355224609375,
+        "p90_km": 77.11433410644531
+      }
+    },
+    {
+      "recipe": {
+        "spacing_km": 5.0,
+        "epoch": 0,
+        "kind": "prototype_coordinate",
+        "rerank_weight": 0.0
+      },
+      "validation": {
+        "n": 1000,
+        "within_1km": 3.6999999999999997,
+        "within_5km": 44.0,
+        "within_25km": 70.39999999999999,
+        "within_200km": 93.60000000000001,
+        "median_km": 6.009692072704372,
+        "mean_km": 42.254285608972125,
+        "p90_km": 147.17186834609194
+      }
+    },
+    {
+      "recipe": {
+        "spacing_km": 5.0,
+        "epoch": 0,
+        "kind": "prototype_reranked_reference",
+        "rerank_weight": 0.1
+      },
+      "validation": {
+        "n": 1000,
+        "within_1km": 48.6,
+        "within_5km": 70.89999999999999,
+        "within_25km": 83.6,
+        "within_200km": 96.7,
+        "median_km": 1.1132140159606934,
+        "mean_km": 23.726835250854492,
+        "p90_km": 71.35552978515625
+      }
+    },
+    {
+      "recipe": {
+        "spacing_km": 5.0,
+        "epoch": 0,
+        "kind": "prototype_reranked_reference",
+        "rerank_weight": 0.25
+      },
+      "validation": {
+        "n": 1000,
+        "within_1km": 48.6,
+        "within_5km": 70.5,
+        "within_25km": 83.5,
+        "within_200km": 97.0,
+        "median_km": 1.0950894355773926,
+        "mean_km": 23.314281463623047,
+        "p90_km": 69.62771606445312
+      }
+    },
+    {
+      "recipe": {
+        "spacing_km": 5.0,
+        "epoch": 4,
+        "kind": "prototype_coordinate",
+        "rerank_weight": 0.0
+      },
+      "validation": {
+        "n": 1000,
+        "within_1km": 6.9,
+        "within_5km": 51.300000000000004,
+        "within_25km": 70.8,
+        "within_200km": 94.39999999999999,
+        "median_km": 4.6183806133158365,
+        "mean_km": 39.21097242402543,
+        "p90_km": 138.93954242450005
+      }
+    },
+    {
+      "recipe": {
+        "spacing_km": 5.0,
+        "epoch": 4,
+        "kind": "prototype_reranked_reference",
+        "rerank_weight": 0.1
+      },
+      "validation": {
+        "n": 1000,
+        "within_1km": 48.199999999999996,
+        "within_5km": 71.89999999999999,
+        "within_25km": 83.8,
+        "within_200km": 96.5,
+        "median_km": 1.127061128616333,
+        "mean_km": 23.62767219543457,
+        "p90_km": 69.7804183959961
+      }
+    },
+    {
+      "recipe": {
+        "spacing_km": 5.0,
+        "epoch": 4,
+        "kind": "prototype_reranked_reference",
+        "rerank_weight": 0.25
+      },
+      "validation": {
+        "n": 1000,
+        "within_1km": 46.800000000000004,
+        "within_5km": 71.7,
+        "within_25km": 83.2,
+        "within_200km": 96.39999999999999,
+        "median_km": 1.2107410430908203,
+        "mean_km": 23.672319412231445,
+        "p90_km": 68.4346694946289
+      }
+    },
+    {
+      "recipe": {
+        "spacing_km": 5.0,
+        "epoch": 8,
+        "kind": "prototype_coordinate",
+        "rerank_weight": 0.0
+      },
+      "validation": {
+        "n": 1000,
+        "within_1km": 7.3,
+        "within_5km": 50.3,
+        "within_25km": 69.6,
+        "within_200km": 93.4,
+        "median_km": 4.967871934788423,
+        "mean_km": 42.29589632778212,
+        "p90_km": 150.3307871526092
+      }
+    },
+    {
+      "recipe": {
+        "spacing_km": 5.0,
+        "epoch": 8,
+        "kind": "prototype_reranked_reference",
+        "rerank_weight": 0.1
+      },
+      "validation": {
+        "n": 1000,
+        "within_1km": 48.3,
+        "within_5km": 72.1,
+        "within_25km": 84.0,
+        "within_200km": 96.5,
+        "median_km": 1.1219005584716797,
+        "mean_km": 23.32733154296875,
+        "p90_km": 69.7804183959961
+      }
+    },
+    {
+      "recipe": {
+        "spacing_km": 5.0,
+        "epoch": 8,
+        "kind": "prototype_reranked_reference",
+        "rerank_weight": 0.25
+      },
+      "validation": {
+        "n": 1000,
+        "within_1km": 47.0,
+        "within_5km": 71.3,
+        "within_25km": 83.1,
+        "within_200km": 96.3,
+        "median_km": 1.1970572471618652,
+        "mean_km": 24.366775512695312,
+        "p90_km": 69.80789184570312
+      }
+    }
+  ],
+  "official_test_evaluated": false
+}

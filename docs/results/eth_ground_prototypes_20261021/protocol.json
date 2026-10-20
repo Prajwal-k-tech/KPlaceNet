@@ -1,0 +1,38 @@
+{
+  "inspiration": "Scaling Image Geo-Localization to Continent Level: ground prototypes, boundary interpolation, multi-similarity ground-prototype edge",
+  "differences": "Frozen ResNet-DINO input; no encoder optimization, no aerial imagery/encoder or S2; local regular 2/5km grids; no full ETH reproduction",
+  "recipes": {
+    "spacing_km": [
+      2.0,
+      5.0
+    ],
+    "epochs": [
+      0,
+      4,
+      8
+    ],
+    "rerank_weight": [
+      0.0,
+      0.1,
+      0.25
+    ]
+  },
+  "training": {
+    "seed": 42,
+    "epochs": 8,
+    "optimizer": "AdamW",
+    "lr": 0.003,
+    "weight_decay": 0.0,
+    "batch": 256,
+    "positive": "bilinear normalized prototype mixture",
+    "negative": "nodes farther than2x spacing",
+    "loss_alpha": 2.0,
+    "loss_beta": 50.0,
+    "loss_margin": 0.5
+  },
+  "selection": "Apply all safety conditions to each candidate before ranking eligible candidates by within5, median and within25; current retrieval eligible",
+  "selection_amendment": "Corrected candidate-level guardrail filtering after validation inspection and before test. Original highest-within5 candidate failed median guardrail. This is an exploratory amendment, not a pristine preregistration.",
+  "promotion": "within5 improves >=.5pp; within25 no worse by >.5pp; median <=1.02x current",
+  "test": "Only evaluate after promotion gate; benchmark reused, not independent confirmation",
+  "storage": "reuse cached frozen descriptors; no raw image download"
+}

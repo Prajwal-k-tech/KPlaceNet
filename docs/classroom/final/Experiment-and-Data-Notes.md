@@ -66,3 +66,29 @@ For frozen encoders: download a small batch, decode in RAM, compute descriptors,
 [Mapillary API demo](https://mapillary.github.io/api-demo/) and [KartaView API](https://kartaview.org/doc/photos).
 
 Experiment records: docs/results/l8_fine_retrieval_20261021, l9_dinov2_20261021, l10_precision_20261021 and fine_deployment_20261021. The compact deployment-bank verification preserves official-test threshold counts and median. Historical model-only and hybrid results remain available for comparison.
+
+<!-- PAGE -->
+# ETH-inspired prototype experiment
+Experimental ground-only implementation /21 October 2026. Not active in the live app.
+
+## What was implemented
+Geographic prototype vectors summarize local appearance. A 2 km/5 km grid and bilinear interpolation connect each training location to four neighboring prototype nodes. A multi-similarity-style ground-prototype loss was tested using frozen ResNet-DINO features. We also tested using prototype context to re-rank the 50 closest training references. No aerial encoder, aerial-ground fusion, S2 cell hierarchy or end-to-end encoder training was implemented.
+
+## Measured tradeoff
+The chosen contextual re-ranker uses 2 km prototypes initialized from weighted feature averages, with no prototype optimization(epoch 0). Learned prototype versions were tested but were not the selected candidate. On validation, within 5 km rose 71.1% to 71.8% and median fell 1.072 km to 1.038 km.
+
+| Reused official test:357 photos | Current fine mode | Experimental re-ranking |
+|---|---|---|
+| Within 5 km |17.37%(62)|16.53%(59)|
+| Within 25 km |63.03%(225)|65.83%(235)|
+| Median error |15.92 km|15.57 km|
+| Mean error |61.21 km|57.70 km|
+
+The re-ranker changed 38 references. It improved coarser localization but lost three within 5 km successes, exceeding the 0.5 percentage-point permitted loss. It was not deployed. Current fine mode and the Study Guide/Demo Playbook still describe the installed ResNet-DINO nearest-reference method.
+
+## What the experiment establishes
+Some ETH-inspired components are computationally feasible here; they are not equivalent to ETH's full aerial-ground method and do not automatically improve close-range accuracy. Full cross-view training needs suitable aligned aerial imagery, not simply a finer geographic grid or a larger GPU.
+
+The candidate-eligibility selection code was corrected after validation inspection and before test. This is explicitly recorded as an exploratory amendment. The test benchmark has already been reused. Neither the validation gain nor the mixed test result is independent confirmation.
+
+Implementation and evidence: [experiment record](https://github.com/Prajwal-k-tech/KPlaceNet/blob/main/docs/results/eth_ground_prototypes_20261021.md). The live frontend and the two rewritten learning guides have not changed because no new method was promoted.

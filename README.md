@@ -2,6 +2,8 @@
 
 **21 October fine-coordinate update:** default Kerala retrieval combines normalized ResNet-50 and frozen DINOv2 ViT-S/14 descriptors and returns the top training photo coordinate from15,939 references, rather than one of300 cell centers. On the reused357-image official benchmark: **15.92km median,17.37% within5km,63.03% within25km**. This is exploratory, not a fresh final test or meter-accuracy claim. Install with `python scripts/download_fine_retrieval.py`; old cell methods remain available for comparison. [Verification](docs/results/fine_deployment_20261021/verification.json), [current explanation](docs/classroom/final/Fine-Retrieval-Update.md), [dataset research](docs/classroom/final/Experiment-and-Data-Notes.md). Panoramax789 new unique images were encoded separately; reviewed expansion did not improve validation and was not deployed. Regional mode cannot reject outside-region images.
 
+**ETH-inspired experiment (not deployed):** ground prototypes, boundary interpolation and reference re-ranking are implemented and tested. The fixed prototype-context re-ranker improved reused-test within25km from63.03% to65.83% but reduced within5km from17.37% to16.53%, failing the deployment guard. The working app stays unchanged. [Protocol, differences from ETH and results](docs/results/eth_ground_prototypes_20261021.md).
+
 The following20 October section describes the historical L7 comparison.
 
 

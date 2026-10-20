@@ -1,0 +1,35 @@
+{
+  "protocol": {
+    "recipe": {
+      "spacing_km": 2.0,
+      "epoch": 0,
+      "kind": "prototype_reranked_reference",
+      "rerank_weight": 0.1
+    },
+    "decision": "Frozen before evaluation. No test tuning. Deploy only if within5/25 lose no more than.5pp and median <=1.02x current.",
+    "test_caveat": "Already reused official benchmark; exploratory follow-up, not independent confirmation",
+    "selection_amendment": "Corrected candidate-level guardrail filtering after validation inspection and before test. Original highest-within5 candidate failed median guardrail. This is an exploratory amendment, not a pristine preregistration."
+  },
+  "baseline_test": {
+    "n": 357,
+    "within_1km": 0.0,
+    "within_5km": 17.366946778711483,
+    "within_25km": 63.02521008403361,
+    "within_200km": 90.75630252100841,
+    "median_km": 15.920502662658691,
+    "mean_km": 61.21480178833008,
+    "p90_km": 197.74525451660156
+  },
+  "selected_test": {
+    "n": 357,
+    "within_1km": 0.0,
+    "within_5km": 16.5266106442577,
+    "within_25km": 65.82633053221288,
+    "within_200km": 90.75630252100841,
+    "median_km": 15.56712818145752,
+    "mean_km": 57.6967887878418,
+    "p90_km": 197.74525451660156
+  },
+  "deployment_eligible": false,
+  "queries_with_changed_reference": 38
+}

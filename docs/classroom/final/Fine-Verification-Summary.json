@@ -1,7 +1,7 @@
 {
   "date": "2026-10-21",
   "tests": {
-    "passed": 87,
+    "passed": 91,
     "command": "LD_LIBRARY_PATH=../../work/nvidia610/usr/lib .venv-gpu/bin/python -m unittest discover -s tests -q"
   },
   "desktop": {
@@ -29,7 +29,7 @@
     "Demo-Playbook": 6,
     "Project-Report": 19,
     "Last-Minute-Cheat-Sheet": 1,
-    "Experiment-and-Data-Notes": 3,
+    "Experiment-and-Data-Notes": 4,
     "Fine-Retrieval-Update": 2
   },
   "new_slides": {
@@ -43,5 +43,10 @@
   "assets_installer": "Completed against published release; hashes verified",
   "new_panoramax_data_deployed": false,
   "original_main_synced": false,
-  "guides": "Fully rewritten current-system teaching and demo guides; no historical appendices"
+  "guides": "Fully rewritten current-system teaching and demo guides; no historical appendices",
+  "eth_ground_prototype_experiment": {
+    "deployed": false,
+    "reason": "Within5km regression exceeds.5pp guard",
+    "evidence": "docs/results/eth_ground_prototypes_20261021.md"
+  }
 }
