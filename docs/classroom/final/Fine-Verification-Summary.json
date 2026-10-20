@@ -25,8 +25,8 @@
   },
   "maps_url": "https://www.google.com/maps/search/?api=1&query=9.67611027%2C76.42105103",
   "pdf_pages": {
-    "Study-Guide": 26,
-    "Demo-Playbook": 4,
+    "Study-Guide": 19,
+    "Demo-Playbook": 6,
     "Project-Report": 19,
     "Last-Minute-Cheat-Sheet": 1,
     "Experiment-and-Data-Notes": 3,
@@ -42,5 +42,6 @@
   "old_deck": "L7 historical comparison; use four-slide current supplement",
   "assets_installer": "Completed against published release; hashes verified",
   "new_panoramax_data_deployed": false,
-  "original_main_synced": false
+  "original_main_synced": false,
+  "guides": "Fully rewritten current-system teaching and demo guides; no historical appendices"
 }

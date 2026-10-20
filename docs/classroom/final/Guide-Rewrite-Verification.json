@@ -1,0 +1,20 @@
+{
+  "date": "2026-10-21",
+  "scope": "Full rewrite of the two guides only",
+  "guides": {
+    "Study-Guide": {
+      "pages": 19,
+      "words": 6912,
+      "sha256": "2891e6690e898324b85756a045e0faa43b92a4262e92bc2c47bc2982eddca94e"
+    },
+    "Demo-Playbook": {
+      "pages": 6,
+      "words": 2077,
+      "sha256": "52471fc106deeb3ac3d58e5b8e2de6da34f3aec995f795e0fd86ea3aa81a980c"
+    }
+  },
+  "visual_review": "All25 PDF pages rendered and inspected; revised pages re-rendered; no clipping or overflow observed",
+  "content_review": "Checked against demo/app.py, model, dataset, retrieval, fine_inference, uncertainty, installed calibration and frozen deployment results",
+  "mode_distinction": "Kerala fine top1 ResNet+DINO reference GPS; regional cell alternatives; separate World classifier and unverified calibration artifact",
+  "history": "No historical chapters or L5/L7 sections retained"
+}

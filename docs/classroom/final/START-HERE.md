@@ -1,9 +1,9 @@
 # Current preparation:21 October fine retrieval
-Read Fine-Retrieval-Update.pdf first. The default live Kerala method is now L10, combining ResNet and DINOv2 and retrieving actual training-photo coordinates. L7 remains available as a comparison.
+The Study Guide and Demo Playbook have been fully rewritten around the current system, with no historical chapters or update appendices. Read Study-Guide.pdf first; Fine-Retrieval-Update.pdf is an optional short overview. The default live Kerala method is now L10, combining ResNet and DINOv2 and retrieving actual training-photo coordinates. L7 remains available as a comparison.
 
 1. Last-Minute-Cheat-Sheet.pdf: one-page revision.
-2. Study-Guide.pdf: current update first, then historical foundations with definitions and worked examples.
-3. Demo-Playbook.pdf: current method controls, five-minute script, failure, recovery and viva answers.
+2. Study-Guide.pdf:19-page learning course covering the current architecture, terms, methods, training, data, Kerala/World differences, uncertainty and evaluation.
+3. Demo-Playbook.pdf:6-page current demo guide with setup commands, a timed Kerala walkthrough, optional World section, viva answers and recovery.
 4. Project-Report.pdf: current update plus original13-section report. Fill group/title-page details before submission.
 5. Experiment-and-Data-Notes.pdf: measured comparisons, dataset acquisition, rejected experiment and ETH differences.
 
