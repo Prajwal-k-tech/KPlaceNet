@@ -23,3 +23,9 @@ The classroom report and viva guide are in `docs/classroom/`. The report preserv
 The fork main and both contribution branches were published after Git Credential Manager browser authentication. Direct upstream push is denied to Prajwal-k-tech; PR 1 is updated for maintainer merge. The upload UI was opened in a browser, mode switching and research details inspected, and the Gradio 6 launcher now preserves theme and CSS. `scripts/check_demo_ready.py` reports missing model and data files before rehearsal. The seven-page live demo playbook documents controls, inference, design rationale, an exact artifact transfer list, and a timed script.
 
 Full follow-up validation: 74 tests run, 73 passed, one CUDA-only skip. No original checkpoints or demonstration images were found in the Windows project locations checked or Ubuntu home. File readiness is not verified inference; real-image demo verification remains pending those artifacts.
+
+## Release artifact restoration
+
+Upstream be4ea66 adds the weights-v1 release downloader. All eight release assets were installed locally and checked against their GitHub release SHA-256 digests. The ten configured example photos were fetched individually from the official OSV-5M test archives using bounded HTTP ranges, without downloading the full dataset. Both models loaded successfully and produced finite predictions on all ten photos, five per scope. Kerala sidecar/checkpoint centroid checks pass. This is an inference smoke check, not a benchmark rerun.
+
+The release global calibration is historical (T=3.9387) and contains no checkpoint hash; its identity remains explicitly unverified. It predates the revised three-way fitting protocol and should not be described using the fork 20k model calibration metrics. The separate GeoGuessr game still requires its test metadata; the upload interface can use the restored photos without a dataset CSV. Weights, images, and downloads remain gitignored.

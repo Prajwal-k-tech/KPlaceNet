@@ -23,7 +23,7 @@ A good first example is chosen because you have verified its behavior on the exa
 
 ## Current readiness on this laptop
 
-The frontend has been launched and inspected locally. Scope switching, the research accordion, UI construction, and software tests have been checked. No real image prediction has been verified here because the trained checkpoints, matching regional cell file, and example images are absent. The repository ignores checkpoints and downloaded data intentionally. A visible interface does not mean its trained model is available.
+The weights-v1 release has now been installed locally. All eight release assets have been checked for expected size and SHA 256 against the release digest where supplied. Both trained models load, and inference has succeeded on all ten configured demonstration photos, five per scope. The photos were fetched individually from the official test image archives. This is an inference smoke check, not a rerun of the benchmark. The global calibration is the historical artifact, has no checkpoint identity hash, and predates the corrected three way protocol. Its model match remains explicitly unverified.
 
 The integrated code is in Prajwal-k-tech's fork and existing PR 1. Asterisk-Hunter main needs a maintainer merge because Prajwal-k-tech lacks direct push permission. No force push is necessary for this integration.
 
@@ -167,7 +167,7 @@ Close with the bounded findings: more data helped across three paired seeds; bal
 <!-- PAGE -->
 # Get the exact demo pack and rehearse
 
-## Files needed from the training machine
+## Installed release files
 
 For Kerala, copy checkpoints/l5_kerala_kmeans300/last.pt and checkpoints/l5_kerala_kmeans300/cells.json together. Also copy a few agreed demonstration images from data/kerala_osv5m/test/images while retaining their filenames. The UI's configured examples include 319636679783973.jpg, 1083931132408866.jpg, 313393843511505.jpg, 288990592896618.jpg, and failure example 905069160348732.jpg. Verify each after transfer.
 
