@@ -518,6 +518,9 @@ html body .gradio-container {width: calc(100% - 96px) !important; max-width: non
 .result-note {color: #626A70; font-size: 14px; margin: 12px 0 0;}
 #run-button {background: #172C42; color: #F5F1E8; border: 0; border-bottom: 3px solid #D5663F; min-height: 52px; font-size: 18px; font-weight: 600;}
 #run-button:hover {background: #243F59;}
+#reference-gallery .grid-container {grid-template-columns: minmax(0, 440px) !important; grid-auto-rows: 190px !important;}
+#reference-gallery .gallery-item, #reference-gallery .thumbnail-item {height: 190px !important; min-height: 0 !important;}
+#reference-gallery img {height: 100% !important; width: 100% !important; object-fit: contain !important;}
 .demo-gallery {background: transparent !important; height: auto !important;}
 .demo-gallery .grid-wrap {height: auto !important;}
 .demo-gallery .grid-container {grid-template-columns: repeat(5, minmax(0, 1fr)) !important; grid-auto-rows: 160px !important;}
@@ -680,7 +683,7 @@ def build_ui():
                 result_out = gr.HTML(_result_html(), elem_id="result")
         reference_out = gr.Gallery(label="Retrieved training reference (different from the uploaded test photo)",
                                    columns=1, height=230, object_fit="contain", visible=False,
-                                   allow_preview=True, interactive=False)
+                                   allow_preview=True, interactive=False, elem_id="reference-gallery")
         gr.Markdown("### Demo photographs", elem_id="examples-heading")
         gr.Markdown("Choose a photograph, then select **Locate photo**. "
                     "Selected test-set photos; these examples do not represent average performance.")

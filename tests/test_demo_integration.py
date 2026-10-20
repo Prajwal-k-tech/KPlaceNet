@@ -67,3 +67,15 @@ class DemoIntegrationTests(unittest.TestCase):
                     side_effect=AssertionError('initial view must not load weights')):
                 figure = _empty_map('kerala')
         self.assertEqual(list(figure.data[0].lat), [10])
+
+class FinePresentationTests(unittest.TestCase):
+    def test_fine_result_labels_similarity_and_reference_coordinate(self):
+        from demo.app import _result_html, _format_markdown
+        d=dict(mode='kerala',fine=True,lat=9.67,lon=76.42,similarity=.81,
+               reference_id='train123',pipeline='Fine retrieval',cell_id=2,raw_conf=.7,box=(8,13,74,78))
+        summary=_result_html(d)
+        self.assertIn('Retrieved location',summary)
+        self.assertIn('Appearance similarity',summary)
+        self.assertNotIn('81.0%',summary)
+        self.assertIn('train123',_format_markdown(d))
+        self.assertIn('not a cell center',_format_markdown(d))

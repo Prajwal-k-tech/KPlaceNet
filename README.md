@@ -1,5 +1,9 @@
 # KPlaceNet / GeoNet
 
+**21 October fine-coordinate update:** default Kerala retrieval combines normalized ResNet-50 and frozen DINOv2 ViT-S/14 descriptors and returns the top training photo coordinate from15,939 references, rather than one of300 cell centers. On the reused357-image official benchmark: **15.92km median,17.37% within5km,63.03% within25km**. This is exploratory, not a fresh final test or meter-accuracy claim. Install with `python scripts/download_fine_retrieval.py`; old cell methods remain available for comparison. [Verification](docs/results/fine_deployment_20261021/verification.json), [current explanation](docs/classroom/final/Fine-Retrieval-Update.md), [dataset research](docs/classroom/final/Experiment-and-Data-Notes.md). Panoramax789 new unique images were encoded separately; reviewed expansion did not improve validation and was not deployed. Regional mode cannot reject outside-region images.
+
+The following20 October section describes the historical L7 comparison.
+
 
 **20 October final Kerala-area update:** frozen-feature geographic smoothing (L6), followed by a fixed training-only ResNet + KNN blend (L7), improves within-25-km accuracy from 41.18% (L5) to 47.62% (L6) to 53.50% (hybrid), with median errors 42.08, 28.41 and 21.84 km. These are 357 official test images; L7 reuses the already-inspected benchmark and has a worse p90 than L6. [L6 record](docs/results/l6_kerala_20261020.md), [L7 protocol and limitations](docs/results/l7_kerala_knn_20261020.md). Install with `python scripts/download_kerala_l7.py` and restart the demo. The KNN switch compares with ResNet alone. Regional mode assumes Kerala-area input, includes neighboring territory, and does not detect outside-region images.
 
