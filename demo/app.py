@@ -481,6 +481,9 @@ html body .gradio-container {width: calc(100% - 96px) !important; max-width: non
 .demo-gallery .grid-container {grid-template-columns: repeat(5, minmax(0, 1fr)) !important; grid-auto-rows: 160px !important;}
 .demo-gallery .gallery-item, .demo-gallery .thumbnail-item {min-width: 0 !important; height: 160px !important;}
 .demo-gallery .caption-label {display: block !important; opacity: 1 !important; position: absolute !important; bottom: 0 !important; left: 0 !important; right: 0 !important; color: #172C42 !important; background: rgba(250,247,240,.97) !important; padding: 7px 8px !important; font-size: 14px !important; line-height: 1.3 !important; white-space: normal !important;}
+#drop-status {min-height: 0 !important; padding: 0 !important;}
+#drop-status p:empty {display: none;}
+#drop-status p {font-size: 14px; color: #B84F2D;}
 #workspace {gap: 24px;}
 #workspace h3, #examples-heading h3 {font-size: 21px;}
 #location-map {background: #E7EAE2; border: 1px solid #D8D0C4; border-radius: 8px; overflow: hidden;}
@@ -594,7 +597,8 @@ def build_ui():
                                             (MODE_LABELS[MODE_GLOBAL], MODE_GLOBAL)],
                                    value=MODE_KERALA, label="Geographic scope")
                 img_in = gr.Image(type="pil", label="Street scene", height=250,
-                                  sources=["upload", "clipboard"])
+                                  sources=["upload", "clipboard"], interactive=True, elem_id="street-image")
+                gr.HTML('<p role="status" aria-live="polite"></p>', elem_id="drop-status")
                 run = gr.Button("Locate photo →", variant="primary", elem_id="run-button")
                 gr.Markdown("One of 300 geographic cells. The marker shows a cell center, so predictions are regional.")
             with gr.Column(scale=6, min_width=300, elem_id="map-panel"):
@@ -664,7 +668,47 @@ def launch_demo(**kwargs):
         kwargs.setdefault("theme", _demo_theme(gr))
         # Gradio scopes selectors inside media rules; root layout must be global.
         kwargs.setdefault("head", "<style>" + DEMO_CSS + "</style>")
-        kwargs.setdefault("js", """() => {
+        kwargs.setdefault("js", r"""() => {
+            // Native Gradio handles File drops; browser images arrive as URLs/HTML.
+            const imageZone = event => event.target instanceof Element && event.target.closest('#street-image');
+            const status = message => {
+                const node = document.querySelector('#drop-status p');
+                if (node) node.textContent = message;
+            };
+            document.addEventListener('dragover', event => {
+                if (imageZone(event)) event.preventDefault();
+            }, true);
+            document.addEventListener('drop', async event => {
+                if (!imageZone(event) || !event.dataTransfer) return;
+                const transfer = event.dataTransfer;
+                status('');
+                if (transfer.files.length) return;
+                event.preventDefault();
+                event.stopImmediatePropagation();
+                const html = new DOMParser().parseFromString(transfer.getData('text/html'), 'text/html');
+                const source = html.querySelector('img')?.getAttribute('src') ||
+                    transfer.getData('text/uri-list').split('\n').find(line => line && !line.startsWith('#')) ||
+                    transfer.getData('text/plain').trim();
+                try {
+                    const url = new URL(source);
+                    if (!['https:', 'http:', 'data:'].includes(url.protocol)) throw new Error('Unsupported image link');
+                    status('Loading dropped image…');
+                    const response = await fetch(url.href, {credentials: 'omit', signal: AbortSignal.timeout(15000)});
+                    if (!response.ok) throw new Error('Image request failed');
+                    const blob = await response.blob();
+                    if (!blob.type.startsWith('image/')) throw new Error('The link is not an image');
+                    const file = new File([blob], 'dropped-image.' + (blob.type.split('/')[1] || 'jpg'), {type: blob.type});
+                    const input = document.querySelector('#street-image input[type=file]');
+                    if (!input) throw new Error('Upload input unavailable');
+                    const files = new DataTransfer();
+                    files.items.add(file);
+                    input.files = files.files;
+                    input.dispatchEvent(new Event('change', {bubbles: true}));
+                    status('');
+                } catch (error) {
+                    status('This website blocked the image or supplied a page link. Save the image to your device, then drop the saved file here or click Upload.');
+                }
+            }, true);
             let timer;
             window.addEventListener('resize', () => {
                 clearTimeout(timer);
