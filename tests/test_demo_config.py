@@ -81,3 +81,18 @@ class DemoCalibrationConfigTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class KeralaArtifactSelectionTests(unittest.TestCase):
+    def test_l5_fallback_and_l6_preference(self):
+        from src.demo_config import kerala_artifact_paths
+        from unittest.mock import patch
+        with tempfile.TemporaryDirectory() as tmp, patch.dict('os.environ', {}, clear=True):
+            root=Path(tmp)
+            self.assertEqual(kerala_artifact_paths(root)[0],root/'checkpoints/l5_kerala_kmeans300/last.pt')
+            l6=root/'checkpoints/l6_kerala_geographic';l6.mkdir(parents=True)
+            (l6/'selected.pt').write_bytes(b'checkpoint')
+            self.assertEqual(kerala_artifact_paths(root),(l6/'selected.pt',l6/'cells.json'))
+            with patch.dict('os.environ',{'KPLACENET_KERALA_CHECKPOINT':str(root/'custom.pt'),
+                                          'KPLACENET_KERALA_CELLS':str(root/'custom.json')}):
+                self.assertEqual(kerala_artifact_paths(root),(root/'custom.pt',root/'custom.json'))

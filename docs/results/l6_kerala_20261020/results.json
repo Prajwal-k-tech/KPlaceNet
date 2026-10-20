@@ -1,0 +1,486 @@
+{
+  "protocol": {
+    "seed": 42,
+    "source_checkpoint": "/home/prajwal-k/Documents/Codex/2026-10-20/https-github-com-asterisk-hunter-kplacenet/work/KPlaceNet/checkpoints/l5_kerala_kmeans300/last.pt",
+    "checkpoint_sha256": "09d106752f404196a04d9c9caa520c6ffc58b615b65de1b18531bd7f685dfafe",
+    "cells_sha256": "bc22ebe91d8903071c8a36b3e651f25bc4da48d957ebd08a1f3282fa15094148",
+    "train_n": 15939,
+    "val_n": 1000,
+    "test_n": 357,
+    "device": "cuda",
+    "torch_version": "2.7.1+cu128",
+    "gpu_name": "NVIDIA GeForce RTX 3050 6GB Laptop GPU",
+    "algorithm": "Frozen L5 backbone; paired head-only smoothing recipes",
+    "recipes": [
+      "uniform_smoothing",
+      "geographic_smoothing"
+    ],
+    "geographic_scale_km": 15.0,
+    "geometry_source": "Training coordinates only; scale fixed before evaluation",
+    "lr": 0.0001,
+    "weight_decay": 0.01,
+    "label_smoothing": 0.1,
+    "batch_size": 256,
+    "epochs_per_recipe": 12,
+    "selection": "max validation within_25km, then min median_km; baseline eligible",
+    "promote_rule": "validation within25 improves by >=0.5 percentage points, median no more than 2% worse",
+    "caveats": [
+      "Existing random holdout is spatially optimistic.",
+      "Backbone and cell geometry stay unchanged.",
+      "This restores the original dataset; no additional training data was added.",
+      "One seed and two prespecified regularization recipes; no statistical significance claim."
+    ]
+  },
+  "selection": {
+    "selected_recipe": "geographic_smoothing",
+    "selected_epoch": 12,
+    "validation": {
+      "n": 1000,
+      "cell_top1_pct": 49.6,
+      "within_1km": 10.299999999999999,
+      "within_25km": 70.89999999999999,
+      "within_200km": 94.5,
+      "mean_km": 38.08300852981874,
+      "median_km": 4.777566971266394,
+      "p90_km": 141.60283237078855
+    },
+    "baseline_validation": {
+      "n": 1000,
+      "cell_top1_pct": 43.0,
+      "within_1km": 8.4,
+      "within_25km": 64.60000000000001,
+      "within_200km": 92.9,
+      "mean_km": 47.59369714613281,
+      "median_km": 7.02992456604755,
+      "p90_km": 165.68854417857517
+    },
+    "promotion_eligible": true
+  },
+  "history": [
+    {
+      "recipe": "uniform_smoothing",
+      "epoch": 1,
+      "train_loss": 2.3984664405811027,
+      "validation": {
+        "n": 1000,
+        "cell_top1_pct": 46.1,
+        "within_1km": 9.700000000000001,
+        "within_25km": 67.5,
+        "within_200km": 93.30000000000001,
+        "mean_km": 43.70228601889712,
+        "median_km": 5.869050621013722,
+        "p90_km": 156.6593161279929
+      }
+    },
+    {
+      "recipe": "uniform_smoothing",
+      "epoch": 2,
+      "train_loss": 2.2053286117415136,
+      "validation": {
+        "n": 1000,
+        "cell_top1_pct": 46.9,
+        "within_1km": 10.0,
+        "within_25km": 67.4,
+        "within_200km": 93.30000000000001,
+        "mean_km": 43.57129727246382,
+        "median_km": 5.508815905088817,
+        "p90_km": 154.18379844975811
+      }
+    },
+    {
+      "recipe": "uniform_smoothing",
+      "epoch": 3,
+      "train_loss": 2.0910690216776104,
+      "validation": {
+        "n": 1000,
+        "cell_top1_pct": 48.0,
+        "within_1km": 10.299999999999999,
+        "within_25km": 68.4,
+        "within_200km": 93.89999999999999,
+        "mean_km": 41.67282210797249,
+        "median_km": 5.343956378236007,
+        "p90_km": 150.5572688312501
+      }
+    },
+    {
+      "recipe": "uniform_smoothing",
+      "epoch": 4,
+      "train_loss": 2.0030667662613064,
+      "validation": {
+        "n": 1000,
+        "cell_top1_pct": 48.699999999999996,
+        "within_1km": 10.299999999999999,
+        "within_25km": 69.1,
+        "within_200km": 94.6,
+        "mean_km": 40.56297453790201,
+        "median_km": 4.951684606921441,
+        "p90_km": 150.04099492119371
+      }
+    },
+    {
+      "recipe": "uniform_smoothing",
+      "epoch": 5,
+      "train_loss": 1.9271521480942515,
+      "validation": {
+        "n": 1000,
+        "cell_top1_pct": 48.199999999999996,
+        "within_1km": 10.2,
+        "within_25km": 68.7,
+        "within_200km": 94.6,
+        "mean_km": 40.438458418592276,
+        "median_km": 5.1275340529610745,
+        "p90_km": 150.04099492119371
+      }
+    },
+    {
+      "recipe": "uniform_smoothing",
+      "epoch": 6,
+      "train_loss": 1.860730296044661,
+      "validation": {
+        "n": 1000,
+        "cell_top1_pct": 48.199999999999996,
+        "within_1km": 10.100000000000001,
+        "within_25km": 69.19999999999999,
+        "within_200km": 94.1,
+        "mean_km": 41.323518124036845,
+        "median_km": 5.036361145785515,
+        "p90_km": 151.41216061522488
+      }
+    },
+    {
+      "recipe": "uniform_smoothing",
+      "epoch": 7,
+      "train_loss": 1.800741328200789,
+      "validation": {
+        "n": 1000,
+        "cell_top1_pct": 47.699999999999996,
+        "within_1km": 9.9,
+        "within_25km": 68.89999999999999,
+        "within_200km": 94.1,
+        "mean_km": 41.2785876963902,
+        "median_km": 5.104052003764249,
+        "p90_km": 151.8245842025933
+      }
+    },
+    {
+      "recipe": "uniform_smoothing",
+      "epoch": 8,
+      "train_loss": 1.7475679304872151,
+      "validation": {
+        "n": 1000,
+        "cell_top1_pct": 49.0,
+        "within_1km": 10.4,
+        "within_25km": 69.5,
+        "within_200km": 94.19999999999999,
+        "mean_km": 40.26103760864062,
+        "median_km": 4.840691356355741,
+        "p90_km": 150.5572688312501
+      }
+    },
+    {
+      "recipe": "uniform_smoothing",
+      "epoch": 9,
+      "train_loss": 1.700024798206751,
+      "validation": {
+        "n": 1000,
+        "cell_top1_pct": 49.0,
+        "within_1km": 10.299999999999999,
+        "within_25km": 69.69999999999999,
+        "within_200km": 94.19999999999999,
+        "mean_km": 40.13688445760048,
+        "median_km": 4.871943100501656,
+        "p90_km": 151.37216070381143
+      }
+    },
+    {
+      "recipe": "uniform_smoothing",
+      "epoch": 10,
+      "train_loss": 1.6573786406529294,
+      "validation": {
+        "n": 1000,
+        "cell_top1_pct": 49.4,
+        "within_1km": 10.100000000000001,
+        "within_25km": 69.69999999999999,
+        "within_200km": 94.39999999999999,
+        "mean_km": 40.07505388743611,
+        "median_km": 4.81165720181102,
+        "p90_km": 151.37216070381143
+      }
+    },
+    {
+      "recipe": "uniform_smoothing",
+      "epoch": 11,
+      "train_loss": 1.6190450231436169,
+      "validation": {
+        "n": 1000,
+        "cell_top1_pct": 49.3,
+        "within_1km": 10.100000000000001,
+        "within_25km": 70.0,
+        "within_200km": 94.3,
+        "mean_km": 39.61686206422221,
+        "median_km": 4.684840360243599,
+        "p90_km": 150.5572688312501
+      }
+    },
+    {
+      "recipe": "uniform_smoothing",
+      "epoch": 12,
+      "train_loss": 1.5843709704941613,
+      "validation": {
+        "n": 1000,
+        "cell_top1_pct": 49.8,
+        "within_1km": 10.2,
+        "within_25km": 70.39999999999999,
+        "within_200km": 94.39999999999999,
+        "mean_km": 39.63795783428669,
+        "median_km": 4.691662195349567,
+        "p90_km": 150.04099492119371
+      }
+    },
+    {
+      "recipe": "geographic_smoothing",
+      "epoch": 1,
+      "train_loss": 1.8741636947419071,
+      "validation": {
+        "n": 1000,
+        "cell_top1_pct": 45.800000000000004,
+        "within_1km": 9.9,
+        "within_25km": 67.7,
+        "within_200km": 93.5,
+        "mean_km": 42.945076534460505,
+        "median_km": 5.787675321336353,
+        "p90_km": 156.6593161279929
+      }
+    },
+    {
+      "recipe": "geographic_smoothing",
+      "epoch": 2,
+      "train_loss": 1.7034792404296266,
+      "validation": {
+        "n": 1000,
+        "cell_top1_pct": 47.099999999999994,
+        "within_1km": 10.100000000000001,
+        "within_25km": 67.9,
+        "within_200km": 93.89999999999999,
+        "mean_km": 41.789087209103876,
+        "median_km": 5.47064555151781,
+        "p90_km": 151.37216070381143
+      }
+    },
+    {
+      "recipe": "geographic_smoothing",
+      "epoch": 3,
+      "train_loss": 1.6098581096579883,
+      "validation": {
+        "n": 1000,
+        "cell_top1_pct": 47.9,
+        "within_1km": 10.100000000000001,
+        "within_25km": 68.4,
+        "within_200km": 94.1,
+        "mean_km": 40.786674128154935,
+        "median_km": 5.385187160669228,
+        "p90_km": 150.04099492119371
+      }
+    },
+    {
+      "recipe": "geographic_smoothing",
+      "epoch": 4,
+      "train_loss": 1.5428594683335368,
+      "validation": {
+        "n": 1000,
+        "cell_top1_pct": 48.9,
+        "within_1km": 10.299999999999999,
+        "within_25km": 69.39999999999999,
+        "within_200km": 94.3,
+        "mean_km": 40.113999028437796,
+        "median_km": 4.951684606921441,
+        "p90_km": 151.37216070381143
+      }
+    },
+    {
+      "recipe": "geographic_smoothing",
+      "epoch": 5,
+      "train_loss": 1.486372139591653,
+      "validation": {
+        "n": 1000,
+        "cell_top1_pct": 48.8,
+        "within_1km": 10.299999999999999,
+        "within_25km": 69.1,
+        "within_200km": 94.3,
+        "mean_km": 39.84636241866104,
+        "median_km": 4.953925690256394,
+        "p90_km": 150.5572688312501
+      }
+    },
+    {
+      "recipe": "geographic_smoothing",
+      "epoch": 6,
+      "train_loss": 1.4383788868327745,
+      "validation": {
+        "n": 1000,
+        "cell_top1_pct": 49.2,
+        "within_1km": 10.4,
+        "within_25km": 69.39999999999999,
+        "within_200km": 94.69999999999999,
+        "mean_km": 39.2164052425413,
+        "median_km": 4.895546605120277,
+        "p90_km": 146.81895506267855
+      }
+    },
+    {
+      "recipe": "geographic_smoothing",
+      "epoch": 7,
+      "train_loss": 1.3951053145284955,
+      "validation": {
+        "n": 1000,
+        "cell_top1_pct": 48.9,
+        "within_1km": 10.299999999999999,
+        "within_25km": 69.89999999999999,
+        "within_200km": 94.6,
+        "mean_km": 38.98315643033096,
+        "median_km": 4.922909030202936,
+        "p90_km": 149.34932112955664
+      }
+    },
+    {
+      "recipe": "geographic_smoothing",
+      "epoch": 8,
+      "train_loss": 1.3572605919363776,
+      "validation": {
+        "n": 1000,
+        "cell_top1_pct": 49.2,
+        "within_1km": 10.5,
+        "within_25km": 69.8,
+        "within_200km": 94.3,
+        "mean_km": 39.50076314823932,
+        "median_km": 4.81165720181102,
+        "p90_km": 150.5572688312501
+      }
+    },
+    {
+      "recipe": "geographic_smoothing",
+      "epoch": 9,
+      "train_loss": 1.323434343241682,
+      "validation": {
+        "n": 1000,
+        "cell_top1_pct": 49.1,
+        "within_1km": 10.5,
+        "within_25km": 70.0,
+        "within_200km": 94.39999999999999,
+        "mean_km": 38.88878073801502,
+        "median_km": 4.922909030202936,
+        "p90_km": 150.5572688312501
+      }
+    },
+    {
+      "recipe": "geographic_smoothing",
+      "epoch": 10,
+      "train_loss": 1.2928400202791905,
+      "validation": {
+        "n": 1000,
+        "cell_top1_pct": 48.8,
+        "within_1km": 10.299999999999999,
+        "within_25km": 70.0,
+        "within_200km": 94.3,
+        "mean_km": 39.15484839434394,
+        "median_km": 4.895546605120277,
+        "p90_km": 150.04099492119371
+      }
+    },
+    {
+      "recipe": "geographic_smoothing",
+      "epoch": 11,
+      "train_loss": 1.2650984880563583,
+      "validation": {
+        "n": 1000,
+        "cell_top1_pct": 48.699999999999996,
+        "within_1km": 10.299999999999999,
+        "within_25km": 70.5,
+        "within_200km": 94.39999999999999,
+        "mean_km": 38.304068627153946,
+        "median_km": 4.821078072117201,
+        "p90_km": 145.5619092445227
+      }
+    },
+    {
+      "recipe": "geographic_smoothing",
+      "epoch": 12,
+      "train_loss": 1.2397350257519564,
+      "validation": {
+        "n": 1000,
+        "cell_top1_pct": 49.6,
+        "within_1km": 10.299999999999999,
+        "within_25km": 70.89999999999999,
+        "within_200km": 94.5,
+        "mean_km": 38.08300852981874,
+        "median_km": 4.777566971266394,
+        "p90_km": 141.60283237078855
+      }
+    }
+  ],
+  "baseline_test": {
+    "n": 357,
+    "cell_top1_pct": 17.92717086834734,
+    "within_1km": 0.5602240896358543,
+    "within_25km": 41.17647058823529,
+    "within_200km": 80.11204481792717,
+    "mean_km": 102.84660502843077,
+    "median_km": 42.08215384179117,
+    "p90_km": 291.5844836666763
+  },
+  "selected_test": {
+    "n": 357,
+    "cell_top1_pct": 20.72829131652661,
+    "within_1km": 0.5602240896358543,
+    "within_25km": 47.61904761904761,
+    "within_200km": 84.31372549019608,
+    "mean_km": 85.32770164333718,
+    "median_km": 28.40558392282621,
+    "p90_km": 230.9850458406496
+  },
+  "head_training_seconds": 3.2219642630007,
+  "test_used_for": "Final paired reporting after selection; not epoch/hyperparameter selection",
+  "paired_within25_counts": {
+    "baseline_correct": 147,
+    "selected_correct": 170,
+    "newly_correct": 41,
+    "regressed": 18
+  },
+  "test_per_town": {
+    "kochi": {
+      "n": 9,
+      "baseline_within25_pct": 77.77777777777779,
+      "selected_within25_pct": 88.88888888888889,
+      "baseline_median_km": 5.125360180985631,
+      "selected_median_km": 5.125360180985631
+    },
+    "kottayam": {
+      "n": 18,
+      "baseline_within25_pct": 38.88888888888889,
+      "selected_within25_pct": 72.22222222222221,
+      "baseline_median_km": 40.94215533721838,
+      "selected_median_km": 17.012147587331583
+    },
+    "munnar": {
+      "n": 13,
+      "baseline_within25_pct": 61.53846153846154,
+      "selected_within25_pct": 69.23076923076923,
+      "baseline_median_km": 10.602516386666387,
+      "selected_median_km": 8.970953421872418
+    },
+    "other_kerala": {
+      "n": 306,
+      "baseline_within25_pct": 39.869281045751634,
+      "selected_within25_pct": 44.11764705882353,
+      "baseline_median_km": 43.20039956162364,
+      "selected_median_km": 33.87282754151
+    },
+    "trivandrum": {
+      "n": 11,
+      "baseline_within25_pct": 27.27272727272727,
+      "selected_within25_pct": 45.45454545454545,
+      "baseline_median_km": 161.60027215461602,
+      "selected_median_km": 121.84417743582875
+    }
+  }
+}

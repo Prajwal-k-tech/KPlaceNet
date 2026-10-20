@@ -12,6 +12,7 @@ Usage:
 from __future__ import annotations
 
 import sys
+import hashlib
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -42,12 +43,16 @@ def _mb(num_bytes: float) -> str:
     return f"{num_bytes / 1e6:.1f} MB"
 
 
-def download(asset: str, dest: Path) -> None:
-    if dest.exists() and dest.stat().st_size > 0:
+def download(asset: str, dest: Path, *, base_url: str = BASE_URL, sha256: str | None = None) -> None:
+    valid_existing = dest.is_file() and dest.stat().st_size > 0
+    if valid_existing and sha256 is not None:
+        with dest.open("rb") as stream:
+            valid_existing = hashlib.file_digest(stream, "sha256").hexdigest() == sha256
+    if valid_existing:
         print(f"  skip (exists): {dest.relative_to(ROOT)}")
         return
 
-    url = f"{BASE_URL}/{asset}"
+    url = f"{base_url}/{asset}"
     dest.parent.mkdir(parents=True, exist_ok=True)
     partial = dest.with_name(dest.name + ".part")
     print(f"  {asset} -> {dest.relative_to(ROOT)}")
@@ -74,6 +79,12 @@ def download(asset: str, dest: Path) -> None:
     if total and size != total:
         partial.unlink(missing_ok=True)
         raise RuntimeError(f"incomplete download ({size} of {total} bytes)")
+    if sha256 is not None:
+        with partial.open("rb") as stream:
+            actual = hashlib.file_digest(stream, "sha256").hexdigest()
+        if actual != sha256:
+            partial.unlink(missing_ok=True)
+            raise RuntimeError("download SHA-256 mismatch")
     partial.replace(dest)
     print(f"    done ({_mb(size)})")
 

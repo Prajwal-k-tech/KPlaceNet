@@ -2,7 +2,7 @@
 
 Global mode: L2 winner (l2_imagenet_1.0_layer4) + L3 calibration
 (temperature + conformal), plotly world map (real countries).
-Kerala mode: L5 Kerala pinpoint (l5_kerala_kmeans300), raw softmax only
+Kerala mode: published L6 geographic smoothing when installed, L5 fallback; raw softmax only
 (no calibration exists for this checkpoint), zoomed Kerala map.
 Lazy, separately cached loads; one-image inference per mode.
 Set KPLACENET_CHECKPOINT and optionally KPLACENET_CALIBRATION to select
@@ -33,8 +33,8 @@ CALIB_JSON = Path(os.environ.get(
 SIDECAR_CELLS = Path(os.environ.get(
     "KPLACENET_CELLS", str(ROOT / "checkpoints" / "l2_cells_full.json"),
 )).expanduser()
-KERALA_CHECKPOINT = ROOT / "checkpoints" / "l5_kerala_kmeans300" / "last.pt"
-KERALA_CELLS = ROOT / "checkpoints" / "l5_kerala_kmeans300" / "cells.json"
+from src.demo_config import kerala_artifact_paths
+KERALA_CHECKPOINT, KERALA_CELLS = kerala_artifact_paths(ROOT)
 ABSTAIN_THRESHOLD = 0.5
 IMAGE_SIZE = 224
 

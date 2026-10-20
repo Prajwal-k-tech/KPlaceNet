@@ -88,3 +88,13 @@ def verify_calibration_checkpoint(config: CalibrationConfig, checkpoint_hash: st
     if config.checkpoint_sha256 != checkpoint_hash.lower():
         raise ValueError("calibration artifact was fitted for a different checkpoint")
     return True
+
+
+def kerala_artifact_paths(root: Path) -> tuple[Path, Path]:
+    """Prefer the published L6 pack when installed; preserve the L5 fallback."""
+    import os
+    preferred = root / 'checkpoints/l6_kerala_geographic'
+    folder = preferred if (preferred / 'selected.pt').is_file() else root / 'checkpoints/l5_kerala_kmeans300'
+    checkpoint = folder / ('selected.pt' if folder == preferred else 'last.pt')
+    return (Path(os.environ.get('KPLACENET_KERALA_CHECKPOINT', str(checkpoint))).expanduser(),
+            Path(os.environ.get('KPLACENET_KERALA_CELLS', str(folder / 'cells.json'))).expanduser())

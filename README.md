@@ -1,5 +1,8 @@
 # KPlaceNet / GeoNet
 
+
+**20 October Kerala update:** geographic smoothing of the frozen-feature classifier improves official-test within-25-km accuracy from 41.18% to 47.62% and median error from 42.08 to 28.41 km (357 images). [Measured protocol and limitations](docs/results/l6_kerala_20261020.md). Install the SHA-256-checked improved pack with `python scripts/download_kerala_l6.py`; restart the demo afterward. Existing L5 weights remain available as a fallback.
+
 PlaNet-inspired coarse image geolocation with a ResNet-50 classifier over geographic cells. The original experiments use an RTX 4050; Prajwal's bounded follow-up CUDA experiments use an RTX 3050 laptop GPU (6GB VRAM); KPlaceNet is not a reproduction of PlaNet's model, data scale, or benchmark results.
 
 ## Integrated contributions and measured results

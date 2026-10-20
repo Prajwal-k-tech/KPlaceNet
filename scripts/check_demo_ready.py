@@ -39,8 +39,10 @@ def check(mode: str) -> dict:
                 checks.append(dict(label='Calibration validity', required=True, exists=False,
                                    detail=str(error)))
     if mode in {'kerala', 'all'}:
-        file('Kerala checkpoint', ROOT / 'checkpoints/l5_kerala_kmeans300/last.pt')
-        file('Kerala cell map', ROOT / 'checkpoints/l5_kerala_kmeans300/cells.json')
+        from src.demo_config import kerala_artifact_paths
+        regional_checkpoint, regional_cells = kerala_artifact_paths(ROOT)
+        file('Kerala checkpoint', regional_checkpoint)
+        file('Kerala cell map', regional_cells)
     if mode == 'game':
         file('Game global checkpoint', ROOT / 'checkpoints/l2_imagenet_1.0_layer4/last.pt')
         file('Game metadata', ROOT / 'data/osv5m_test/metadata.csv')
