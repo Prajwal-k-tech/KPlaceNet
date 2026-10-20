@@ -143,11 +143,32 @@ scripts/run_l3_uncertainty.py and src/reproducibility.py: show the three partiti
 
 docs/results/l2_data_scale_osv_test_20261009.md and docs/results/l3_uncertainty_osv_test_20261009.md: trace a slide number to a dated report and associated JSON.
 
-## Practical preparation before class
+<!-- PAGE -->
+# Practical preparation and difficult questions
 
 Run unit tests and plan only CLIs first. The real demo additionally needs local model checkpoints, matching cells, and any calibration artifacts. These are not in Git. Existing historical reports are evidence of recorded runs; passing synthetic tests does not reproduce them. Keep the existing presentation PDF as an offline backup. Add Kerala results as a separately labeled optional section if using that demo.
 
 Complete the report title page with confirmed roll numbers, institution, department, and instructor. The report includes all thirteen requested sections and cites the original papers and project records.
+
+## Can we compare historical 3 33 percent with the later 5 30 percent
+
+They come from different experiment samples and protocols. Use the paired 3.756% versus 5.300% comparison to explain the data scale result. Historical figures can provide context only when their sample differences are stated.
+
+## Does a cell bounding box mean a confidence interval
+
+No. It is a stored geometric extent of a class, not a region calibrated to contain the true coordinate with a specified probability. The conformal output is a set of candidate classes, not the single winning cell rectangle.
+
+## Is the k means coordinate transform globally equal area
+
+No. It scales longitude by the cosine of mean training latitude as an approximation. That differs from the equal spherical area diagnostic grid, whose latitude bands use sin(latitude). The approximation is more reasonable over a limited region and does not solve global wraparound geometry.
+
+## How can you show the contribution remains relevant
+
+The main repository still used the earlier conformal cutoff and shared calibration fitting rows. The fork correction directly addresses those parts. The added strict checkpoint contract, recorded identities, and paired evaluation tools remain useful for global and regional experiments. Integration preserves the newer Kerala model instead of replacing it with an older fork snapshot.
+
+## What did today's tests actually verify
+
+The integrated suite runs 73 tests: 72 pass and one CUDA-only test is skipped on CPU. It includes a small synthetic image train and evaluate path, mathematical edge cases, provenance checks, and demo labels. The demo UI builds. This verifies software behavior, not a rerun of the reported real image experiments or a guarantee of deployment accuracy.
 
 ## Final self check
 
