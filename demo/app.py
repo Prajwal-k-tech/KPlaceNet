@@ -278,27 +278,27 @@ def render_kerala_map(lat: float, lon: float, cell):
 def _style_map(fig, kerala=False):
     """Consistent, spacious map styling for projection on a classroom screen."""
     fig.update_geos(
-        resolution=50, landcolor="#e7eee8", oceancolor="#dcebf2",
-        lakecolor="#dcebf2", showlakes=True, bgcolor="#f3f7f9",
-        coastlinecolor="#91aaa9", countrycolor="#b6c7c6", showframe=False,
+        resolution=50, landcolor="#E9E1D1", oceancolor="#E7EAE2",
+        lakecolor="#E7EAE2", showlakes=True, bgcolor="#F5F1E8",
+        coastlinecolor="#A4A18E", countrycolor="#BCB6A6", showframe=False,
     )
     for trace in fig.data:
         if trace.name and ("cells" in trace.name or "regions" in trace.name):
-            trace.marker.update(size=4, color="rgba(28,125,139,0.35)")
+            trace.marker.update(size=4, color="rgba(23,44,66,0.38)")
             trace.name = "Model regions"
         elif trace.name and "box" in trace.name:
-            trace.line.update(color="#d08b32", width=2)
-            trace.update(fill="toself", fillcolor="rgba(208,139,50,0.12)")
+            trace.line.update(color="#D5663F", width=2)
+            trace.update(fill="toself", fillcolor="rgba(213,102,63,0.10)")
             trace.name = "Selected cell bounds"
         elif trace.name and "predicted" in trace.name:
-            trace.marker.update(size=17, color="#d36540", symbol="circle",
+            trace.marker.update(size=17, color="#D5663F", symbol="circle",
                                 line={"color": "white", "width": 3})
             trace.name = "Predicted location"
             trace.hovertemplate = "%{lat:.4f}° N, %{lon:.4f}° E<extra>Prediction</extra>"
     fig.update_layout(
         height=380, autosize=True, title=None,
-        paper_bgcolor="#f3f7f9", plot_bgcolor="#f3f7f9",
-        font={"family": "Georgia, serif", "color": "#243e53", "size": 12},
+        paper_bgcolor="#F5F1E8", plot_bgcolor="#F5F1E8",
+        font={"family": "Arial, sans-serif", "color": "#172C42", "size": 12},
         margin={"l": 8, "r": 8, "t": 12, "b": 58},
         legend={"orientation": "h", "x": 0.5, "xanchor": "center",
                 "y": -0.04, "yanchor": "top", "font": {"size": 11}},
@@ -455,29 +455,30 @@ def build_predict_fn():
 
 
 DEMO_CSS = """
-html, body {background: #f4f7f8 !important; color-scheme: light;}
-html body .gradio-container {width: calc(100% - 64px) !important; max-width: 1480px !important; margin: 0 auto !important; padding: 24px 0 !important; background: #f4f7f8; color: #243e53;}
+html, body {background: #F5F1E8 !important; color-scheme: light;}
+html body .gradio-container {width: calc(100% - 64px) !important; max-width: 1480px !important; margin: 0 auto !important; padding: 24px 0 !important; background: #F5F1E8; color: #172C42;}
 .gradio-container .main {padding: 0 !important;}
-#hero {background: #153747; padding: 20px 28px; border-radius: 10px; margin-bottom: 16px;}
-#hero h1 {font-family: Georgia, serif; color: #fff; font-size: 30px; font-weight: 400; margin: 0 0 5px;}
-#hero p {color: #c9dde1; font-size: 14px; margin: 0; max-width: 850px;}
-.eyebrow {color: #146f76; letter-spacing: 1.5px; font-size: 11px; font-weight: 700;}
-#result {background: #fff; border: 1px solid #d5e1e5; border-radius: 10px; padding: 18px 22px; min-height: 130px;}
-#result h2 {font-family: Georgia, serif; font-size: 25px; color: #183b50; margin: 6px 0 12px;}
+[data-testid="block-info"] {color: #172C42 !important;}
+#hero {background: transparent; padding: 8px 0 22px; border-radius: 0; border-bottom: 1px solid #D8D0C4; margin-bottom: 22px;}
+#hero h1 {font-family: Arial, Helvetica, sans-serif; color: #172C42; font-size: 34px; font-weight: 750; letter-spacing: -1px; margin: 0 0 5px;}
+#hero p {color: #626A70; font-size: 14px; margin: 0; max-width: 850px;}
+.eyebrow {color: #B84F2D; letter-spacing: 1.5px; font-size: 11px; font-weight: 700;}
+#result {background: #FAF7F0; border: 1px solid #D8D0C4; border-radius: 10px; padding: 18px 22px; min-height: 130px;}
+#result h2 {font-family: Arial, Helvetica, sans-serif; font-size: 28px; font-weight: 700; color: #172C42; margin: 6px 0 12px;}
 .result-grid {display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; font-variant-numeric: tabular-nums;}
-.result-grid span {display: block; color: #526b7b; font-size: 12px; margin-bottom: 5px;}
-.result-grid strong {font-size: 22px; color: #143b50;}
-.result-note {color: #526b7b; font-size: 12px; margin: 12px 0 0;}
-#run-button {background: #146f76; color: white; border: 0; min-height: 44px; font-weight: 600;}
-#run-button:hover {background: #105d63;}
-#metrics {padding: 8px 16px; border-left: 3px solid #1c8589; background: #e8f1f1; margin: 10px 0;}
-#metrics p {color: #345566; font-size: 13px;}
+.result-grid span {display: block; color: #626A70; font-size: 12px; margin-bottom: 5px;}
+.result-grid strong {font-size: 22px; color: #172C42;}
+.result-note {color: #626A70; font-size: 12px; margin: 12px 0 0;}
+#run-button {background: #172C42; color: #F5F1E8; border: 0; border-bottom: 3px solid #D5663F; min-height: 44px; font-weight: 600;}
+#run-button:hover {background: #243F59;}
+#metrics {padding: 8px 16px; border-left: 3px solid #D5663F; background: #EEE7DA; margin: 10px 0;}
+#metrics p {color: #515D66; font-size: 13px;}
 .demo-gallery {background: transparent !important; height: auto !important;}
 .demo-gallery .grid-wrap {height: auto !important;}
 .demo-gallery .grid-container {grid-template-columns: repeat(5, minmax(0, 1fr)) !important; grid-auto-rows: 155px !important;}
 .demo-gallery .gallery-item, .demo-gallery .thumbnail-item {min-width: 0 !important; height: 155px !important;}
-.demo-gallery .caption-label {display: block !important; opacity: 1 !important; position: absolute !important; bottom: 0 !important; left: 0 !important; right: 0 !important; color: #183b50 !important; background: rgba(255,255,255,.96) !important; padding: 7px 8px !important; font-size: 11px !important; line-height: 1.3 !important; white-space: normal !important;}
-button:focus-visible {outline: 3px solid #22929a !important; outline-offset: 3px;}
+.demo-gallery .caption-label {display: block !important; opacity: 1 !important; position: absolute !important; bottom: 0 !important; left: 0 !important; right: 0 !important; color: #172C42 !important; background: rgba(250,247,240,.97) !important; padding: 7px 8px !important; font-size: 11px !important; line-height: 1.3 !important; white-space: normal !important;}
+button:focus-visible {outline: 3px solid #D5663F !important; outline-offset: 3px;}
 @media(max-width: 1050px) {.demo-gallery .grid-container {grid-template-columns: repeat(3, minmax(0, 1fr)) !important;}}
 @media(max-width: 760px) {html body .gradio-container.gradio-container {width: calc(100% - 28px) !important; padding: 14px 0 !important;} #hero {padding: 18px;} #hero h1 {font-size: 26px;} .result-grid {grid-template-columns: 1fr 1fr; gap: 14px;} .result-grid strong {font-size: 19px;} .demo-gallery .grid-container {grid-template-columns: repeat(2, minmax(0, 1fr)) !important;} }
 """
@@ -485,7 +486,7 @@ button:focus-visible {outline: 3px solid #22929a !important; outline-offset: 3px
 
 def _result_html(d=None):
     if d is None:
-        return ('<div class="eyebrow" style="color:#146f76">PREDICTION SUMMARY</div>'
+        return ('<div class="eyebrow" style="color:#B84F2D">PREDICTION SUMMARY</div>'
                 '<h2>Where was this photo taken?</h2>'
                 '<p class="result-note">Upload a street scene or choose an example, then select Locate photo.</p>')
     kerala = d.get("mode") == MODE_KERALA
@@ -495,7 +496,7 @@ def _result_html(d=None):
     note = ("Raw model score · uncalibrated; this is not a measured probability of correctness."
             if not calibrated else "Calibrated model score · the model abstains below 50% confidence.")
     return (
-        f'<div class="eyebrow" style="color:#146f76">{status.upper()}</div>'
+        f'<div class="eyebrow" style="color:#B84F2D">{status.upper()}</div>'
         f'<h2>{"Kerala" if kerala else "Global"} · predicted cell {d["cell_id"]}</h2>'
         '<div class="result-grid">'
         f'<div><span>Latitude</span><strong>{d["lat"]:.4f}°</strong></div>'
@@ -515,7 +516,7 @@ def _empty_map(mode):
             lat=[c["centroid_lat"] for c in cells],
             lon=[c["centroid_lon"] for c in cells],
             mode="markers", name="Model regions",
-            marker={"size": 4, "color": "#4b9196"},
+            marker={"size": 4, "color": "#172C42"},
             hovertemplate="Training-derived cell center<extra></extra>",
         ))
     fig.update_layout(geo={"projection": {"type": "equirectangular"},
@@ -530,7 +531,7 @@ def _empty_map(mode):
         ))
     fig.add_annotation(text="Model regions · select a photo to predict", x=0.5, y=1,
                        xref="paper", yref="paper", showarrow=False,
-                       font={"size": 12, "color": "#345566"})
+                       font={"size": 12, "color": "#515D66"})
     return _style_map(fig, kerala=kerala)
 
 
@@ -538,15 +539,15 @@ def _demo_theme(gr):
     # The interface is intentionally light even with a dark OS preference.
     # Mirror every theme token instead of mixing dark components with light CSS.
     import inspect
-    theme = gr.themes.Soft(primary_hue="teal", neutral_hue="slate").set(
-        body_background_fill="#f4f7f8", body_text_color="#243e53",
-        body_text_color_subdued="#526b7b", block_background_fill="#ffffff",
-        block_label_background_fill="#eaf2f3", block_label_text_color="#243e53",
-        background_fill_primary="#ffffff", background_fill_secondary="#eef3f5",
-        input_background_fill="#ffffff", border_color_primary="#d5e1e5",
-        checkbox_label_background_fill="#eaf2f3",
-        checkbox_label_background_fill_selected="#cfe9e7",
-        checkbox_label_text_color="#243e53", checkbox_label_text_color_selected="#183b50",
+    theme = gr.themes.Soft(primary_hue="orange", neutral_hue="stone", font=["Arial", "Helvetica", "sans-serif"]).set(
+        body_background_fill="#F5F1E8", body_text_color="#172C42",
+        body_text_color_subdued="#626A70", block_background_fill="#FAF7F0",
+        block_label_background_fill="#EEE7DA", block_label_text_color="#172C42",
+        background_fill_primary="#FAF7F0", background_fill_secondary="#EEE7DA",
+        input_background_fill="#FFFCF7", border_color_primary="#D8D0C4",
+        checkbox_label_background_fill="#EEE7DA",
+        checkbox_label_background_fill_selected="#E4D7C5",
+        checkbox_label_text_color="#172C42", checkbox_label_text_color_selected="#172C42",
     )
     values = theme.to_dict()["theme"]
     allowed = inspect.signature(theme.set).parameters
