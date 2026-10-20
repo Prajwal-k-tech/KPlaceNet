@@ -1,0 +1,92 @@
+{
+  "recipe": {
+    "name": "resnet0.5_k1",
+    "resnet_weight": 0.5,
+    "k": 1,
+    "radius_km": 25.0,
+    "prior_weight": 0.0
+  },
+  "promotion_eligible": true,
+  "baseline_validation": {
+    "n": 1000,
+    "within_1km": 21.6,
+    "within_5km": 58.5,
+    "within_25km": 80.2,
+    "within_200km": 95.3,
+    "median_km": 3.317680597305298,
+    "mean_km": 29.013626098632812,
+    "p90_km": 85.775634765625
+  },
+  "selected_validation": {
+    "n": 1000,
+    "within_1km": 48.8,
+    "within_5km": 71.1,
+    "within_25km": 83.3,
+    "within_200km": 97.0,
+    "median_km": 1.0721819400787354,
+    "mean_km": 22.462217330932617,
+    "p90_km": 68.19993591308594
+  },
+  "all_validation": {
+    "resnet1.0_k1": {
+      "n": 1000,
+      "within_1km": 40.1,
+      "within_5km": 62.3,
+      "within_25km": 78.8,
+      "within_200km": 94.69999999999999,
+      "median_km": 1.9587860107421875,
+      "mean_km": 32.45180892944336,
+      "p90_km": 134.0350799560547
+    },
+    "resnet1.0_k5": {
+      "n": 1000,
+      "within_1km": 26.900000000000002,
+      "within_5km": 60.3,
+      "within_25km": 78.9,
+      "within_200km": 95.0,
+      "median_km": 3.136775493621826,
+      "mean_km": 31.095603942871094,
+      "p90_km": 117.37728881835938
+    },
+    "resnet0.75_k1": {
+      "n": 1000,
+      "within_1km": 48.199999999999996,
+      "within_5km": 71.0,
+      "within_25km": 84.0,
+      "within_200km": 96.6,
+      "median_km": 1.1351087093353271,
+      "mean_km": 23.85097885131836,
+      "p90_km": 92.13543701171875
+    },
+    "resnet0.75_k5": {
+      "n": 1000,
+      "within_1km": 31.8,
+      "within_5km": 65.3,
+      "within_25km": 83.5,
+      "within_200km": 96.89999999999999,
+      "median_km": 2.4735569953918457,
+      "mean_km": 22.98407745361328,
+      "p90_km": 65.86724090576172
+    },
+    "resnet0.5_k1": {
+      "n": 1000,
+      "within_1km": 48.8,
+      "within_5km": 71.1,
+      "within_25km": 83.3,
+      "within_200km": 97.0,
+      "median_km": 1.0721819400787354,
+      "mean_km": 22.462217330932617,
+      "p90_km": 68.19993591308594
+    },
+    "resnet0.5_k5": {
+      "n": 1000,
+      "within_1km": 31.7,
+      "within_5km": 65.7,
+      "within_25km": 84.1,
+      "within_200km": 97.3,
+      "median_km": 2.3290467262268066,
+      "mean_km": 21.45970344543457,
+      "p90_km": 60.631072998046875
+    }
+  }
+}

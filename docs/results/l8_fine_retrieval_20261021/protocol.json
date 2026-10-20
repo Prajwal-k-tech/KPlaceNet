@@ -1,0 +1,36 @@
+{
+  "recipes": [
+    {
+      "name": "nearest_training_position",
+      "k": 1,
+      "radius_km": 25.0,
+      "prior_weight": 0.0
+    },
+    {
+      "name": "local5",
+      "k": 5,
+      "radius_km": 25.0,
+      "prior_weight": 0.0
+    },
+    {
+      "name": "local20",
+      "k": 20,
+      "radius_km": 25.0,
+      "prior_weight": 0.0
+    },
+    {
+      "name": "local20_classifier_prior",
+      "k": 20,
+      "radius_km": 25.0,
+      "prior_weight": 0.2
+    }
+  ],
+  "feature_source": "Frozen L5/L6 ResNet-50 features",
+  "bank_split": "15939 train only",
+  "validation_n": 1000,
+  "test_n": 357,
+  "selection": "highest validation within25, then lowest median, then mean; L7 baseline eligible",
+  "gate": "within25 +.5pp and median <=1.02 baseline, or median improves >=10% with within25 no worse by >.5pp",
+  "test_caveat": "Repeated benchmark already inspected for L6/L7; exploratory follow-up, not fresh confirmation",
+  "coordinate_method": "Spherical average only inside the highest-mass 25-km neighbor mode; k1 returns a training-photo coordinate"
+}

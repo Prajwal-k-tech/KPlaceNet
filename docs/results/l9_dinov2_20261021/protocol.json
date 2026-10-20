@@ -1,0 +1,28 @@
+{
+  "backbone": "official dinov2_vits14 frozen pretrained; 384-dim",
+  "input": "same 256 resize/224 center crop/ImageNet normalization",
+  "recipes": [
+    {
+      "name": "nearest",
+      "k": 1,
+      "radius_km": 25.0,
+      "prior_weight": 0.0
+    },
+    {
+      "name": "local5",
+      "k": 5,
+      "radius_km": 25.0,
+      "prior_weight": 0.0
+    },
+    {
+      "name": "local20",
+      "k": 20,
+      "radius_km": 25.0,
+      "prior_weight": 0.0
+    }
+  ],
+  "selection": "validation within25 then median; preserve L8 baseline if no improvement",
+  "test_caveat": "Reused benchmark, exploratory. Pretraining-source overlap has not been audited.",
+  "storage": "Features cached per split; no copied image datasets",
+  "weights_sha256": "b938bf1bc15cd2ec0feacfe3a1bb553fe8ea9ca46a7e1d8d00217f29aef60cd9"
+}

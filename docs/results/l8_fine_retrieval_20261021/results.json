@@ -1,0 +1,130 @@
+{
+  "protocol": {
+    "recipes": [
+      {
+        "name": "nearest_training_position",
+        "k": 1,
+        "radius_km": 25.0,
+        "prior_weight": 0.0
+      },
+      {
+        "name": "local5",
+        "k": 5,
+        "radius_km": 25.0,
+        "prior_weight": 0.0
+      },
+      {
+        "name": "local20",
+        "k": 20,
+        "radius_km": 25.0,
+        "prior_weight": 0.0
+      },
+      {
+        "name": "local20_classifier_prior",
+        "k": 20,
+        "radius_km": 25.0,
+        "prior_weight": 0.2
+      }
+    ],
+    "feature_source": "Frozen L5/L6 ResNet-50 features",
+    "bank_split": "15939 train only",
+    "validation_n": 1000,
+    "test_n": 357,
+    "selection": "highest validation within25, then lowest median, then mean; L7 baseline eligible",
+    "gate": "within25 +.5pp and median <=1.02 baseline, or median improves >=10% with within25 no worse by >.5pp",
+    "test_caveat": "Repeated benchmark already inspected for L6/L7; exploratory follow-up, not fresh confirmation",
+    "coordinate_method": "Spherical average only inside the highest-mass 25-km neighbor mode; k1 returns a training-photo coordinate"
+  },
+  "selection": {
+    "recipe": {
+      "name": "local20_classifier_prior",
+      "k": 20,
+      "radius_km": 25.0,
+      "prior_weight": 0.2
+    },
+    "promotion_eligible": true,
+    "baseline_validation": {
+      "n": 1000,
+      "within_1km": 10.9,
+      "within_5km": 55.60000000000001,
+      "within_25km": 74.4,
+      "within_200km": 95.0,
+      "median_km": 4.024782874932935,
+      "mean_km": 33.955912132550615,
+      "p90_km": 125.4517684772396
+    },
+    "selected_validation": {
+      "n": 1000,
+      "within_1km": 21.6,
+      "within_5km": 58.5,
+      "within_25km": 80.2,
+      "within_200km": 95.3,
+      "median_km": 3.317680597305298,
+      "mean_km": 29.013626098632812,
+      "p90_km": 85.775634765625
+    },
+    "all_validation": {
+      "nearest_training_position": {
+        "n": 1000,
+        "within_1km": 40.1,
+        "within_5km": 62.3,
+        "within_25km": 78.8,
+        "within_200km": 94.69999999999999,
+        "median_km": 1.9587860107421875,
+        "mean_km": 32.45180892944336,
+        "p90_km": 134.0350799560547
+      },
+      "local5": {
+        "n": 1000,
+        "within_1km": 26.900000000000002,
+        "within_5km": 60.3,
+        "within_25km": 78.9,
+        "within_200km": 95.0,
+        "median_km": 3.136867046356201,
+        "mean_km": 31.095600128173828,
+        "p90_km": 117.37728881835938
+      },
+      "local20": {
+        "n": 1000,
+        "within_1km": 14.6,
+        "within_5km": 51.9,
+        "within_25km": 78.10000000000001,
+        "within_200km": 94.39999999999999,
+        "median_km": 4.4350433349609375,
+        "mean_km": 33.716575622558594,
+        "p90_km": 129.4760284423828
+      },
+      "local20_classifier_prior": {
+        "n": 1000,
+        "within_1km": 21.6,
+        "within_5km": 58.5,
+        "within_25km": 80.2,
+        "within_200km": 95.3,
+        "median_km": 3.317680597305298,
+        "mean_km": 29.013626098632812,
+        "p90_km": 85.775634765625
+      }
+    }
+  },
+  "device": "cuda",
+  "baseline_test": {
+    "n": 357,
+    "within_1km": 0.5602240896358543,
+    "within_5km": 8.403361344537815,
+    "within_25km": 53.50140056022409,
+    "within_200km": 85.15406162464986,
+    "median_km": 21.84416612436229,
+    "mean_km": 80.64828075152087,
+    "p90_km": 239.8238186882608
+  },
+  "selected_test": {
+    "n": 357,
+    "within_1km": 0.0,
+    "within_5km": 15.126050420168067,
+    "within_25km": 59.66386554621849,
+    "within_200km": 86.5546218487395,
+    "median_km": 18.27340316772461,
+    "mean_km": 71.16942596435547,
+    "p90_km": 233.59896850585938
+  }
+}

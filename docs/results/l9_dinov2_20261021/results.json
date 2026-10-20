@@ -1,0 +1,87 @@
+{
+  "protocol": {
+    "backbone": "official dinov2_vits14 frozen pretrained; 384-dim",
+    "input": "same 256 resize/224 center crop/ImageNet normalization",
+    "recipes": [
+      {
+        "name": "nearest",
+        "k": 1,
+        "radius_km": 25.0,
+        "prior_weight": 0.0
+      },
+      {
+        "name": "local5",
+        "k": 5,
+        "radius_km": 25.0,
+        "prior_weight": 0.0
+      },
+      {
+        "name": "local20",
+        "k": 20,
+        "radius_km": 25.0,
+        "prior_weight": 0.0
+      }
+    ],
+    "selection": "validation within25 then median; preserve L8 baseline if no improvement",
+    "test_caveat": "Reused benchmark, exploratory. Pretraining-source overlap has not been audited.",
+    "storage": "Features cached per split; no copied image datasets",
+    "weights_sha256": "b938bf1bc15cd2ec0feacfe3a1bb553fe8ea9ca46a7e1d8d00217f29aef60cd9"
+  },
+  "selection": {
+    "recipe": null,
+    "promotion_eligible": false,
+    "baseline_validation": {
+      "n": 1000,
+      "within_1km": 21.6,
+      "within_5km": 58.5,
+      "within_25km": 80.2,
+      "within_200km": 95.3,
+      "median_km": 3.317680597305298,
+      "mean_km": 29.013626098632812,
+      "p90_km": 85.775634765625
+    },
+    "selected_validation": {
+      "n": 1000,
+      "within_1km": 21.6,
+      "within_5km": 58.5,
+      "within_25km": 80.2,
+      "within_200km": 95.3,
+      "median_km": 3.317680597305298,
+      "mean_km": 29.013626098632812,
+      "p90_km": 85.775634765625
+    },
+    "all_validation": {
+      "nearest": {
+        "n": 1000,
+        "within_1km": 36.0,
+        "within_5km": 57.099999999999994,
+        "within_25km": 72.1,
+        "within_200km": 95.1,
+        "median_km": 3.0900676250457764,
+        "mean_km": 34.82750701904297,
+        "p90_km": 110.89482116699219
+      },
+      "local5": {
+        "n": 1000,
+        "within_1km": 22.0,
+        "within_5km": 52.7,
+        "within_25km": 75.4,
+        "within_200km": 95.7,
+        "median_km": 4.304823875427246,
+        "mean_km": 31.642288208007812,
+        "p90_km": 93.12214660644531
+      },
+      "local20": {
+        "n": 1000,
+        "within_1km": 11.5,
+        "within_5km": 40.300000000000004,
+        "within_25km": 74.4,
+        "within_200km": 95.39999999999999,
+        "median_km": 7.1073808670043945,
+        "mean_km": 35.81961441040039,
+        "p90_km": 120.86868286132812
+      }
+    }
+  },
+  "device": "cuda"
+}

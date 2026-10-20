@@ -1,0 +1,52 @@
+{
+  "primary_objective": "within5km, then median; latest requested fine-location precision rather than coarse25km",
+  "recipes": [
+    {
+      "name": "resnet1.0_k1",
+      "resnet_weight": 1.0,
+      "k": 1,
+      "radius_km": 25.0,
+      "prior_weight": 0.0
+    },
+    {
+      "name": "resnet1.0_k5",
+      "resnet_weight": 1.0,
+      "k": 5,
+      "radius_km": 25.0,
+      "prior_weight": 0.0
+    },
+    {
+      "name": "resnet0.75_k1",
+      "resnet_weight": 0.75,
+      "k": 1,
+      "radius_km": 25.0,
+      "prior_weight": 0.0
+    },
+    {
+      "name": "resnet0.75_k5",
+      "resnet_weight": 0.75,
+      "k": 5,
+      "radius_km": 25.0,
+      "prior_weight": 0.0
+    },
+    {
+      "name": "resnet0.5_k1",
+      "resnet_weight": 0.5,
+      "k": 1,
+      "radius_km": 25.0,
+      "prior_weight": 0.0
+    },
+    {
+      "name": "resnet0.5_k5",
+      "resnet_weight": 0.5,
+      "k": 5,
+      "radius_km": 25.0,
+      "prior_weight": 0.0
+    }
+  ],
+  "baseline": "L8 local20 classifier-prior",
+  "guardrail": "validation within25 no worse than L8 by >2pp",
+  "promotion": "within5 improves >=.5pp; median <=1.02 baseline",
+  "selection": "Validation only. Reused official test only after freeze; no fresh confirmation claimed.",
+  "storage": "cached 384-dim DINO and 2048-dim ResNet; no duplicated source photos"
+}
