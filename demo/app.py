@@ -473,6 +473,9 @@ html body .gradio-container {width: calc(100% - 96px) !important; max-width: non
 .result-grid {display: grid; grid-template-columns: 1fr; gap: 16px; font-variant-numeric: tabular-nums;}
 .result-grid span {display: block; color: #626A70; font-size: 12px; margin-bottom: 5px;}
 .result-grid strong {font-size: 22px; color: #172C42;}
+.maps-link {display: inline-block; margin-top: 16px; padding: 11px 15px; background: #172C42; color: #F5F1E8 !important; border-radius: 5px; font-size: 15px; font-weight: 600; text-decoration: none !important;}
+.maps-link:hover {background: #243F59;}
+.maps-link:focus-visible {outline: 3px solid #D5663F; outline-offset: 3px;}
 .result-note {color: #626A70; font-size: 14px; margin: 12px 0 0;}
 #run-button {background: #172C42; color: #F5F1E8; border: 0; border-bottom: 3px solid #D5663F; min-height: 52px; font-size: 18px; font-weight: 600;}
 #run-button:hover {background: #243F59;}
@@ -515,6 +518,8 @@ def _result_html(d=None):
         f'<div><span>Longitude</span><strong>{d["lon"]:.4f}°</strong></div>'
         f'<div><span>{"Calibrated confidence" if calibrated else "Raw model score"}</span><strong>{confidence:.1%}</strong></div>'
         f'</div><p class="result-note">{note} The marker represents a cell centroid.</p>'
+        f'<a class="maps-link" href="https://www.google.com/maps/search/?api=1&amp;query={d["lat"]:.8f}%2C{d["lon"]:.8f}" '
+        'target="_blank" rel="noopener noreferrer">Open in Google Maps ↗</a>'
     )
 
 
