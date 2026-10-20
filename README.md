@@ -1,7 +1,7 @@
 # KPlaceNet / GeoNet
 
 
-**20 October Kerala update:** geographic smoothing of the frozen-feature classifier improves official-test within-25-km accuracy from 41.18% to 47.62% and median error from 42.08 to 28.41 km (357 images). [Measured protocol and limitations](docs/results/l6_kerala_20261020.md). Install the SHA-256-checked improved pack with `python scripts/download_kerala_l6.py`; restart the demo afterward. Existing L5 weights remain available as a fallback.
+**20 October final Kerala-area update:** frozen-feature geographic smoothing (L6), followed by a fixed training-only ResNet + KNN blend (L7), improves within-25-km accuracy from 41.18% (L5) to 47.62% (L6) to 53.50% (hybrid), with median errors 42.08, 28.41 and 21.84 km. These are 357 official test images; L7 reuses the already-inspected benchmark and has a worse p90 than L6. [L6 record](docs/results/l6_kerala_20261020.md), [L7 protocol and limitations](docs/results/l7_kerala_knn_20261020.md). Install with `python scripts/download_kerala_l7.py` and restart the demo. The KNN switch compares with ResNet alone. Regional mode assumes Kerala-area input, includes neighboring territory, and does not detect outside-region images.
 
 PlaNet-inspired coarse image geolocation with a ResNet-50 classifier over geographic cells. The original experiments use an RTX 4050; Prajwal's bounded follow-up CUDA experiments use an RTX 3050 laptop GPU (6GB VRAM); KPlaceNet is not a reproduction of PlaNet's model, data scale, or benchmark results.
 
@@ -10,6 +10,8 @@ PlaNet-inspired coarse image geolocation with a ResNet-50 classifier over geogra
 Prajwal Kumar K contributes strict checkpoint/evaluation validation, hash-bound training and evaluation manifests, paired geographic metrics, and a finite-sample conformal order-statistic correction. Its real-data evidence is deliberately bounded: on one exploratory OSV-5M test sample, training with 20k rather than 10k images reduced mean geodesic error by 456 km and increased within-200-km accuracy by 1.54 percentage points across three paired seeds. The 20k model still averages 5,522 km error, and the training pool uses only four of 98 train archives. The [data-scale report](docs/results/l2_data_scale_osv_test_20261009.md) and [L3 calibration report](docs/results/l3_uncertainty_osv_test_20261009.md) separate these measured results from inherited upstream results and document their limits. See [fork status](docs/FORK_STATUS.md) for the exact scope and validation.
 
 ## Classroom submission
+
+The [final preparation pack](docs/classroom/final/START-HERE.md) contains the editable presentation, PDF backup, full report, study guide, demo script, cheat sheet and experiment notes.
 
 The [project report](docs/classroom/report.md) follows the CSE 311 structure. The [presentation and viva guide](docs/classroom/presentation-guide.md) explains the procedure, methodology, contribution, and likely questions. Use the [live demo playbook](docs/classroom/demo-playbook.md) for frontend controls, a five-minute script, and the exact demo files to transfer. Run `python scripts/check_demo_ready.py --mode all` before rehearsal. See [integration validation](docs/INTEGRATION_20261020.md) for compatibility checks.
 

@@ -20,7 +20,7 @@ Source: docs/results/l7_kerala_knn_20261020/results.json; scripts/evaluate_l7_kn
 
 <!-- PAGE -->
 
-Updated 20 October 2026. Use this guide for the final L6 demo and tomorrow's viva.
+Updated 20 October 2026. Use this guide for the final L6/L7 demo and tomorrow's viva.
 
 ## Your opening explanation
 KPlaceNet estimates a photograph's geographic region from its pixels. It converts geography into 300 classes, uses a pretrained ResNet-50 to predict a class, and displays that class's saved centroid. The Kerala specialist assumes a Kerala-domain input. The global mode has different weights and different geographic cells.
@@ -144,7 +144,7 @@ Only the head receives gradients in L6. The two recipes' cached-feature optimiza
 # 5. Results and evaluation
 
 ## Which numbers belong to which experiment
-| Metric | L5 baseline | Final L6 | Evaluation |
+| Metric | L5 baseline | L6 classifier | Evaluation |
 |---|---:|---:|---|
 | Within 25 km | 41.18% | 47.62% | 357 official Kerala test images |
 | Correct within 25 km | 147 | 170 | Same 357 images |
@@ -266,9 +266,28 @@ Is overfitting fixed? No. Official-test performance improves, but a substantial 
 Why can the failure photo look like another region? Similar appearances and incomplete learned distinctions can confuse the classifier. Without interpretability analysis, do not claim the exact visual cause of a particular failure.
 
 ## A two-hour study plan
-Spend 30 minutes explaining data, preprocessing and the model using pages 1 to 4. Spend 25 minutes on L6, metrics and the spatial audit. Spend 25 minutes on uncertainty, contribution and the ETH comparison. Spend 25 minutes rehearsing the live demo twice, including the failure and the Maps link. Use the final 15 minutes for the cheat sheet and questions without notes.
+Spend 30 minutes explaining data, preprocessing and the model using pages 1 to 4. Spend 25 minutes on L6/L7, metrics and the spatial audit. Spend 25 minutes on uncertainty, contribution and the ETH comparison. Spend 25 minutes rehearsing the live demo twice, including the failure and the Maps link. Use the final 15 minutes for the cheat sheet and questions without notes.
 
 ## Before you sleep
 Be able to give the opening in 45 seconds, trace the pipeline in two minutes, explain the improvement in one minute and recover from a failed upload. Confirm the report's institution, department, instructor and roll numbers before submission on 22 October 2026. Keep the final slides PDF and genuine prediction screenshots available offline.
 
 Primary evidence: project code and docs/results/l6_kerala_20261020/; OSV-5M dataset https://huggingface.co/datasets/osv5m/osv5m ; PlaNet https://arxiv.org/abs/1602.05314 .
+
+<!-- PAGE -->
+
+# Explain the final KNN refinement
+
+## Why this particular KNN blend?
+The neighbors act as a local memory of training appearances. The classifier compresses those appearances into learned weights; retrieval can recover useful local evidence that the head spreads across several cells. We blend cell probabilities rather than averaging coordinates, which could place a result between unrelated places. Five neighbors, a similarity temperature of 0.07 and a 20% vote were fixed as a small conservative experiment, not established as optimal settings. More weight could amplify bad visual matches. The Southern Kerala failure demonstrates that risk.
+
+KNN here searches image features, not GPS coordinates. Training GPS supplies each neighbor's class label; an uploaded photograph supplies no GPS. The bank uses roughly 125 MiB for features and needs extra similarity computation. It does not train the ResNet again. KNN memory is normal for that method; leakage would occur if validation/test photographs were included in its bank, which this run explicitly forbids. Spatially adjacent training scenes can still make random validation optimistic even with disjoint IDs.
+
+
+## A twenty-second answer
+ResNet extracts a visual descriptor. We find five training photographs with similar descriptors using cosine similarity. Their location-class votes contribute 20% and the learned classifier contributes 80%. We predict the class with the highest combined score and display its stored centroid. Test photographs never enter the neighbor bank.
+
+## If asked why it can still fail
+A nearest neighbor always exists, even when no photograph in the bank is a good match. Similar greenery, masonry or road texture does not establish a country. The regional model has no learned foreign-image rejection class. We must evaluate an outside-region detector on independent examples before claiming one. The Great Wall screenshot demonstrates this limitation.
+
+## If asked whether this proves generalization
+No. The hybrid improved a reused official benchmark after validation selection. Its high-error tail worsened, the random validation split has nearby street scenes, and only one fixed retrieval recipe was tested. A new geographically separated dataset and repeated runs are the next evidence needed. Do not describe test-set reuse as an untouched final confirmation.

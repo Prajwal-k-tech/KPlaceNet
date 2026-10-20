@@ -25,3 +25,7 @@ The task launcher prefers the isolated GPU environment and otherwise uses CPU. M
 ## Preparation and data research
 
 The updated report retains all 13 required sections. The study guide and live-demo playbook reflect L6, the current controls, limits and exact artifact paths. The additional-data collector produced 350 Commons candidate metadata records; these were not used for training or evaluation and still need image/coordinate/duplicate review. The confirmed ETH paper is a later improvement reference, not a claim of reproduction.
+
+
+## Final L7 refinement
+The optional live default uses a matching training-only bank with five cosine neighbors and fixed 80/20 classifier/retrieval blend. Validation selects before follow-up test reporting. The reused 357-image benchmark records 53.50% within 25 km and 21.84-km median error, with worse p90 than L6. There are now 82 tests (GPU all pass; CPU one CUDA-only skip). Release: https://github.com/Prajwal-k-tech/KPlaceNet/releases/tag/kerala-l7-hybrid-20261020 . Regional mode assumes the Kerala-area bounding rectangle and cannot detect outside-region input.

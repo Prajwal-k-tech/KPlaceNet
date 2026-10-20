@@ -1,0 +1,62 @@
+{
+  "assets": [
+    {
+      "apiUrl": "https://api.github.com/repos/Prajwal-k-tech/KPlaceNet/releases/assets/659313801",
+      "contentType": "application/json",
+      "createdAt": "2026-10-20T12:46:01Z",
+      "digest": "sha256:880537c7c487536765fcb2e6a00143939ffafbb31b9e1ff3a73d4d41f25f567d",
+      "downloadCount": 0,
+      "id": "RA_kwDOU9j34M4nTFSJ",
+      "label": "",
+      "name": "l6_deployment.json",
+      "size": 568,
+      "state": "uploaded",
+      "updatedAt": "2026-10-20T12:46:01Z",
+      "url": "https://github.com/Prajwal-k-tech/KPlaceNet/releases/download/kerala-l6-20261020-verified/l6_deployment.json"
+    },
+    {
+      "apiUrl": "https://api.github.com/repos/Prajwal-k-tech/KPlaceNet/releases/assets/659313803",
+      "contentType": "application/json",
+      "createdAt": "2026-10-20T12:46:01Z",
+      "digest": "sha256:bc22ebe91d8903071c8a36b3e651f25bc4da48d957ebd08a1f3282fa15094148",
+      "downloadCount": 0,
+      "id": "RA_kwDOU9j34M4nTFSL",
+      "label": "",
+      "name": "l6_kerala_geographic_cells.json",
+      "size": 86806,
+      "state": "uploaded",
+      "updatedAt": "2026-10-20T12:46:01Z",
+      "url": "https://github.com/Prajwal-k-tech/KPlaceNet/releases/download/kerala-l6-20261020-verified/l6_kerala_geographic_cells.json"
+    },
+    {
+      "apiUrl": "https://api.github.com/repos/Prajwal-k-tech/KPlaceNet/releases/assets/659313800",
+      "contentType": "application/octet-stream",
+      "createdAt": "2026-10-20T12:46:01Z",
+      "digest": "sha256:d5588854830b8fcdf2c35b1f1d21d19c7628183b4004aa76b5e1c535fd753107",
+      "downloadCount": 0,
+      "id": "RA_kwDOU9j34M4nTFSI",
+      "label": "",
+      "name": "l6_kerala_geographic_selected.pt",
+      "size": 96816453,
+      "state": "uploaded",
+      "updatedAt": "2026-10-20T12:46:12Z",
+      "url": "https://github.com/Prajwal-k-tech/KPlaceNet/releases/download/kerala-l6-20261020-verified/l6_kerala_geographic_selected.pt"
+    },
+    {
+      "apiUrl": "https://api.github.com/repos/Prajwal-k-tech/KPlaceNet/releases/assets/659313799",
+      "contentType": "application/json",
+      "createdAt": "2026-10-20T12:46:01Z",
+      "digest": "sha256:d4c9c91e58eab8a3dfd76908716ceb27915e6d61c72fe88533b63319de7dec60",
+      "downloadCount": 0,
+      "id": "RA_kwDOU9j34M4nTFSH",
+      "label": "",
+      "name": "l6_results.json",
+      "size": 14209,
+      "state": "uploaded",
+      "updatedAt": "2026-10-20T12:46:01Z",
+      "url": "https://github.com/Prajwal-k-tech/KPlaceNet/releases/download/kerala-l6-20261020-verified/l6_results.json"
+    }
+  ],
+  "isDraft": false,
+  "url": "https://github.com/Prajwal-k-tech/KPlaceNet/releases/tag/kerala-l6-20261020-verified"
+}

@@ -1,0 +1,25 @@
+{
+  "selected_recipe": "geographic_smoothing",
+  "selected_epoch": 12,
+  "validation": {
+    "n": 1000,
+    "cell_top1_pct": 49.6,
+    "within_1km": 10.299999999999999,
+    "within_25km": 70.89999999999999,
+    "within_200km": 94.5,
+    "mean_km": 38.08300852981874,
+    "median_km": 4.777566971266394,
+    "p90_km": 141.60283237078855
+  },
+  "baseline_validation": {
+    "n": 1000,
+    "cell_top1_pct": 43.0,
+    "within_1km": 8.4,
+    "within_25km": 64.60000000000001,
+    "within_200km": 92.9,
+    "mean_km": 47.59369714613281,
+    "median_km": 7.02992456604755,
+    "p90_km": 165.68854417857517
+  },
+  "promotion_eligible": true
+}

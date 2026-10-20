@@ -1,3 +1,5 @@
+> Current 20 October status: the fork branches contain L6/L7 and integration work; upstream PR #1 is open and original main still requires a maintainer merge. The 17 October entry below is historical and its earlier PR plan is superseded. See [current validation](INTEGRATION_20261020.md).
+
 > Historical fork handoff. The 20 October integration retains these contributions alongside upstream Kerala mode; see [integration validation](INTEGRATION_20261020.md).
 
 # Fork work status

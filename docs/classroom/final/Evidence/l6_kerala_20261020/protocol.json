@@ -1,0 +1,32 @@
+{
+  "seed": 42,
+  "source_checkpoint": "/home/prajwal-k/Documents/Codex/2026-10-20/https-github-com-asterisk-hunter-kplacenet/work/KPlaceNet/checkpoints/l5_kerala_kmeans300/last.pt",
+  "checkpoint_sha256": "09d106752f404196a04d9c9caa520c6ffc58b615b65de1b18531bd7f685dfafe",
+  "cells_sha256": "bc22ebe91d8903071c8a36b3e651f25bc4da48d957ebd08a1f3282fa15094148",
+  "train_n": 15939,
+  "val_n": 1000,
+  "test_n": 357,
+  "device": "cuda",
+  "torch_version": "2.7.1+cu128",
+  "gpu_name": "NVIDIA GeForce RTX 3050 6GB Laptop GPU",
+  "algorithm": "Frozen L5 backbone; paired head-only smoothing recipes",
+  "recipes": [
+    "uniform_smoothing",
+    "geographic_smoothing"
+  ],
+  "geographic_scale_km": 15.0,
+  "geometry_source": "Training coordinates only; scale fixed before evaluation",
+  "lr": 0.0001,
+  "weight_decay": 0.01,
+  "label_smoothing": 0.1,
+  "batch_size": 256,
+  "epochs_per_recipe": 12,
+  "selection": "max validation within_25km, then min median_km; baseline eligible",
+  "promote_rule": "validation within25 improves by >=0.5 percentage points, median no more than 2% worse",
+  "caveats": [
+    "Existing random holdout is spatially optimistic.",
+    "Backbone and cell geometry stay unchanged.",
+    "This restores the original dataset; no additional training data was added.",
+    "One seed and two prespecified regularization recipes; no statistical significance claim."
+  ]
+}

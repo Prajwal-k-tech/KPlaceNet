@@ -1,0 +1,15 @@
+{
+  "release": "https://github.com/Prajwal-k-tech/KPlaceNet/releases/tag/kerala-l6-20261020-verified",
+  "assets": {
+    "l6_kerala_geographic_selected.pt": {
+      "destination": "checkpoints/l6_kerala_geographic/selected.pt",
+      "sha256": "d5588854830b8fcdf2c35b1f1d21d19c7628183b4004aa76b5e1c535fd753107",
+      "bytes": 96816453
+    },
+    "l6_kerala_geographic_cells.json": {
+      "destination": "checkpoints/l6_kerala_geographic/cells.json",
+      "sha256": "bc22ebe91d8903071c8a36b3e651f25bc4da48d957ebd08a1f3282fa15094148",
+      "bytes": 86806
+    }
+  }
+}

@@ -39,7 +39,7 @@ The project contains several distinct experiments. Historical global experiments
 
 For the seed 42 model trained on 20,000 images, three disjoint subsets are used for temperature fitting, conformal calibration, and final evaluation. Expected calibration error decreases from 0.4171 to 0.0453. Empirical conformal coverage is 90.8%, but the average set contains 159.7 of 300 classes. Better confidence estimates therefore coexist with weak geographic precision. The correction to the finite sample conformal rank and recorded sample provenance make this evaluation auditable. [R4]
 
-A separate Kerala specialist uses regional training images and regional cells. The L5 baseline obtains 41.2% within 25 km and median error 42.1 km. A final frozen-feature geographic smoothing follow-up increases these to 47.6% within 25 km and median error 28.4 km on the same 357 official test images, after selection on validation. [R6] These figures describe a restricted task and cannot be compared directly with global results. The overall contribution is a working visual geolocation pipeline, controlled experimental comparisons, and a clear account of what confidence and evaluation results do and do not establish. [R5]
+A separate Kerala specialist uses regional training images and regional cells. The L5 baseline obtains 41.2% within 25 km and median error 42.1 km. A frozen-feature geographic smoothing follow-up increases these to 47.6% within 25 km and median error 28.4 km on the same 357 official test images, after selection on validation. [R7] A fixed ResNet-plus-KNN follow-up reaches 53.50% within 25 km and 21.84-km median on that reused benchmark; this is not fresh independent confirmation. [R8] These figures describe a restricted task and cannot be compared directly with global results. The overall contribution is a working visual geolocation pipeline, controlled experimental comparisons, and a clear account of what confidence and evaluation results do and do not establish. [R5]
 
 Keywords: visual geolocation, ResNet 50, transfer learning, geographic cells, temperature scaling, conformal prediction.
 
@@ -278,9 +278,8 @@ Forty-one images become correct within 25 km and eighteen regress, a net gain of
 
 A recovered-subset audit finds disjoint image IDs but 982 of 1,000 random validation images within 1 km of training, versus zero of the 357 official test images. Median nearest-training distances are 99 m and 2.520 km respectively. This supports the optimistic-validation caveat. The original Kerala extraction is a bounding-box slice rather than a state-polygon audit.
 
-The ETH Zurich/Google/Politecnico di Milano paper Scaling Image Geo-Localization to Continent Level combines ground prototypes with aerial embeddings and geographic interpolation. L6 adapts broad geographic-boundary awareness through soft labels. It does not reproduce that paper's aerial system, interpolation rule, losses, scale or benchmark. [3]
+The ETH Zurich/Google/Politecnico di Milano paper Scaling Image Geo-Localization to Continent Level combines ground prototypes with aerial embeddings and geographic interpolation. L6 adapts broad geographic-boundary awareness through soft labels. It does not reproduce that paper's aerial system, interpolation rule, losses, scale or benchmark. [6]
 
-<!-- PAGE -->
 <!-- PAGE -->
 
 ## 10.4 Final L7 improvement: ResNet plus training-only KNN
@@ -323,7 +322,7 @@ Privacy and deployment also constrain usefulness. Visual localization can expose
 <!-- PAGE -->
 # 12 Conclusion
 
-The final L6 follow-up improves the same regional official-test within-25-km rate to 47.6% and median error to 28.4 km through a frozen-backbone classifier update. It retains the limits of regional assumptions, centroid decoding, raw scores and optimistic random validation. A separate search collected 350 Commons candidate metadata records; they were not used for training or evaluation. [R6]
+The L6 follow-up improves the same regional official-test within-25-km rate to 47.6% and median error to 28.4 km through a frozen-backbone classifier update. It retains the limits of regional assumptions, centroid decoding, raw scores and optimistic random validation. The fixed L7 ResNet-plus-KNN follow-up reaches 53.50% within 25 km and 21.84-km median on the reused benchmark, with a worse p90 than L6; independent spatial evaluation remains necessary. A separate search collected 350 Commons candidate metadata records; they were not used for training or evaluation. [R7, R8, R9]
 
 KPlaceNet implements the complete chain from image preprocessing to geographic classification, coordinate decoding, and geodesic evaluation. Transfer learning makes the experiment feasible on laptop hardware, while saved class definitions keep model outputs geographically meaningful. The project goes beyond producing a map marker by testing data scale, sampling, cell geometry, and uncertainty under explicit controls.
 
@@ -331,7 +330,7 @@ The controlled data scale study records consistent improvements across three pai
 
 Calibration improves confidence agreement but does not improve argmax location accuracy. Empirical conformal coverage of 90.8% is accompanied by sets averaging 159.7 of 300 classes, and geographic slices vary substantially. The corrected rank, three way split, checkpoint verification, and provenance manifests strengthen the scientific procedure while preserving the distinction between mathematical assumptions and measured behavior.
 
-The Kerala specialist produces stronger coarse regional results, with 41.2% within 25 km on 357 official test examples. It should be presented as a separate restricted geography model, with raw uncalibrated confidence and a substantial random validation versus official test gap. These limitations are essential to an accurate account of the outcome.
+The historical L5 Kerala specialist records 41.2% within 25 km; L6 reaches 47.6%, and the fixed L7 hybrid follow-up reaches 53.5% on the same 357 official test examples. It should be presented as a separate restricted geography model, with raw uncalibrated confidence and a substantial random validation versus official test gap. These limitations are essential to an accurate account of the outcome.
 
 Future work should use broader training archives, independent spatial validation for model and threshold choices, measured region restricted baselines, and repeated evaluation beyond three seeds. Step matched comparisons would help separate more data from more optimization updates. Larger or hierarchical cell representations may reduce quantization error if supervision and compute permit. Regional uncertainty assessment and fresh held out geography are needed before making deployment claims.
 
@@ -368,6 +367,11 @@ Project implementation and experiment records accessed 20 October 2026
 
 R2 to R4 source revision c02d320 on branch prajwal/eval-integrity at https://github.com/Prajwal-k-tech/KPlaceNet. Historical and follow up results use distinct evaluation subsets. Source code examined includes src/dataset.py, src/model.py, src/train.py, src/cells.py, src/eval.py, src/uncertainty.py, and experiment runners. Measurements are cited to the recorded reports rather than represented as newly reproduced runs.
 
-[R6] Project run record, docs/results/l6_kerala_20261020.md and associated protocol, selection, split audit and per-image predictions, 20 October 2026.
+[R7] Project run record, docs/results/l6_kerala_20261020.md and associated protocol, selection, split audit and per-image predictions, 20 October 2026.
 
-[3] Lindenberger et al. Scaling Image Geo-Localization to Continent Level. NeurIPS 2025. https://arxiv.org/abs/2510.26795 .
+[6] Lindenberger et al. Scaling Image Geo-Localization to Continent Level. NeurIPS 2025. https://arxiv.org/abs/2510.26795 .
+
+
+[R8] Project L7 retrieval follow-up. docs/results/l7_kerala_knn_20261020.md, fixed protocol and validation selection record, 20 October 2026. https://github.com/Prajwal-k-tech/KPlaceNet/blob/main/docs/results/l7_kerala_knn_20261020.md
+
+[R9] Wikimedia Commons API and machine-readable licensing metadata. Candidate manifest collected 20 October 2026. https://commons.wikimedia.org/wiki/Commons:API/MediaWiki and https://commons.wikimedia.org/wiki/Help:Machine-readable_data

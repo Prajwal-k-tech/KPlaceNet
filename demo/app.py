@@ -429,7 +429,7 @@ def _format_markdown(d: dict) -> str:
             f"- Predicted lat/lon: **{d['lat']:.4f}, {d['lon']:.4f}**\n"
             f"- Cell id: **{d['cell_id']}** (box lat [{lat0:.2f}, {lat1:.2f}], "
             f"lon [{lon0:.2f}, {lon1:.2f}])\n"
-            f"- Raw confidence: **{d['raw_conf'] * 100:.2f}%** (uncalibrated)\n"
+            f"- Classifier maximum score: **{d['raw_conf'] * 100:.2f}%** (uncalibrated)\n"
             f"- Conformal set: n/a — Kerala mode is uncalibrated\n"
             f"- Calibration: none; optional KNN blends 80% classifier with 20% training-only neighbor votes.\n"
             f"- Decision: raw confidence only (no ACCEPT/ABSTAIN threshold)\n\n"
@@ -608,6 +608,8 @@ def build_ui():
             return _empty_map(mode), _result_html(), "Upload a photo to see model details."
         try:
             d = predict_one(img, mode, use_knn=use_knn)
+            if use_knn and d.get("mode") == MODE_KERALA and not d.get("hybrid"):
+                gr.Warning("The matching KNN bank is not installed; this result uses ResNet alone.")
         except Exception as exc:
             raise gr.Error("Prediction could not complete. Check the model checkpoint and try again.") from exc
         return d["figure"], _result_html(d), _format_markdown(d)
@@ -628,7 +630,7 @@ def build_ui():
                 mode_in = gr.Radio(choices=[(MODE_LABELS[MODE_KERALA], MODE_KERALA),
                                             (MODE_LABELS[MODE_GLOBAL], MODE_GLOBAL)],
                                    value=MODE_KERALA, label="Geographic scope")
-                img_in = gr.Image(type="pil", label="Street scene", height=250,
+                img_in = gr.Image(type="pil", format="png", label="Street scene", height=250,
                                   sources=["upload", "clipboard"], interactive=True, elem_id="street-image")
                 gr.HTML('<p role="status" aria-live="polite"></p>', elem_id="drop-status")
                 use_knn_in = gr.Checkbox(label="Refine with training-photo neighbors (KNN)", value=True)
