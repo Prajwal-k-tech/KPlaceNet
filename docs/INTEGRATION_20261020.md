@@ -17,3 +17,9 @@ The cross-platform report path formatter now recognizes foreign Windows and POSI
 These CPU checks use Python 3.12 and PyTorch 2.14.1+cpu. They do not rerun or independently reproduce the dated CUDA image experiments. Images and trained checkpoints remain local, gitignored prerequisites.
 
 The classroom report and viva guide are in `docs/classroom/`. The report preserves separate sample identities and attribution for historical global, controlled fork, and Kerala studies. Title page institution, instructor, department, and roll numbers still need confirmation.
+
+## Demo preparation follow-up
+
+The fork main and both contribution branches were published after Git Credential Manager browser authentication. Direct upstream push is denied to Prajwal-k-tech; PR 1 is updated for maintainer merge. The upload UI was opened in a browser, mode switching and research details inspected, and the Gradio 6 launcher now preserves theme and CSS. `scripts/check_demo_ready.py` reports missing model and data files before rehearsal. The seven-page live demo playbook documents controls, inference, design rationale, an exact artifact transfer list, and a timed script.
+
+Full follow-up validation: 74 tests run, 73 passed, one CUDA-only skip. No original checkpoints or demonstration images were found in the Windows project locations checked or Ubuntu home. File readiness is not verified inference; real-image demo verification remains pending those artifacts.

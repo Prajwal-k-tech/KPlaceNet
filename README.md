@@ -8,7 +8,7 @@ Prajwal Kumar K contributes strict checkpoint/evaluation validation, hash-bound 
 
 ## Classroom submission
 
-The [project report](docs/classroom/report.md) follows the CSE 311 structure. The [presentation and viva guide](docs/classroom/presentation-guide.md) explains the procedure, methodology, contribution, and likely questions. See [integration validation](docs/INTEGRATION_20261020.md) for compatibility checks.
+The [project report](docs/classroom/report.md) follows the CSE 311 structure. The [presentation and viva guide](docs/classroom/presentation-guide.md) explains the procedure, methodology, contribution, and likely questions. Use the [live demo playbook](docs/classroom/demo-playbook.md) for frontend controls, a five-minute script, and the exact demo files to transfer. Run `python scripts/check_demo_ready.py --mode all` before rehearsal. See [integration validation](docs/INTEGRATION_20261020.md) for compatibility checks.
 
 ## Setup (Windows or Linux, Python 3.10+, PyTorch 2.x)
 

@@ -457,6 +457,7 @@ def build_predict_fn():
 DEMO_CSS = """
 .gradio-container {max-width: 1440px !important; background: #f5f7f8;}
 .gradio-container label, .gradio-container label span {color: #243e53 !important;}
+.gradio-container .block-title, .gradio-container legend {color: #243e53 !important;}
 #hero {background: #132e42; padding: 30px 36px; border-radius: 14px; margin-bottom: 18px;}
 #hero h1 {font-family: Georgia, serif; color: #fff; font-size: 38px; font-weight: 400; margin: 6px 0 10px;}
 #hero p {color: #c4d8e2; font-size: 16px; max-width: 780px;}
@@ -505,6 +506,20 @@ def _empty_map(mode):
     return _style_map(fig)
 
 
+def _demo_theme(gr):
+    return gr.themes.Soft(primary_hue="teal", neutral_hue="slate").set(
+        body_background_fill_dark="#f5f7f8", body_text_color_dark="#243e53",
+        body_text_color_subdued_dark="#617789", block_background_fill_dark="#ffffff",
+        block_label_background_fill_dark="#eaf2f3", block_label_text_color_dark="#243e53",
+        background_fill_primary_dark="#ffffff", background_fill_secondary_dark="#eef3f5",
+        input_background_fill_dark="#ffffff", border_color_primary_dark="#dbe4e9",
+        checkbox_label_background_fill_dark="#eaf2f3",
+        checkbox_label_background_fill_selected_dark="#cfe9e7",
+        checkbox_label_text_color_dark="#243e53",
+        checkbox_label_text_color_selected_dark="#243e53",
+    )
+
+
 def build_ui():
     import gradio as gr
 
@@ -521,15 +536,11 @@ def build_ui():
     def reset_result(mode):
         return _empty_map(mode), _result_html(), "Run a prediction to inspect calibration and cell bounds."
 
-    theme = gr.themes.Soft(primary_hue="teal", neutral_hue="slate").set(
-        body_background_fill_dark="#f5f7f8", body_text_color_dark="#243e53",
-        body_text_color_subdued_dark="#617789", block_background_fill_dark="#ffffff",
-        block_label_background_fill_dark="#eaf2f3", block_label_text_color_dark="#243e53",
-        background_fill_primary_dark="#ffffff", background_fill_secondary_dark="#eef3f5",
-        input_background_fill_dark="#ffffff", border_color_primary_dark="#dbe4e9",
-    )
-    with gr.Blocks(title="KPlaceNet | Visual geolocation", css=DEMO_CSS,
-                   theme=theme) as demo:
+    # Gradio 6 moved theme/css from Blocks to launch; retain older releases.
+    style = {} if int(gr.__version__.split(".")[0]) >= 6 else {
+        "css": DEMO_CSS, "theme": _demo_theme(gr),
+    }
+    with gr.Blocks(title="KPlaceNet | Visual geolocation", **style) as demo:
         gr.HTML('<div class="eyebrow">COMPUTER VISION / VISUAL GEOLOCATION</div>'
                 '<h1>A place, from a photograph.</h1>'
                 '<p>KPlaceNet learns geographic cues from street scenes. Explore a global model '
@@ -588,5 +599,15 @@ def build_ui():
     return demo
 
 
+def launch_demo(**kwargs):
+    """Launch with the classroom theme on both Gradio 5 and 6."""
+    import gradio as gr
+
+    if int(gr.__version__.split(".")[0]) >= 6:
+        kwargs.setdefault("css", DEMO_CSS)
+        kwargs.setdefault("theme", _demo_theme(gr))
+    return build_ui().launch(**kwargs)
+
+
 if __name__ == "__main__":
-    build_ui().launch()
+    launch_demo()
