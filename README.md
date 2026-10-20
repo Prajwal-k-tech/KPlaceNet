@@ -32,12 +32,32 @@ data/
   im2gps3k/          # 3k eval only — never train — via --dataset im2gps3k
   kerala_osv5m/      # OSV-5M Kerala slice (bbox 8.0-12.8N, 74.5-77.5E) — L5 region model, via scripts/extract_kerala_osv5m.py
   .gitkeep
-  .gitkeep
 ```
 
 - CSV format expected by `src/dataset.py`: `image_path,lat,lon` (header required). Paths may be absolute or relative to CSV location.
 - OSV-5M spatial separation (1km) is respected by not mixing splits; IM2GPS3k is eval-only.
 - Large datasets are **not** committed — see `data/README.md`.
+
+## Model Weights (team)
+
+Checkpoints are **not** stored in git (GitHub blocks files over 100 MB). They are attached to the [`weights-v1` release](https://github.com/Asterisk-Hunter/KPlaceNet/releases/tag/weights-v1). Pull them into the expected `checkpoints/` paths:
+
+```powershell
+python scripts/download_weights.py
+```
+
+| Asset | Destination | Use |
+|-------|-------------|-----|
+| `l2_imagenet_1.0_layer4_last.pt` | `checkpoints/l2_imagenet_1.0_layer4/last.pt` | global model (demo); L5 backbone warm start |
+| `l5_kerala_kmeans300_last.pt` | `checkpoints/l5_kerala_kmeans300/last.pt` | Kerala model (demo) |
+| `l5_kerala_kmeans300_best.pt` | `checkpoints/l5_kerala_kmeans300/best.pt` | best validation checkpoint |
+| `l2_cells_full.json` | `checkpoints/l2_cells_full.json` | full global cell boxes |
+| `l3_uncertainty_results.json` | `checkpoints/l3_uncertainty_results.json` | demo temperature + conformal quantile |
+| `l5_kerala_kmeans300_cells.json` | `checkpoints/l5_kerala_kmeans300/cells.json` | Kerala cells |
+| `l5_kerala_kmeans300_metrics.json` | `checkpoints/l5_kerala_kmeans300/metrics_l5_kerala.json` | training curve |
+| `l5_kerala_kmeans300_results.json` | `checkpoints/l5_kerala_kmeans300/results.json` | before/after eval numbers |
+
+The script skips files that already exist, so it is safe to re-run. Datasets are separate — see `data/README.md` (Kerala slice: `python scripts/extract_kerala_osv5m.py`).
 
 ## How to Run — Smoke Test (L0 exit gate)
 
