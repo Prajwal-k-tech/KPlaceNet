@@ -1,27 +1,32 @@
-# KPlaceNet: understand the current system
-A learning guide / 21 October 2026
+# KPlaceNet: understand Kerala mode
+Study guide / 21 October 2026
 
-## 1. The problem we solve
-**Visual geolocation** means estimating where a photograph was taken by examining its visible content. KPlaceNet takes one image and returns a location estimate. Roads, buildings, vegetation, terrain and other visual patterns can help distinguish places, but similar-looking places can cause errors.
+## 1. What the project does
+**Visual geolocation** means estimating where a photograph was taken from its visible content. KPlaceNet takes one image, analyzes its appearance and returns a location estimate. This guide covers only the Kerala-area system and its regional method choices.
 
-The current app has two separate **modes**, meaning two different prediction workflows. They use separate model resources; changing mode changes the method and geographic coverage, not just the map zoom.
+The input is the photograph's pixels. The app does not use the uploaded image's GPS metadata to obtain the answer, read the gallery caption as a label, search the live web for the image or move around a panorama.
 
-| Mode | What happens | What the coordinate means |
+A **coordinate** is a latitude-longitude pair. Latitude measures north/south position and longitude measures east/west position. Coordinates such as 9.6761, 76.4211 identify a point on Earth. The number of displayed decimal places does not establish location accuracy.
+
+## The three regional choices
+The current interface uses a **Regional prediction method** selector. When we say the KNN toggle, we mean choosing the middle option below instead of classifier only. It is not a separate checkbox in this version.
+
+| Interface choice | How it selects a location | What it returns |
 |---|---|---|
-| Kerala area: Fine coordinates | ResNet and DINOv2 describe the image; search regional training references | GPS coordinate of the best-matching reference photograph |
-| Kerala area: Regional cells | ResNet predicts a geographic class, with optional KNN class votes | Saved center of the selected class |
-| World | A separate ResNet predicts a global geographic class; score-scaling and uncertainty rules are applied | Saved center of the selected global class |
+| Fine coordinates - ResNet + DINOv2 | Find one most-similar training reference using two image encoders | That reference photograph's stored GPS |
+| Regional cells - ResNet + KNN | Blend classifier scores with five training-neighbor class votes | Center of the winning geographic cell |
+| Regional cells - classifier only | Use the classifier's highest-scoring cell | Center of that cell |
 
-**GPS coordinates** are a latitude-longitude pair. Latitude measures north/south position; longitude measures east/west position. A displayed coordinate such as 9.6761, 76.4211 identifies a point on Earth. Four decimal places describe how the number is displayed, not how accurate the model is.
+**Classification** means choosing a category. A **geographic cell** is a location category, and a **centroid** is its representative center. **Retrieval** means selecting a stored reference by similarity. **KNN**, K-nearest neighbors, uses similar stored examples to inform a decision.
 
-## What our system does not do
-It does not use the uploaded image's GPS metadata to solve the task, search the live web for its identity, move around a panorama or perform live navigation. Google Maps is an output link: it displays the coordinate our model already produced. It does not improve that prediction.
+Fine mode also uses nearest-neighbor search, but it is not the five-neighbor class-voting option. It uses one reference and a different combined representation. Turning the class-voting option off does not disable all nearest-neighbor logic in the application.
 
-Regional mode assumes a Kerala-area scene. Its data were collected using a rectangle, not a verified Kerala state boundary. That rectangle includes nearby territory in neighboring states. The app cannot establish that an arbitrary input belongs to Kerala.
+Regional mode assumes a Kerala-area input. Its collection rectangle includes nearby territory outside the state's boundary. It cannot verify that a foreign or out-of-region photograph belongs to its coverage.
 
-**Checkpoint:** Explain the three possible meanings of a returned coordinate before studying how any network works.
+**Checkpoint:** First distinguish the method, the score and the coordinate source. A retrieved photo coordinate and a cell center are different kinds of output.
 
 <!-- PAGE -->
+
 # 2. Data, labels and honest separation
 
 ## What one data record contains
@@ -47,6 +52,7 @@ The official test has been inspected across multiple project experiments. The cu
 **Checkpoint:** Why can two disjoint image-ID lists still produce an optimistic evaluation? Because disjoint files do not guarantee different places or capture sequences.
 
 <!-- PAGE -->
+
 # 3. Turning a photograph into model input
 
 ## Pixels, channels and tensors
@@ -72,6 +78,7 @@ Both regional encoders receive this same processed image tensor. The bank was bu
 **Checkpoint:** Image normalization changes pixel scales. Descriptor normalization, introduced later, changes feature-vector lengths. They are different operations.
 
 <!-- PAGE -->
+
 # 4. ResNet: learning useful visual features
 
 ## Neural networks and weights
@@ -94,6 +101,7 @@ A **classifier head** is a separate linear layer that maps the descriptor to geo
 **Checkpoint:** Why is ResNet useful in retrieval even when its classifier head does not select the answer? Its trained backbone supplies the representation used to compare photographs.
 
 <!-- PAGE -->
+
 # 5. DINOv2: a second visual representation
 
 ## What DINOv2 contributes
@@ -117,6 +125,7 @@ In deployment both encoders are **frozen**, meaning their weights remain fixed. 
 Source for DINOv2's model family and pretrained encoders: [official DINOv2 repository](https://github.com/facebookresearch/dinov2).
 
 <!-- PAGE -->
+
 # 6. Combining features: a worked explanation
 
 ## Why normalize a descriptor?
@@ -151,6 +160,7 @@ A cosine score such as 0.812 is a similarity value. It does not mean an 81.2% ch
 **Checkpoint:** Explain why the square-root weights result in equal similarity contributions: multiplying query and reference weights gives sqrt(0.5) x sqrt(0.5) = 0.5.
 
 <!-- PAGE -->
+
 # 7. Fine-coordinate retrieval, end to end
 
 ## Query and reference bank
@@ -173,31 +183,104 @@ This is not a direct pixel comparison: the query can differ in lighting or viewp
 **Checkpoint:** The returned coordinate belongs to the reference photo. Without the query's true coordinate, we cannot know the query-reference distance error just by reading the output.
 
 <!-- PAGE -->
-# 8. The two regional cell methods
 
-## Cells, classes and centroids
-A **geographic cell** is a group or region used as a classification label. A **class** is one possible output category. The regional classifier has 300 classes. Each has a stored **centroid**, or representative center coordinate, and latitude-longitude bounds.
+# 8. How classifier-only prediction works
 
-The regional cells are built from training GPS positions with **K-means**, a clustering algorithm that repeatedly assigns positions to nearby cluster centers and updates the centers. A cluster is a group of related examples. Here clustering groups coordinates, not image pixels. These cells are not Kerala districts, uniform-size grid squares or a verified administrative partition.
+## Geographic cells are training labels
+The regional classifier has 300 **classes**, or output categories. Each class corresponds to a group of training GPS positions with a stored center and latitude-longitude bounds. They are not districts, recognized town names or uniform-size squares.
 
-A class's bounding rectangle describes its spatial extent. It is not a confidence interval and does not guarantee the query lies inside it. Overlapping bounds and uneven sampling further limit a simple geometric interpretation.
+The groups are created with **K-means**, a clustering algorithm. A cluster is a group of examples. K-means assigns positions to nearby cluster centers and updates those centers repeatedly. In this project it groups geographic coordinates, not image colors or image descriptors. The resulting cell metadata is saved and reused during classification.
 
-## Classifier only
-A linear head maps the 2,048 ResNet features to 300 **logits**, which are unrestricted class scores. **Softmax** converts logits into nonnegative values that sum to one: p(j) = exp(logit(j)) / sum exp(logit). The largest score selects the class; its center becomes the output.
+**K-means and KNN are different.** K-means builds geographic groups offline. KNN searches visual descriptors of known training images during a prediction. The 300 classes and the five neighbors count different things.
 
-A score summing to one with the others is not automatically a calibrated real-world probability. Kerala class scores are uncalibrated.
+## From a ResNet descriptor to class scores
+The ResNet backbone supplies 2,048 visual features. A **linear classifier head** applies learned weights and biases to these features, producing one score per cell. In compact form, scores = W x + b, where x is the descriptor, W contains learned feature weights and b contains learned offsets.
 
-## Classifier plus KNN
-**K-nearest neighbors**, or KNN, finds k references most similar to the query. This regional option uses ResNet descriptors only, with k = 5. Similarities are converted into neighbor weights using softmax(similarity / 0.07). The number 0.07 controls how strongly the most similar neighbors dominate. Their weights are added to their geographic class labels.
+These raw scores are called **logits**. They are unrestricted real numbers. **Softmax** converts them into nonnegative class scores summing to one:
 
-The app combines 80% classifier scores with 20% neighbor class votes, selects the winning class and returns its centroid. Thus this option still has only 300 center outputs. Fine mode instead uses two encoders, k = 1 and a reference coordinate.
+`p(j) = exp(logit(j)) / sum(exp(all logits))`
 
-**Do not confuse K-means and KNN:** K-means builds geographic classes offline. KNN searches visual training descriptors at inference. The 300 classes and the five neighbors count different things.
+Here exp is the exponential function, and j identifies a class. **Argmax** selects the index with the largest score. If cell 196 wins, the app returns the saved center of cell 196. It does not calculate a new GPS pair from the image.
 
-**Checkpoint:** State which regional options return a center and which returns a reference GPS coordinate.
+## What the score and box mean
+The largest softmax score indicates how strongly the classifier favors one class relative to its other classes. A high score is not automatically a well-calibrated probability of being correct. **Calibration** means checking whether scores agree with observed correctness over suitable labeled examples. Regional scores are not calibrated.
+
+A cell's displayed bounding rectangle is a geographic extent derived from its associated positions. It is not a confidence interval, and it does not guarantee that the query is inside. A confidence interval would need a separately justified uncertainty procedure.
+
+All photos assigned the same winning cell receive that same center coordinate. This is why the cell options have a geographic resolution limit even when they choose the right general area.
+
+**Checkpoint:** The classifier learns a decision rule from image features. At inference it chooses a cell using learned weights; it does not need to look up a particular training photograph.
 
 <!-- PAGE -->
-# 9. How the learned model is trained
+
+# 9. What enabling KNN actually does
+
+## Start with the same ResNet features
+Select **Regional cells - ResNet + KNN** to use five-neighbor class voting. The classifier still runs. KNN adds evidence from stored training examples; it does not replace ResNet or run a second neural classifier.
+
+A **query** is the uploaded image. A **reference** is a training image with a known cell label. A **bank** is the saved collection of reference descriptors and labels. The class-voting bank contains the 15,939 training entries. No validation or test image IDs are included.
+
+## The complete five-step procedure
+1. Extract the query's 2,048-dimensional ResNet descriptor. A descriptor is a learned numerical description of appearance.
+2. L2-normalize query and reference descriptors to unit length, then compute cosine similarities. This compares vector direction rather than raw length.
+3. Select the five references with highest similarity. The number k = 5 counts reference photographs, not classes. Several references can share the same class label.
+4. Convert the five similarities into normalized weights and add their weights by geographic class. The implementation uses softmax(similarity / 0.07). The constant 0.07 controls how strongly the higher-similarity neighbors dominate. It is a score-sharpening setting, not fitted confidence calibration.
+5. Blend the neighbor votes with classifier scores, choose the largest blended score and return that class's center.
+
+The blend for each cell j is:
+
+`combined(j) = 0.8 * classifier(j) + 0.2 * neighbor_vote(j)`
+
+The classifier therefore contributes 80% of the score distribution and the neighbors 20%. This is not an 80% accuracy claim. A **vote distribution** means the class totals formed from the five neighbor weights; those totals sum to one.
+
+## What changes when KNN is disabled?
+Select **Regional cells - classifier only**. The app selects the class from classifier scores alone. The ResNet input and learned classifier are the same; the neighbor vote no longer influences the decision. Both options still return one of 300 stored centers.
+
+Neither option changes model weights when a photo is uploaded. KNN uses stored examples at inference rather than fitting a new neural network on each query. It cannot tell whether a visually similar reference is geographically correct.
+
+**Checkpoint:** KNN changes the evidence used to choose a cell. It does not refine a cell center into a more precise point within that cell.
+
+<!-- PAGE -->
+
+# 10. KNN: a numerical example
+The numbers here are illustrative teaching values, not outputs from a particular project photograph.
+
+## Neighbor weights become class votes
+Suppose the five most similar references have these already-normalized weights. The weight depends on visual similarity, not on whether the place is truly correct.
+
+| Neighbor | Stored cell | Weight |
+|---|---|---|
+| 1 | B | 0.30 |
+| 2 | B | 0.25 |
+| 3 | A | 0.20 |
+| 4 | B | 0.15 |
+| 5 | C | 0.10 |
+
+The weights sum to one. Add weights belonging to the same cell: A receives 0.20; B receives 0.30 + 0.25 + 0.15 = 0.70; C receives 0.10. Five neighbors have produced votes for three classes.
+
+## Blend these votes with classifier scores
+For simplicity this example uses three classes. The real model has 300.
+
+| Cell | Classifier score | Neighbor vote | Combined score |
+|---|---|---|---|
+| A | 0.48 | 0.20 | 0.8 x 0.48 + 0.2 x 0.20 = 0.424 |
+| B | 0.45 | 0.70 | 0.8 x 0.45 + 0.2 x 0.70 = 0.500 |
+| C | 0.07 | 0.10 | 0.8 x 0.07 + 0.2 x 0.10 = 0.076 |
+
+**KNN disabled:** A wins with classifier score 0.48. The coordinate is A's center.
+
+**KNN enabled:** B wins with combined score 0.500. The coordinate becomes B's center. The result did not move toward a weighted average of the five reference GPS positions; a different cell won.
+
+## Why KNN does not always change the answer
+If the classifier strongly prefers A, a 20% neighbor contribution may be too small to reverse the ranking. If both sources already favor A, the cell can stay unchanged while its score changes. An unchanged marker does not mean the toggle is broken.
+
+KNN can also make the answer worse: several visually similar but distant references may vote for the wrong cell. Similar appearance is useful evidence, not proof of geographic identity. The displayed blended score is still uncalibrated.
+
+**Checkpoint:** Explain what is being averaged: class-score distributions, not the coordinates themselves and not the neural-network weights.
+
+<!-- PAGE -->
+
+# 11. How the learned model is trained
 
 ## Supervised learning and loss
 **Supervised learning** uses examples with known answers. For geographic classification, a training photo's GPS position determines its target cell label. The network receives image pixels; GPS is used to define the answer during training, not to give away a query's location at inference.
@@ -218,7 +301,8 @@ The fine coordinate is selected from frozen descriptors, so changing the head al
 **Checkpoint:** Training changes parameters. Clicking Locate only runs inference and lookup; it does not teach the model a new place.
 
 <!-- PAGE -->
-# 10. Building and selecting the retrieval system
+
+# 12. Building and selecting the retrieval system
 
 ## Offline work versus a live prediction
 **Offline** here means preparation performed before serving a user query, not necessarily without internet. Build the bank by applying the frozen ResNet and DINO encoders to each training reference once. Save the combined descriptors, coordinates and IDs. A **cache** is saved work reused later instead of recomputing it.
@@ -240,56 +324,7 @@ A **checkpoint** is a saved model state. A **SHA-256 fingerprint** is a file-con
 **Checkpoint:** What needs rebuilding after an encoder's weights or preprocessing changes? The reference descriptors, and the validation/evaluation needed to justify the new system.
 
 <!-- PAGE -->
-# 11. World mode is a separate classifier
 
-## The global prediction path
-World mode loads a different ResNet checkpoint and its global cell definitions. It processes the image, calculates 300 class logits, scales their scores, selects a class and returns that class's centroid. It does not use the regional DINO encoder or the regional nearest-photo bank.
-
-A **global model** means its geographic class map spans the world; it does not mean every place has useful training coverage or that any input can be localized precisely. Each cell can cover a large area. World mode is a coarse classifier, not a world-scale version of our fine regional retrieval.
-
-| Property | Regional fine mode | World mode |
-|---|---|---|
-| Visual representation | ResNet plus DINOv2 | Separate ResNet classifier |
-| Output selection | Most similar training reference | Highest-scoring global cell |
-| Coordinate source | Reference GPS | Cell center |
-| Displayed score | Cosine similarity | Softmax / temperature-scaled class score |
-| Decision rule | Always returns best available match | ACCEPT or ABSTAIN at score threshold 0.5 |
-| Uncertainty set | Not fitted | Conformal set machinery if a quantile is loaded |
-
-## Temperature scaling
-**Calibration** asks whether scores reflect observed correctness over comparable examples. A model can rank classes well but be overconfident. **Temperature scaling** divides all logits by one positive number T before softmax. T greater than one usually makes the score distribution less concentrated.
-
-The installed World artifact supplies T approximately 3.9387. Dividing all logits by the same positive number preserves their ranking. It therefore does not correct the selected location or improve top-one distance by itself. It changes scores used by uncertainty and threshold rules.
-
-The installed artifact has no checkpoint fingerprint. The app correctly labels its match to the current checkpoint as unverified. A temperature value being loaded is not proof that it is a valid calibration for this exact deployed model. Do not attach a measured calibration or coverage guarantee to this live World instance without verifying that identity and the evaluation setup.
-
-**Checkpoint:** Temperature scaling can change confidence and ACCEPT/ABSTAIN behavior while leaving the predicted cell unchanged.
-
-<!-- PAGE -->
-# 12. Understanding World uncertainty outputs
-
-## ACCEPT and ABSTAIN
-The app compares the largest temperature-scaled class score with 0.5. **ACCEPT** means the score meets that threshold. **ABSTAIN** means it does not. These are workflow decisions, not externally verified facts. A wrong prediction can be accepted; a correct prediction can be rejected.
-
-The app still displays a best cell coordinate when it abstains. That coordinate means “highest-ranked candidate,” not “the system approved this location.” A score threshold is not a reliable foreign-image detector, and the regional mode has no equivalent ACCEPT/ABSTAIN threshold.
-
-## Conformal prediction
-A **prediction set** contains several candidate class labels rather than just one. **Conformal prediction** uses labeled calibration examples to choose a rule for forming such sets. For each calibration example, our score is 1 minus the model's probability for the true class. This is a **nonconformity score**: a larger value means the true label was less compatible with the model output.
-
-For n calibration examples and desired error fraction alpha, choose the kth smallest score, where k = ceil((n + 1) * (1 - alpha)). **Ceil** rounds upward. The chosen value q is a **quantile threshold**, meaning a cutoff derived from an ordered sample. If k exceeds n, the conservative cutoff is positive infinity. At inference, include classes for which 1 - p(class) is at most q.
-
-Example: q = 0.8 includes every class with p at least 0.2. A larger q usually includes more classes. These sets contain class labels, not a continuous GPS error circle.
-
-**Coverage** is the proportion of examples whose true class is inside the set. Under appropriate **exchangeability**, meaning calibration and future examples behave like interchangeable draws, split conformal can provide marginal coverage. **Marginal** means over the population, not for every individual image or town. Distribution shift can break that interpretation.
-
-The live artifact's checkpoint identity is unverified. Its loaded q is approximately 0.99891. Treat the resulting set as an artifact-driven output, not a proven current coverage guarantee. “90% target set coverage” would never mean 90% exact-coordinate accuracy.
-
-## ECE
-**Expected calibration error**, or ECE, groups predictions by confidence and compares average score with observed class accuracy in each group. Lower is better for that specific evaluation. It measures score reliability, not geographic distance, and is not currently a verified live World result.
-
-**Checkpoint:** A set containing many classes can have high coverage while being too broad to be useful for precise localization.
-
-<!-- PAGE -->
 # 13. Reading the actual regional result
 
 ## Distance error and thresholds
@@ -314,11 +349,12 @@ For each labeled query, calculate one error in kilometers. Then summarize the di
 ## Why zero within 1 km?
 Every official test position is more than 1 km from the original reference bank, and fine mode returns a reference coordinate. That creates a geometric ceiling: no possible top-one match from this bank can meet the 1-km threshold on this subset. The reference coverage must change, or the output method must estimate beyond reference coordinates, to overcome that ceiling.
 
-Random validation gives 71.1% within 5 km and 1.07-km median, but contains many near-training positions. Those numbers are not interchangeable with the official test. All reported values here concern regional fine mode, not World mode.
+Random validation gives 71.1% within 5 km and 1.07-km median, but contains many near-training positions. Those numbers are not interchangeable with the official test. These figures apply to regional fine retrieval, not the cell options.
 
 **Checkpoint:** Why can the median be 15.92 km while the mean is 61.21 km? A smaller number of very distant errors can strongly increase the mean.
 
 <!-- PAGE -->
+
 # 14. Failure, generalization and overfitting
 
 ## Four different reasons for a wrong location
@@ -341,30 +377,36 @@ A local map makes the result visible; it cannot make it correct. The Google Maps
 **Checkpoint:** Diagnose a northern match for a southern road photo as an observed retrieval error. Do not invent a reason such as “the model read this sign” without testing that claim.
 
 <!-- PAGE -->
-# 15. Reading and operating the frontend
 
-## What each control does
-**Frontend** means the user-facing interface. **Backend** means the Python logic handling model loading and prediction. **Gradio** connects the interface components to Python callbacks; a callback is a function triggered by a user action. **Plotly** draws the interactive geographic figure.
+# 15. Reading the Kerala frontend correctly
 
-Geographic scope chooses regional or World resources. The regional method control chooses fine retrieval, classifier-plus-KNN or classifier only. Upload accepts an image file; clipboard input can paste an available image. A browser-image drag may supply a URL rather than a file. If that source blocks access, save the image and upload the saved file.
+## The controls and their effects
+The **frontend** is the user-facing interface; the **backend** is the Python prediction logic. Gradio connects controls to Python callbacks. A callback is a function triggered by an action. Plotly draws the interactive map.
 
-Clicking a gallery thumbnail loads an example and its scope. It does not itself run the encoders. **Locate photo** runs inference. Changing the image, mode or method clears the previous result so an old coordinate is not presented as the new query's answer.
+Keep geographic scope on **Kerala area - regional model**. Use **Regional prediction method** for the three regional choices. To demonstrate the KNN toggle, compare **Regional cells - classifier only** against **Regional cells - ResNet + KNN**, using the same loaded photograph and clicking Locate after each change.
 
-## Understanding the displayed outputs
-In fine mode, the marker is the matched training reference coordinate. The separate retrieved-reference image, when locally available, is not the uploaded query. Its ID identifies the bank entry. In cell modes, the marker is a class centroid and the cell bounds may be drawn. Those bounds are geographic extents, not uncertainty intervals.
+Fine coordinates is a third, separate choice. It uses two encoders and top-one reference GPS lookup. Do not describe switching from classifier only to fine mode as merely enabling the five-neighbor KNN blend.
 
-The background map dots represent the 300 regional class centers, including in fine mode. They do not show all 15,939 retrieval references or every place the fine method can return. The current fine coordinate does not need to coincide with a background class-center dot.
+An upload supplies image pixels. A gallery click loads a selected image and its scope but does not itself run inference. **Locate photo** performs prediction. Changing an image or method clears the old result, so a stale answer is not shown as the new method's output.
 
-**Prediction details** contains method-specific information. In World mode, distinguish the best coordinate from the ACCEPT/ABSTAIN decision, the scaled score from the raw score, and set size from geographic precision. Fine mode has neither a conformal set nor an accept threshold.
+## Score labels and coordinates
+In fine mode, the output says **Retrieved location** and **Appearance similarity (cosine)**. The separate reference picture is a training photograph, not the uploaded query. Its saved GPS supplies the marker position. A score such as 0.812 is not an 81.2% probability of correctness.
 
-## What the examples demonstrate
-The gallery query photographs came from official test archives and were deliberately selected. **Curated** means chosen for demonstration, not sampled to estimate average accuracy. Loading a named thumbnail does not feed its place caption into the model. The callback loads the image; encoders receive processed pixels.
+In the cell options, the marker is a cell center. The class-plus-KNN details distinguish classifier scores from the selected blended score. Both are uncalibrated. A cell rectangle, if drawn, is a geographic extent and not a confidence interval.
 
-A known failure is included. In our current smoke check, the Southern Kerala example retrieves a northern reference near 12.45793, 75.09220. This should be explained as a limitation, not hidden or relabeled a successful regional prediction.
+The 300 small background map dots are class centers, including when fine mode is selected. They do not show all 15,939 reference entries. Fine retrieval can return a point that is not one of those background dots.
 
-**Checkpoint:** Fine mode can show 300 map dots while searching 15,939 references because the dots and retrieval bank are different data structures.
+## Examples, Maps and known error
+The gallery queries came from official test archives and were deliberately chosen. **Curated** means selected for demonstration, not sampled to estimate average performance. Captions help the presenter; they are not sent to the image encoder as the answer.
+
+**Open in Google Maps** displays the predicted coordinate outside the app. It does not search for the true place or correct the prediction. Without a known query coordinate, the app cannot measure a new upload's distance error.
+
+The Southern Kerala example is a known fine-mode failure: our checked run matches a northern reference near 12.45793, 75.09220. Show it as an error, not as evidence that any location within the regional map is acceptable.
+
+**Checkpoint:** For every result, identify which regional method ran, whether the coordinate is reference GPS or a center, and which kind of score is displayed.
 
 <!-- PAGE -->
+
 # 16. Running and understanding the implementation
 
 ## Start this laptop's app
@@ -391,105 +433,39 @@ A **virtual environment** keeps a project's Python packages separate. The app us
 | src/fine_inference.py | DINO loading, descriptor fusion and fine search |
 | src/retrieval.py | Five-neighbor regional class voting |
 | src/cells.py | Cell construction, assignment and metadata |
-| src/uncertainty.py | Temperature, ECE, conformal and threshold functions |
-| src/demo_config.py | Artifact selection and identity checks |
+| src/demo_config.py | Regional artifact selection and identity checks |
 
 Model weights and banks are **artifacts**, meaning saved resources required at runtime. They are downloaded from releases rather than stored as large Git files. In a separately prepared Python environment, `python scripts/download_fine_retrieval.py` installs the verified fine assets and matching regional model artifacts. It does not install Python packages or download the entire image dataset. Reference thumbnails require their corresponding image files.
 
 **Checkpoint:** Cloning source code alone is not enough to reproduce the installed demo: packages, weights, cell metadata and matching banks are also needed.
 
 <!-- PAGE -->
-# 17. Additional data and research boundaries
 
-## What the current bank actually uses
-The deployed bank uses the 15,939 OSV-5M training entries. New Panoramax photos are not in that bank. The data pipeline found 936 regional candidates and encoded 789 unique image byte sequences after exact deduplication. **Deduplication** removes repeated content; exact-byte deduplication does not detect all visually near-identical frames.
+# 17. Explain Kerala mode in your own words
 
-Images were downloaded in small batches, decoded in memory and converted to descriptors. The pipeline retained metadata, descriptors and limited review sheets rather than a full new image archive. **Metadata** means information about an image, such as author, source URL, license and coordinates.
+## The explanation to understand, not just memorize
+KPlaceNet estimates a photo's location from visual appearance. The app preprocesses the photo into a normalized 224 x 224 RGB input. ResNet transforms it into 2,048 learned features.
 
-Review found menus, indoor images and repeated road views. After outdoor review and spatial filtering, a 24-reference candidate expansion left validation unchanged and was not promoted. Acquiring data and using it to improve a deployed model are separate achievements.
+In classifier-only mode, a learned head selects one of 300 geographic cells and returns its center. Enabling the regional KNN option finds five visually similar training references, adds their weights by class and blends 20% neighbor votes with 80% classifier scores. The winner still supplies a cell center.
 
-For frozen encoders, saving descriptors avoids repeated extraction and saves storage. Full encoder training requires revisiting image pixels; repeatedly deleting and re-downloading every batch each epoch can be slower. A bounded cache or carefully shuffled shards is a more suitable tradeoff. A **shard** is a manageable subset of a larger dataset.
+Fine mode follows another path: it combines the normalized ResNet descriptor with a 384-dimensional DINOv2 descriptor, gives both equal similarity weight and retrieves one best training reference. Its coordinate is that reference's saved GPS. It is not an arbitrary new latitude-longitude prediction.
 
-## How this differs from the ETH/Google paper
-Scaling Image Geo-Localization to Continent Level combines learned ground-view prototypes with aerial embeddings and fine geographic S2 cell codes. A **prototype** is a learned representative vector. **Aerial imagery** views the ground from above. **Cross-view** learning relates ground and aerial views. **S2** is a hierarchical geographic cell system.
+Neither path verifies that the input belongs to Kerala. The collection rectangle includes neighboring territory; visually similar scenes can produce distant wrong answers. Scores are not calibrated correctness probabilities. Test results describe a labeled dataset, not the accuracy of whichever photograph is currently uploaded.
 
-Our fine pipeline uses two ground-image encoders and searches actual training photographs. It has no aerial encoder, fused ground-aerial cell database or geometric verification. It has not reproduced or surpassed ETH's accuracy. Their within-200-m result on a different region and dataset is not comparable to our within-25-km regional result. [ETH/Google project](https://scaling-geoloc.github.io/).
+## Questions and answers
+**Why can five neighbors produce fewer than five class votes?** Several references may share a cell, so their weights are added together.
 
-More reliable fine localization would need denser route coverage, reviewed coordinates, stronger route/date-separated evaluation and possibly local matching or licensed aligned aerial imagery. OCR, meaning optical character recognition, could extract text from signs, but it is not part of the current prediction path. Do not claim live web search, OCR or satellite fusion in the demo.
+**Does KNN move the marker inside a cell?** No. It can change the selected cell; the output remains that cell's saved center.
 
-**Checkpoint:** Explain what is implemented before discussing possible extensions. Data acquisition, prototype research and installed inference are different things.
+**Does disabling KNN retrain ResNet?** No. It removes the vote blend from that inference path. The learned weights remain fixed.
 
-<!-- PAGE -->
-# 18. Explain the complete project aloud
+**Is fine mode simply KNN enabled?** No. It combines two encoders and returns one reference GPS; the regional class-voting option uses five ResNet neighbors and returns a center.
 
-## A complete short explanation
-KPlaceNet estimates where one photograph was taken. Our main Kerala-area method converts the image to a consistent 224-pixel RGB input, then extracts a 2,048-dimensional ResNet descriptor and a 384-dimensional DINOv2 descriptor. We normalize each, combine them with equal similarity weight and find the most similar entry among 15,939 training references. The output is that reference photograph's saved coordinate, with a visual reference and a Google Maps link.
+**Why might the toggle leave the result unchanged?** Both sources can favor the same cell, or the classifier's lead may be too strong for 20% neighbor votes to overturn.
 
-The regional cell options use ResNet to select one of 300 geographic classes, optionally blending five-neighbor class votes. World mode uses a separate global ResNet classifier and adds temperature-scaled scores, a threshold decision and conformal-set machinery. Its installed calibration artifact is not checkpoint-verified, so its uncertainty output carries that limitation.
+**Is the reference photo allowed to be a training image?** Yes. The bank intentionally contains training references. A held-out query must be excluded; nearby scene overlap still needs evaluation controls.
 
-Our current regional fine result is 63.03% within 25 km and a 15.92-km median error on 357 reused official test photos. This is not exact-location accuracy. Sparse references, visually similar places, nearby-scene evaluation overlap and lack of outside-region rejection limit the system.
+**What does 63.03% within 25 km mean?** 225 of 357 official test photos have distance error at most 25 km in fine mode. It is not exact-street accuracy and does not describe the cell-plus-KNN method.
 
-## Check your understanding
-1. Why does a high similarity not prove a correct place?
-2. Which methods return a centroid, and which returns reference GPS?
-3. Why can a gallery example be a test photo while the displayed match is a training photo?
-4. Does the fine method use the classifier's winning class to adjust its coordinate?
-5. What changes when we select World instead of Kerala?
-6. Why is the validation median much smaller than the official test median?
-7. Can temperature scaling improve the winning global coordinate by itself?
-8. Is a conformal set of 200 classes evidence of precise localization?
-9. Why were the new Panoramax photos not added to deployment?
-10. What must be rebuilt if the encoders change?
-
-## Answers
-1. It measures learned appearance; different places can look alike.
-
-2. Cell options and World return centers; regional fine returns a reference coordinate.
-
-3. Query and bank are separate roles and disjoint ID sets.
-
-4. No: top-one combined-descriptor search supplies it.
-
-5. Separate checkpoint, cell map and prediction workflow are used; regional DINO retrieval is not used.
-
-6. Many validation places are near training references.
-
-7. No: positive-temperature scaling preserves ranking.
-
-8. No: broad class coverage and location precision differ.
-
-9. The reviewed expansion did not meet the validation improvement condition.
-
-10. Recompute matching reference descriptors and repeat the required validation/evaluation.
-
-<!-- PAGE -->
-# 19. Source map and essential vocabulary
-
-## Primary project evidence
-Use the repository paths below to trace the current behavior. The guide explains it; these files are the reproducible implementation and records.
-
-[Fine inference](https://github.com/Prajwal-k-tech/KPlaceNet/blob/main/src/fine_inference.py) and [frontend](https://github.com/Prajwal-k-tech/KPlaceNet/blob/main/demo/app.py).
-[Regional fine deployment verification](https://github.com/Prajwal-k-tech/KPlaceNet/blob/main/docs/results/fine_deployment_20261021/verification.json).
-[Method selection](https://github.com/Prajwal-k-tech/KPlaceNet/blob/main/docs/results/l10_precision_20261021/selection_before_test.json).
-[Uncertainty implementation](https://github.com/Prajwal-k-tech/KPlaceNet/blob/main/src/uncertainty.py) and [calibration identity checks](https://github.com/Prajwal-k-tech/KPlaceNet/blob/main/src/demo_config.py).
-[Official DINOv2](https://github.com/facebookresearch/dinov2), [Torchvision ResNet-50](https://docs.pytorch.org/vision/stable/models/generated/torchvision.models.resnet50.html), and [ETH/Google project](https://scaling-geoloc.github.io/).
-
-## Vocabulary you should be able to explain
-| Term | Meaning in this project |
-|---|---|
-| Training | Changing selected weights using labeled examples and a loss |
-| Inference | Applying fixed models and lookup rules to an input |
-| Descriptor / embedding | Learned numerical representation of image appearance |
-| Retrieval | Selecting a stored reference by similarity |
-| Classification | Selecting a discrete geographic class |
-| Regression | Directly estimating numerical values; not our fine-output method |
-| Centroid | Representative center coordinate of a class |
-| Query / reference | Unknown-location input / known-location bank example |
-| Calibration | Checking or adjusting score reliability on suitable labeled data |
-| Abstention | Withholding an accepted decision under a specified rule |
-| Coverage | Depending on context: geographic reference availability, or prediction-set inclusion rate; always state which |
-| Generalization | Performance on genuinely new examples and conditions |
-| Domain shift | A change in the kind of inputs compared with development data |
-| Checkpoint / bank | Saved model parameters / saved reference descriptors and metadata |
-
-You understand the project when you can trace a query to its coordinate, identify which information supplies that coordinate, and explain what the displayed score does and does not establish.
+## Where the explanation comes from
+[Frontend and method dispatch](https://github.com/Prajwal-k-tech/KPlaceNet/blob/main/demo/app.py), [five-neighbor class voting](https://github.com/Prajwal-k-tech/KPlaceNet/blob/main/src/retrieval.py), [fine retrieval](https://github.com/Prajwal-k-tech/KPlaceNet/blob/main/src/fine_inference.py), [image preprocessing](https://github.com/Prajwal-k-tech/KPlaceNet/blob/main/src/dataset.py), [ResNet model](https://github.com/Prajwal-k-tech/KPlaceNet/blob/main/src/model.py), and [current fine evaluation](https://github.com/Prajwal-k-tech/KPlaceNet/blob/main/docs/results/fine_deployment_20261021/verification.json).

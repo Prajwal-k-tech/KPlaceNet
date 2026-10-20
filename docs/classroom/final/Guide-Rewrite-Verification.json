@@ -1,20 +1,21 @@
 {
   "date": "2026-10-21",
-  "scope": "Full rewrite of the two guides only",
+  "scope": "Kerala-only rewrite of study and demo guides; PDF paths unchanged",
   "guides": {
     "Study-Guide": {
-      "pages": 19,
-      "words": 6912,
-      "sha256": "2891e6690e898324b85756a045e0faa43b92a4262e92bc2c47bc2982eddca94e"
+      "pages": 17,
+      "sha256": "79679dc626d00dc2808146539186b7b60718e8992e6ced8e2ea971d426b23d4b",
+      "scope": "Kerala only; current method selector and KNN enabled/disabled explained"
     },
     "Demo-Playbook": {
-      "pages": 6,
-      "words": 2077,
-      "sha256": "52471fc106deeb3ac3d58e5b8e2de6da34f3aec995f795e0fd86ea3aa81a980c"
+      "pages": 5,
+      "sha256": "d43775699af30566cdddca472bb78e434c0eb567f39b1bfe0c9ec4c243408a57",
+      "scope": "Kerala only; current method selector and KNN enabled/disabled explained"
     }
   },
-  "visual_review": "All25 PDF pages rendered and inspected; revised pages re-rendered; no clipping or overflow observed",
-  "content_review": "Checked against demo/app.py, model, dataset, retrieval, fine_inference, uncertainty, installed calibration and frozen deployment results",
-  "mode_distinction": "Kerala fine top1 ResNet+DINO reference GPS; regional cell alternatives; separate World classifier and unverified calibration artifact",
-  "history": "No historical chapters or L5/L7 sections retained"
+  "visual_review": "All22 pages rendered and visually checked; numerical-example table revised and re-rendered",
+  "content_review": "Checked current method radio labels and the actual k=5,temperature=.07,80/20 class-vote blend against demo/app.py and src/retrieval.py",
+  "mode_distinction": "Regional fine top1 ResNet+DINO reference GPS versus classifier-only or classifier+KNN geographic class centroid",
+  "world_content_removed": true,
+  "experimental_prototypes_deployed": false
 }

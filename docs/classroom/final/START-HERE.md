@@ -1,9 +1,9 @@
 # Current preparation:21 October fine retrieval
-The Study Guide and Demo Playbook have been fully rewritten around the current system, with no historical chapters or update appendices. Read Study-Guide.pdf first; Fine-Retrieval-Update.pdf is an optional short overview. The default live Kerala method is now L10, combining ResNet and DINOv2 and retrieving actual training-photo coordinates. L7 remains available as a comparison.
+The Study Guide and Demo Playbook teach only the current Kerala-area system, including the five-neighbor KNN option and its classifier-only comparison. They contain no World-mode chapters. Read Study-Guide.pdf first; Fine-Retrieval-Update.pdf is an optional short overview. The default live Kerala method is now L10, combining ResNet and DINOv2 and retrieving actual training-photo coordinates. L7 remains available as a comparison.
 
 1. Last-Minute-Cheat-Sheet.pdf: one-page revision.
-2. Study-Guide.pdf:19-page learning course covering the current architecture, terms, methods, training, data, Kerala/World differences, uncertainty and evaluation.
-3. Demo-Playbook.pdf:6-page current demo guide with setup commands, a timed Kerala walkthrough, optional World section, viva answers and recovery.
+2. Study-Guide.pdf:17-page Kerala learning course with clear definitions, image preprocessing, ResNet/DINO features, fine retrieval, classifier cells, KNN voting, a numerical80/20 example, training and evaluation.
+3. Demo-Playbook.pdf:5-page Kerala-only demo guide with startup commands, a timed walkthrough, KNN enabled/disabled comparison, viva answers and recovery.
 4. Project-Report.pdf: current update plus original13-section report. Fill group/title-page details before submission.
 5. Experiment-and-Data-Notes.pdf: measured comparisons, dataset acquisition, rejected experiment and ETH differences.
 

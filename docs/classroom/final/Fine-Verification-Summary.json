@@ -25,8 +25,8 @@
   },
   "maps_url": "https://www.google.com/maps/search/?api=1&query=9.67611027%2C76.42105103",
   "pdf_pages": {
-    "Study-Guide": 19,
-    "Demo-Playbook": 6,
+    "Study-Guide": 17,
+    "Demo-Playbook": 5,
     "Project-Report": 19,
     "Last-Minute-Cheat-Sheet": 1,
     "Experiment-and-Data-Notes": 4,
@@ -43,7 +43,7 @@
   "assets_installer": "Completed against published release; hashes verified",
   "new_panoramax_data_deployed": false,
   "original_main_synced": false,
-  "guides": "Fully rewritten current-system teaching and demo guides; no historical appendices",
+  "guides": "Kerala only: fine retrieval, classifier-only and five-neighbor class voting; World content removed",
   "eth_ground_prototype_experiment": {
     "deployed": false,
     "reason": "Within5km regression exceeds.5pp guard",
