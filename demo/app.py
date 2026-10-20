@@ -476,16 +476,12 @@ html body .gradio-container {width: calc(100% - 96px) !important; max-width: non
 .result-note {color: #626A70; font-size: 14px; margin: 12px 0 0;}
 #run-button {background: #172C42; color: #F5F1E8; border: 0; border-bottom: 3px solid #D5663F; min-height: 52px; font-size: 18px; font-weight: 600;}
 #run-button:hover {background: #243F59;}
-#metrics {padding: 8px 16px; border-left: 3px solid #D5663F; background: #EEE7DA; margin: 10px 0;}
-#metrics p {color: #515D66; font-size: 15px;}
 .demo-gallery {background: transparent !important; height: auto !important;}
 .demo-gallery .grid-wrap {height: auto !important;}
 .demo-gallery .grid-container {grid-template-columns: repeat(5, minmax(0, 1fr)) !important; grid-auto-rows: 160px !important;}
 .demo-gallery .gallery-item, .demo-gallery .thumbnail-item {min-width: 0 !important; height: 160px !important;}
 .demo-gallery .caption-label {display: block !important; opacity: 1 !important; position: absolute !important; bottom: 0 !important; left: 0 !important; right: 0 !important; color: #172C42 !important; background: rgba(250,247,240,.97) !important; padding: 7px 8px !important; font-size: 14px !important; line-height: 1.3 !important; white-space: normal !important;}
 #workspace {gap: 24px;}
-#method-note {padding: 4px 8px; font-size: 15px; color: #626A70;}
-#method-note p {font-size: 15px;}
 #workspace h3, #examples-heading h3 {font-size: 21px;}
 #location-map {background: #E7EAE2; border: 1px solid #D8D0C4; border-radius: 8px; overflow: hidden;}
 #example-tabs button {font-size: 16px;}
@@ -607,25 +603,22 @@ def build_ui():
             with gr.Column(scale=3, min_width=260, elem_id="summary-panel"):
                 gr.Markdown("### Prediction")
                 result_out = gr.HTML(_result_html(), elem_id="result")
-                gr.Markdown("**How it works**\n\nResNet-50 extracts visual features. A classifier selects one of 300 geographic cells; the map marks its center.", elem_id="method-note")
-        gr.Markdown("**Kerala benchmark** · 42 km median error · 41% within 25 km · 357 held-out test photos. "
-                    "These are dataset results, not the accuracy of the uploaded photo.", elem_id="metrics")
         gr.Markdown("### Demo photographs", elem_id="examples-heading")
         gr.Markdown("Choose a photograph, then select **Locate photo**. "
-                    "These are curated examples, including a failure case; they do not represent average performance.")
+                    "Selected test-set photos; these examples do not represent average performance.")
         groups = [
             ("Kerala examples", MODE_KERALA, ROOT / "data/kerala_osv5m/test/images", [
-                ("319636679783973.jpg", "Idukki · curated hit"),
-                ("1083931132408866.jpg", "Kottayam · curated hit"),
-                ("313393843511505.jpg", "Kochi · curated hit"),
-                ("288990592896618.jpg", "Thiruvananthapuram · curated hit"),
-                ("905069160348732.jpg", "Far south · failure case")]),
+                ("319636679783973.jpg", "Idukki"),
+                ("1083931132408866.jpg", "Kottayam"),
+                ("313393843511505.jpg", "Kochi"),
+                ("288990592896618.jpg", "Thiruvananthapuram"),
+                ("905069160348732.jpg", "Southern Kerala")]),
             ("Global examples", MODE_GLOBAL, ROOT / "data/osv5m_test/images", [
-                ("3002826110043032.jpg", "Rajasthan · curated hit"),
-                ("271239751462351.jpg", "Rajasthan · curated hit"),
-                ("905946183585986.jpg", "United Kingdom · curated hit"),
-                ("1472138156457085.jpg", "Ecuador · curated hit"),
-                ("758042071550066.jpg", "Kerala · global failure case")]),
+                ("3002826110043032.jpg", "Rajasthan"),
+                ("271239751462351.jpg", "Rajasthan"),
+                ("905946183585986.jpg", "United Kingdom"),
+                ("1472138156457085.jpg", "Ecuador"),
+                ("758042071550066.jpg", "Kerala")]),
         ]
         example_label = gr.Textbox(label="Selected demonstration", interactive=False, visible=False)
         with gr.Tabs(elem_id="example-tabs"):
@@ -648,7 +641,7 @@ def build_ui():
                         select_example.__annotations__["evt"] = gr.SelectData
                         gallery.select(select_example, outputs=[img_in, mode_in, example_label],
                                        show_progress="hidden")
-        with gr.Accordion("Research details · confidence, calibration & cell bounds", open=False):
+        with gr.Accordion("Prediction details", open=False):
             info_out = gr.Markdown("Run a prediction to inspect calibration and cell bounds.")
             gr.Markdown("Kerala uses raw softmax scores without calibration or an abstention threshold. "
                         "Global mode uses temperature scaling and conformal prediction. "
