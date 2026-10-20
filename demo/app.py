@@ -249,7 +249,7 @@ def render_kerala_map(lat: float, lon: float, cell):
         lon=[74.99, 75.37, 75.78, 76.21, 76.27, 76.52, 76.61, 76.94],
         text=["Kasaragod", "Kannur", "Kozhikode", "Thrissur", "Kochi", "Kottayam", "Kollam", "Thiruvananthapuram"],
         mode="markers+text", textposition="middle right",
-        textfont={"size": 11, "color": "#334b60"},
+        textfont={"size": 13, "color": "#334b60"},
         marker={"size": 4, "color": "#657b8e"},
         showlegend=False, hoverinfo="skip",
     ))
@@ -279,9 +279,14 @@ def _style_map(fig, kerala=False):
     """Consistent, spacious map styling for projection on a classroom screen."""
     fig.update_geos(
         resolution=50, landcolor="#E9E1D1", oceancolor="#E7EAE2",
-        lakecolor="#E7EAE2", showlakes=True, bgcolor="#F5F1E8",
+        lakecolor="#E7EAE2", showlakes=True, bgcolor="#E7EAE2",
         coastlinecolor="#A4A18E", countrycolor="#BCB6A6", showframe=False,
     )
+    if kerala:
+        fig.update_geos(
+            lataxis={"range": [7.2, 13.8], "showgrid": True, "dtick": 2, "gridcolor": "#D3D8CF", "gridwidth": 0.5},
+            lonaxis={"range": [69.5, 84.5], "showgrid": True, "dtick": 2, "gridcolor": "#D3D8CF", "gridwidth": 0.5},
+        )
     for trace in fig.data:
         if trace.name and ("cells" in trace.name or "regions" in trace.name):
             trace.marker.update(size=4, color="rgba(23,44,66,0.38)")
@@ -296,12 +301,12 @@ def _style_map(fig, kerala=False):
             trace.name = "Predicted location"
             trace.hovertemplate = "%{lat:.4f}° N, %{lon:.4f}° E<extra>Prediction</extra>"
     fig.update_layout(
-        height=380, autosize=True, title=None,
-        paper_bgcolor="#F5F1E8", plot_bgcolor="#F5F1E8",
+        height=410, autosize=True, title=None,
+        paper_bgcolor="#E7EAE2", plot_bgcolor="#E7EAE2",
         font={"family": "Arial, sans-serif", "color": "#172C42", "size": 12},
-        margin={"l": 8, "r": 8, "t": 12, "b": 58},
+        margin={"l": 0, "r": 0, "t": 18, "b": 44},
         legend={"orientation": "h", "x": 0.5, "xanchor": "center",
-                "y": -0.04, "yanchor": "top", "font": {"size": 11}},
+                "y": -0.04, "yanchor": "top", "font": {"size": 13}},
     )
     return fig
 
@@ -456,31 +461,39 @@ def build_predict_fn():
 
 DEMO_CSS = """
 html, body {background: #F5F1E8 !important; color-scheme: light;}
-html body .gradio-container {width: calc(100% - 64px) !important; max-width: 1480px !important; margin: 0 auto !important; padding: 24px 0 !important; background: #F5F1E8; color: #172C42;}
+html body .gradio-container {width: calc(100% - 96px) !important; max-width: none !important; margin: 0 auto !important; padding: 24px 0 !important; font-size: 16px; background: #F5F1E8; color: #172C42;}
 .gradio-container .main {padding: 0 !important;}
 [data-testid="block-info"] {color: #172C42 !important;}
-#hero {background: transparent; padding: 8px 0 22px; border-radius: 0; border-bottom: 1px solid #D8D0C4; margin-bottom: 22px;}
-#hero h1 {font-family: Arial, Helvetica, sans-serif; color: #172C42; font-size: 34px; font-weight: 750; letter-spacing: -1px; margin: 0 0 5px;}
-#hero p {color: #626A70; font-size: 14px; margin: 0; max-width: 850px;}
+#hero {display: flex; align-items: baseline; gap: 28px; background: transparent; padding: 0 0 16px; border-radius: 0; border-bottom: 1px solid #D8D0C4; margin-bottom: 8px;}
+#hero h1 {white-space: nowrap; font-family: Arial, Helvetica, sans-serif; color: #172C42; font-size: 34px; font-weight: 750; letter-spacing: -1px; margin: 0 0 5px;}
+#hero p {color: #626A70; font-size: 17px; margin: 0; max-width: 1000px;}
 .eyebrow {color: #B84F2D; letter-spacing: 1.5px; font-size: 11px; font-weight: 700;}
-#result {background: #FAF7F0; border: 1px solid #D8D0C4; border-radius: 10px; padding: 18px 22px; min-height: 130px;}
-#result h2 {font-family: Arial, Helvetica, sans-serif; font-size: 28px; font-weight: 700; color: #172C42; margin: 6px 0 12px;}
-.result-grid {display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; font-variant-numeric: tabular-nums;}
+#result {background: #FAF7F0; border: 1px solid #D8D0C4; border-radius: 10px; padding: 18px 22px; min-height: 140px;}
+#result h2 {font-family: Arial, Helvetica, sans-serif; font-size: 25px; font-weight: 700; color: #172C42; margin: 6px 0 12px;}
+.result-grid {display: grid; grid-template-columns: 1fr; gap: 16px; font-variant-numeric: tabular-nums;}
 .result-grid span {display: block; color: #626A70; font-size: 12px; margin-bottom: 5px;}
 .result-grid strong {font-size: 22px; color: #172C42;}
-.result-note {color: #626A70; font-size: 12px; margin: 12px 0 0;}
-#run-button {background: #172C42; color: #F5F1E8; border: 0; border-bottom: 3px solid #D5663F; min-height: 44px; font-weight: 600;}
+.result-note {color: #626A70; font-size: 14px; margin: 12px 0 0;}
+#run-button {background: #172C42; color: #F5F1E8; border: 0; border-bottom: 3px solid #D5663F; min-height: 52px; font-size: 18px; font-weight: 600;}
 #run-button:hover {background: #243F59;}
 #metrics {padding: 8px 16px; border-left: 3px solid #D5663F; background: #EEE7DA; margin: 10px 0;}
-#metrics p {color: #515D66; font-size: 13px;}
+#metrics p {color: #515D66; font-size: 15px;}
 .demo-gallery {background: transparent !important; height: auto !important;}
 .demo-gallery .grid-wrap {height: auto !important;}
-.demo-gallery .grid-container {grid-template-columns: repeat(5, minmax(0, 1fr)) !important; grid-auto-rows: 155px !important;}
-.demo-gallery .gallery-item, .demo-gallery .thumbnail-item {min-width: 0 !important; height: 155px !important;}
-.demo-gallery .caption-label {display: block !important; opacity: 1 !important; position: absolute !important; bottom: 0 !important; left: 0 !important; right: 0 !important; color: #172C42 !important; background: rgba(250,247,240,.97) !important; padding: 7px 8px !important; font-size: 11px !important; line-height: 1.3 !important; white-space: normal !important;}
+.demo-gallery .grid-container {grid-template-columns: repeat(5, minmax(0, 1fr)) !important; grid-auto-rows: 160px !important;}
+.demo-gallery .gallery-item, .demo-gallery .thumbnail-item {min-width: 0 !important; height: 160px !important;}
+.demo-gallery .caption-label {display: block !important; opacity: 1 !important; position: absolute !important; bottom: 0 !important; left: 0 !important; right: 0 !important; color: #172C42 !important; background: rgba(250,247,240,.97) !important; padding: 7px 8px !important; font-size: 14px !important; line-height: 1.3 !important; white-space: normal !important;}
+#workspace {gap: 24px;}
+#method-note {padding: 4px 8px; font-size: 15px; color: #626A70;}
+#method-note p {font-size: 15px;}
+#workspace h3, #examples-heading h3 {font-size: 21px;}
+#location-map {background: #E7EAE2; border: 1px solid #D8D0C4; border-radius: 8px; overflow: hidden;}
+#example-tabs button {font-size: 16px;}
+footer {display: none !important;}
 button:focus-visible {outline: 3px solid #D5663F !important; outline-offset: 3px;}
+@media(min-width: 1100px) {#workspace {flex-wrap: nowrap !important;} #workspace > div {min-width: 0 !important;}}
 @media(max-width: 1050px) {.demo-gallery .grid-container {grid-template-columns: repeat(3, minmax(0, 1fr)) !important;}}
-@media(max-width: 760px) {html body .gradio-container.gradio-container {width: calc(100% - 28px) !important; padding: 14px 0 !important;} #hero {padding: 18px;} #hero h1 {font-size: 26px;} .result-grid {grid-template-columns: 1fr 1fr; gap: 14px;} .result-grid strong {font-size: 19px;} .demo-gallery .grid-container {grid-template-columns: repeat(2, minmax(0, 1fr)) !important;} }
+@media(max-width: 760px) {html body .gradio-container.gradio-container {width: calc(100% - 28px) !important; padding: 14px 0 !important;} #hero {display: block; padding: 18px;} #hero h1 {font-size: 26px;} .result-grid {grid-template-columns: 1fr 1fr; gap: 14px;} .result-grid strong {font-size: 19px;} .demo-gallery .grid-container {grid-template-columns: repeat(2, minmax(0, 1fr)) !important;} }
 """
 
 
@@ -526,7 +539,7 @@ def _empty_map(mode):
         fig.add_trace(go.Scattergeo(
             lat=[11.26, 9.93, 9.59, 8.52], lon=[75.78, 76.27, 76.52, 76.94],
             text=["Kozhikode", "Kochi", "Kottayam", "Thiruvananthapuram"],
-            mode="text", textposition="middle right", textfont={"size": 11},
+            mode="text", textposition="middle right", textfont={"size": 13},
             showlegend=False, hoverinfo="skip",
         ))
     fig.add_annotation(text="Model regions · select a photo to predict", x=0.5, y=1,
@@ -578,24 +591,27 @@ def build_ui():
     with gr.Blocks(title="KPlaceNet | Visual geolocation", fill_width=True, **style) as demo:
         gr.HTML('<h1>KPlaceNet</h1>'
                 '<p>Photo geolocation · Choose a street scene, predict a region, and inspect the model confidence.</p>', elem_id="hero")
-        with gr.Row(equal_height=False):
-            with gr.Column(scale=4, min_width=300):
+        with gr.Row(equal_height=False, elem_id="workspace"):
+            with gr.Column(scale=4, min_width=300, elem_id="photo-panel"):
                 gr.Markdown("### Photograph and model")
                 mode_in = gr.Radio(choices=[(MODE_LABELS[MODE_KERALA], MODE_KERALA),
                                             (MODE_LABELS[MODE_GLOBAL], MODE_GLOBAL)],
                                    value=MODE_KERALA, label="Geographic scope")
-                img_in = gr.Image(type="pil", label="Street scene", height=260,
+                img_in = gr.Image(type="pil", label="Street scene", height=250,
                                   sources=["upload", "clipboard"])
                 run = gr.Button("Locate photo →", variant="primary", elem_id="run-button")
-                gr.Markdown("The model predicts one of 300 geographic cells. Its marker shows the cell's center, so estimates are regional.")
-            with gr.Column(scale=7, min_width=380):
+                gr.Markdown("One of 300 geographic cells. The marker shows a cell center, so predictions are regional.")
+            with gr.Column(scale=6, min_width=300, elem_id="map-panel"):
                 gr.Markdown("### Predicted region")
-                map_out = gr.Plot(value=_empty_map(MODE_KERALA), label="Location map", show_label=False)
+                map_out = gr.Plot(value=_empty_map(MODE_KERALA), label="Location map", show_label=False, elem_id="location-map")
+            with gr.Column(scale=3, min_width=260, elem_id="summary-panel"):
+                gr.Markdown("### Prediction")
                 result_out = gr.HTML(_result_html(), elem_id="result")
+                gr.Markdown("**How it works**\n\nResNet-50 extracts visual features. A classifier selects one of 300 geographic cells; the map marks its center.", elem_id="method-note")
         gr.Markdown("**Kerala benchmark** · 42 km median error · 41% within 25 km · 357 held-out test photos. "
                     "These are dataset results, not the accuracy of the uploaded photo.", elem_id="metrics")
-        gr.Markdown("### Try a demo photograph")
-        gr.Markdown("Examples select their matching model. Select **Locate photo** to reveal the prediction. "
+        gr.Markdown("### Demo photographs", elem_id="examples-heading")
+        gr.Markdown("Choose a photograph, then select **Locate photo**. "
                     "These are curated examples, including a failure case; they do not represent average performance.")
         groups = [
             ("Kerala examples", MODE_KERALA, ROOT / "data/kerala_osv5m/test/images", [
@@ -611,25 +627,27 @@ def build_ui():
                 ("1472138156457085.jpg", "Ecuador · curated hit"),
                 ("758042071550066.jpg", "Kerala · global failure case")]),
         ]
-        example_label = gr.Textbox(label="Selected demonstration", interactive=False)
-        for label, mode, folder, photos in groups:
-            examples = [[str(folder / filename), mode, caption]
-                        for filename, caption in photos if (folder / filename).exists()]
-            if examples:
-                gallery = gr.Gallery(
-                    value=[(row[0], row[2]) for row in examples], label=label,
-                    columns=5, rows=1, height=175, object_fit="cover", buttons=[],
-                    allow_preview=False, interactive=False, elem_classes=["demo-gallery"],
-                )
+        example_label = gr.Textbox(label="Selected demonstration", interactive=False, visible=False)
+        with gr.Tabs(elem_id="example-tabs"):
+            for label, mode, folder, photos in groups:
+                with gr.Tab(label):
+                    examples = [[str(folder / filename), mode, caption]
+                                for filename, caption in photos if (folder / filename).exists()]
+                    if examples:
+                        gallery = gr.Gallery(
+                            value=[(row[0], row[2]) for row in examples], label=label,
+                            columns=5, rows=1, height=175, object_fit="cover", buttons=[],
+                            allow_preview=False, interactive=False, elem_classes=["demo-gallery"],
+                        )
 
-                def select_example(evt: gr.SelectData, items=examples):
-                    path, selected_mode, caption = items[evt.index]
-                    from PIL import Image
-                    return Image.open(path).convert("RGB"), selected_mode, caption
+                        def select_example(evt: gr.SelectData, items=examples):
+                            path, selected_mode, caption = items[evt.index]
+                            from PIL import Image
+                            return Image.open(path).convert("RGB"), selected_mode, caption
 
-                select_example.__annotations__["evt"] = gr.SelectData
-                gallery.select(select_example, outputs=[img_in, mode_in, example_label],
-                               show_progress="hidden")
+                        select_example.__annotations__["evt"] = gr.SelectData
+                        gallery.select(select_example, outputs=[img_in, mode_in, example_label],
+                                       show_progress="hidden")
         with gr.Accordion("Research details · confidence, calibration & cell bounds", open=False):
             info_out = gr.Markdown("Run a prediction to inspect calibration and cell bounds.")
             gr.Markdown("Kerala uses raw softmax scores without calibration or an abstention threshold. "
