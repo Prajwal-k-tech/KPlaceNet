@@ -11,3 +11,7 @@ pandas
 matplotlib
 Pillow
 tqdm
+
+# Interactive demos
+plotly
+gradio

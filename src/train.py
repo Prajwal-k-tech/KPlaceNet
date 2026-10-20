@@ -10,7 +10,9 @@ No heavy logic beyond stubs; uses src.dataset + src.model + src.cells.
 from __future__ import annotations
 
 import argparse
+import importlib.metadata
 import json
+import platform
 import time
 from pathlib import Path
 import sys
@@ -22,15 +24,17 @@ from tqdm import tqdm
 
 # Allow `python -m src.train` and `python src/train.py`
 try:
-    from src.dataset import GeoDataset, get_transforms
+    from src.dataset import GeoDataset, get_stratified_sampler
     from src.model import build_model, load_places365_checkpoint
     from src.cells import build_cells, assign_cells, save_cells_json, load_cells_json
+    from src.reproducibility import sha256_file, stable_sample_ids, training_run_manifest
 except ImportError:
     # Fallback when running as script without package context
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-    from src.dataset import GeoDataset, get_transforms
+    from src.dataset import GeoDataset, get_stratified_sampler
     from src.model import build_model, load_places365_checkpoint
     from src.cells import build_cells, assign_cells, save_cells_json, load_cells_json
+    from src.reproducibility import sha256_file, stable_sample_ids, training_run_manifest
 
 
 def parse_args() -> argparse.Namespace:
@@ -51,6 +55,10 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--num-workers", type=int, default=0, help="DataLoader workers (0 for Windows safety)")
     p.add_argument("--checkpoint-dir", type=str, default="checkpoints", help="Where to save checkpoints")
     p.add_argument("--seed", type=int, default=42, help="RNG seed")
+    p.add_argument("--sampling-mode", choices=["uniform", "cell-balanced"], default="uniform",
+                   help="Training example sampling; uniform preserves the L1/L2 baseline")
+    p.add_argument("--sampling-power", type=float, default=1.0,
+                   help="Inverse-cell-frequency exponent for cell-balanced sampling (0..1)")
     p.add_argument("--device", type=str, default="auto", help="auto|cuda|cpu")
     # L2 additions
     p.add_argument("--cells-json", type=str, default=None,
@@ -223,6 +231,60 @@ def main() -> None:
     train_args = dict(vars(args))
     train_args["num_cells"] = num_classes
 
+    # Persist exact training-data membership and experiment inputs next to the
+    # checkpoint. This binds later comparisons to the source CSV, selected rows,
+    # cell partition, configuration, and software versions.
+    selected_indices = (
+        list(range(full_len)) if subset_indices is None else subset_indices
+    )
+    sample_ids = stable_sample_ids(ds.df.to_dict(orient="records"))
+    cell_records = [
+        {
+            "cell_id": c.cell_id,
+            "lat_min": c.lat_min,
+            "lat_max": c.lat_max,
+            "lon_min": c.lon_min,
+            "lon_max": c.lon_max,
+            "centroid_lat": c.centroid_lat,
+            "centroid_lon": c.centroid_lon,
+            "count": c.count,
+        }
+        for c in cells
+    ]
+    run_manifest = training_run_manifest(
+        csv_sha256=sha256_file(str(Path(args.csv).resolve())),
+        sample_ids=sample_ids,
+        selected_indices=selected_indices,
+        seed=args.seed,
+        config=train_args,
+        cells=cell_records,
+        initialization=(
+            {
+                "kind": "places365",
+                "checkpoint_sha256": sha256_file(args.places365_checkpoint),
+            }
+            if args.places365_checkpoint is not None
+            else (
+                {
+                    "kind": "torchvision_imagenet",
+                    "architecture": "resnet50",
+                    "weights": "IMAGENET1K_V2",
+                }
+                if args.pretrained
+                else {"kind": "random_initialization"}
+            )
+        ),
+        software={
+            "python": platform.python_version(),
+            "torch": torch.__version__,
+            "torchvision": importlib.metadata.version("torchvision"),
+        },
+    )
+    manifest_path = ckpt_dir / "run_manifest.json"
+    with open(manifest_path, "w", encoding="utf-8") as f:
+        json.dump(run_manifest, f, indent=2)
+    print(f"[train] provenance manifest -> {manifest_path}")
+
     # ------------------------------------------------------------------
     # Apply subset indices if needed
     # ------------------------------------------------------------------
@@ -234,11 +296,30 @@ def main() -> None:
     else:
         ds_for_loader = ds
 
-    # DataLoader — Windows-safe num_workers=0
+    # DataLoader — preserve uniform sampling by default; balancing is an explicit
+    # training-only intervention and never changes validation/test distributions.
+    sampler = None
+    shuffle = True
+    if args.sampling_mode == "cell-balanced":
+        active_cell_ids = cell_ids if subset_indices is None else [cell_ids[i] for i in subset_indices]
+        sampler = get_stratified_sampler(
+            ds_for_loader, active_cell_ids, power=args.sampling_power, seed=args.seed
+        )
+        shuffle = False
+        from collections import Counter
+        counts = Counter(active_cell_ids)
+        print(
+            f"[train] cell-balanced sampling: {len(counts)} observed cells, "
+            f"{min(counts.values())}-{max(counts.values())} examples/cell, "
+            f"power={args.sampling_power}, replacement=True"
+        )
+
+    # Windows-safe num_workers=0
     loader = DataLoader(
         ds_for_loader,
         batch_size=args.batch_size,
-        shuffle=True,
+        shuffle=shuffle,
+        sampler=sampler,
         num_workers=args.num_workers,
         pin_memory=torch.cuda.is_available(),
     )
@@ -397,6 +478,7 @@ def main() -> None:
                 "cells": [{"cell_id": c.cell_id, "centroid_lat": c.centroid_lat, "centroid_lon": c.centroid_lon} for c in cells],
                 "loss": epoch_loss,
                 "num_cells": num_classes,
+                "run_manifest_sha256": run_manifest["manifest_sha256"],
             },
             ckpt_path,
         )
@@ -413,6 +495,7 @@ def main() -> None:
                     "cells": [{"cell_id": c.cell_id, "centroid_lat": c.centroid_lat, "centroid_lon": c.centroid_lon} for c in cells],
                     "loss": epoch_loss,
                     "num_cells": num_classes,
+                    "run_manifest_sha256": run_manifest["manifest_sha256"],
                 },
                 best_path,
             )
@@ -426,6 +509,8 @@ def main() -> None:
         "csv": str(args.csv),
         "checkpoint_dir": str(ckpt_dir),
         "seed": args.seed,
+        "sampling_mode": args.sampling_mode,
+        "sampling_power": args.sampling_power,
         "epochs": args.epochs,
         "batch_size": args.batch_size,
         "image_size": args.image_size,
@@ -447,6 +532,8 @@ def main() -> None:
         "total_elapsed_sec": total_elapsed,
         "trainable_params": trainable_params,
         "total_params": total_params,
+        "run_manifest": str(manifest_path),
+        "run_manifest_sha256": run_manifest["manifest_sha256"],
     }
     if places365_info is not None:
         run_meta["places365_loaded"] = places365_info["loaded"]

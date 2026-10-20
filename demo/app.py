@@ -5,11 +5,14 @@ Global mode: L2 winner (l2_imagenet_1.0_layer4) + L3 calibration
 Kerala mode: L5 Kerala pinpoint (l5_kerala_kmeans300), raw softmax only
 (no calibration exists for this checkpoint), zoomed Kerala map.
 Lazy, separately cached loads; one-image inference per mode.
+Set KPLACENET_CHECKPOINT and optionally KPLACENET_CALIBRATION to select
+artifacts. Model loading is lazy; inference returns a coarse cell estimate.
 """
 
 from __future__ import annotations
 
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -19,9 +22,17 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-CHECKPOINT = ROOT / "checkpoints" / "l2_imagenet_1.0_layer4" / "last.pt"
-CALIB_JSON = ROOT / "checkpoints" / "l3_uncertainty_results.json"
-SIDECAR_CELLS = ROOT / "checkpoints" / "l2_cells_full.json"  # full boxes (same centroids)
+CHECKPOINT = Path(os.environ.get(
+    "KPLACENET_CHECKPOINT",
+    str(ROOT / "checkpoints" / "l2_imagenet_1.0_layer4" / "last.pt"),
+)).expanduser()
+CALIB_JSON = Path(os.environ.get(
+    "KPLACENET_CALIBRATION",
+    str(ROOT / "checkpoints" / "l3_uncertainty_results.json"),
+)).expanduser()
+SIDECAR_CELLS = Path(os.environ.get(
+    "KPLACENET_CELLS", str(ROOT / "checkpoints" / "l2_cells_full.json"),
+)).expanduser()
 KERALA_CHECKPOINT = ROOT / "checkpoints" / "l5_kerala_kmeans300" / "last.pt"
 KERALA_CELLS = ROOT / "checkpoints" / "l5_kerala_kmeans300" / "cells.json"
 ABSTAIN_THRESHOLD = 0.5
@@ -47,17 +58,11 @@ def _mode_key(mode) -> str:
     return MODE_KEYS.get(str(mode), MODE_GLOBAL)
 
 
-def _load_calibration() -> tuple[float, float | None]:
-    """Return (temperature, conformal_quantile or None). Fallbacks: 1.0 / None."""
-    T, q = 1.0, None
-    try:
-        data = json.loads(CALIB_JSON.read_text(encoding="utf-8"))
-        T = float(data.get("temperature", 1.0))
-        q_raw = data.get("conformal_quantile", None)
-        q = float(q_raw) if q_raw is not None else None
-    except Exception:
-        pass
-    return T, q
+def _load_calibration():
+    """Load calibration explicitly; a missing file means uncalibrated mode."""
+    from src.demo_config import load_calibration
+
+    return load_calibration(CALIB_JSON)
 
 
 def _load_resources():
@@ -66,11 +71,16 @@ def _load_resources():
         return _CACHE
     import torch
     from src.cells import Cell
+    from src.eval_contract import validate_eval_checkpoint
     from src.model import build_model
 
+    if not CHECKPOINT.is_file():
+        raise FileNotFoundError(
+            f"Demo checkpoint not found: {CHECKPOINT}. Train a model first; "
+            "the demo will not run with random weights."
+        )
     ckpt = torch.load(str(CHECKPOINT), map_location="cpu")
-    cells_raw = ckpt.get("cells", [])
-    num_cells = int(ckpt.get("num_cells", len(cells_raw)))
+    num_cells, cells_raw = validate_eval_checkpoint(ckpt)
     # Same pattern as scripts/run_l3_uncertainty.py (ckpt cells carry centroids only).
     cells = [
         Cell(
@@ -91,7 +101,10 @@ def _load_resources():
                 SIDECAR_CELLS.read_text(encoding="utf-8"))["cells"]}
             for c in cells:
                 s = side.get(c.cell_id)
-                if s:
+                if s and (
+                    abs(float(s["centroid_lat"]) - c.centroid_lat) < 1e-6
+                    and abs(float(s["centroid_lon"]) - c.centroid_lon) < 1e-6
+                ):
                     c.lat_min, c.lat_max = float(s["lat_min"]), float(s["lat_max"])
                     c.lon_min, c.lon_max = float(s["lon_min"]), float(s["lon_max"])
     except Exception:
@@ -99,12 +112,21 @@ def _load_resources():
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = build_model(num_cells=num_cells, pretrained=False, freeze_backbone=False)
-    model.load_state_dict(ckpt["model_state"], strict=False)
+    model.load_state_dict(ckpt["model_state"], strict=True)
     model.to(device)
     model.eval()
 
-    T, q = _load_calibration()
-    _CACHE.update(model=model, cells=cells, T=T, quantile=q,
+    from src.demo_config import sha256_file, verify_calibration_checkpoint
+
+    calibration = _load_calibration()
+    checkpoint_matches = verify_calibration_checkpoint(
+        calibration, sha256_file(CHECKPOINT)
+    )
+    _CACHE.update(model=model, cells=cells,
+                  T=calibration.temperature,
+                  temperature_fitted=calibration.temperature_fitted,
+                  quantile=calibration.conformal_quantile,
+                  calibration_matches_checkpoint=checkpoint_matches,
                   device=device, K=num_cells)
     return _CACHE
 
@@ -120,15 +142,23 @@ def _load_kerala_resources():
         return _KERALA_CACHE
     import torch
     from src.cells import load_cells_json
+    from src.eval_contract import validate_eval_checkpoint
     from src.model import build_model
 
     ckpt = torch.load(str(KERALA_CHECKPOINT), map_location="cpu")
-    num_cells = int(ckpt.get("num_cells", len(ckpt.get("cells", []))))
+    num_cells, cells_raw = validate_eval_checkpoint(ckpt)
     cells = sorted(load_cells_json(KERALA_CELLS), key=lambda c: c.cell_id)
+    if len(cells) != num_cells or any(
+        c.cell_id != saved["cell_id"]
+        or abs(c.centroid_lat - float(saved["centroid_lat"])) > 1e-6
+        or abs(c.centroid_lon - float(saved["centroid_lon"])) > 1e-6
+        for c, saved in zip(cells, cells_raw)
+    ):
+        raise ValueError("Kerala sidecar cells do not match the checkpoint")
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = build_model(num_cells=num_cells, pretrained=False, freeze_backbone=False)
-    model.load_state_dict(ckpt["model_state"], strict=False)
+    model.load_state_dict(ckpt["model_state"], strict=True)
     model.to(device)
     model.eval()
 
@@ -359,6 +389,9 @@ def predict_one(image, mode=MODE_GLOBAL):
         "cal_conf": cal_conf, "raw_conf": raw_conf, "T": float(T),
         "set_size": set_size, "K": int(K),
         "verdict": "ACCEPT" if accept else "ABSTAIN",
+        "temperature_fitted": res["temperature_fitted"],
+        "conformal_fitted": q is not None,
+        "calibration_matches_checkpoint": res["calibration_matches_checkpoint"],
         "box": (cell.lat_min, cell.lat_max, cell.lon_min, cell.lon_max),
         "quantile": q, "figure": fig,
         "finite": math.isfinite(lat) and math.isfinite(lon),
@@ -383,16 +416,30 @@ def _format_markdown(d: dict) -> str:
 
     verdict = d["verdict"]
     badge = "**ACCEPT**" if verdict == "ACCEPT" else "**ABSTAIN**"
-    q_txt = f"{d['quantile']:.4f}" if d["quantile"] is not None else "n/a (top-1 only)"
+    q_txt = f"{d['quantile']:.4f}" if d["quantile"] is not None else "not fitted"
+    lat0, lat1, lon0, lon1 = d["box"]
+    confidence_label = "Uncalibrated softmax confidence"
+    if d["temperature_fitted"]:
+        confidence_label = (
+            "Temperature-scaled confidence (checkpoint verified)"
+            if d["calibration_matches_checkpoint"]
+            else "Temperature-scaled confidence (artifact match unverified)"
+        )
+    set_label = (
+        f"Conformal set size: **{d['set_size']} of {d['K']}**"
+        if d["conformal_fitted"]
+        else "Prediction set: top-1 only (no conformal guarantee)"
+    )
     return (
         f"### Prediction: {badge}\n\n"
         f"- Predicted lat/lon: **{d['lat']:.4f}, {d['lon']:.4f}**\n"
         f"- Cell id: **{d['cell_id']}** (box lat [{lat0:.2f}, {lat1:.2f}], "
         f"lon [{lon0:.2f}, {lon1:.2f}])\n"
-        f"- Calibrated confidence: **{d['cal_conf'] * 100:.2f}%**\n"
+        f"- {confidence_label}: **{d['cal_conf'] * 100:.2f}%**\n"
         f"- Raw (unscaled) confidence: {d['raw_conf'] * 100:.2f}%\n"
         f"- Temperature T: {d['T']:.4f} | conformal quantile: {q_txt}\n"
-        f"- Conformal set size: **{d['set_size']} of {d['K']}**\n\n"
+        f"- {set_label}\n"
+        f"- Threshold decision at max probability 0.5: **{verdict}**\n\n"
         f"_Note: haversine distance cannot be known for an uploaded photo "
         f"(no ground truth) — distance is only measurable on the labeled test set._"
     )
@@ -435,15 +482,16 @@ def _result_html(d=None):
     kerala = d.get("mode") == MODE_KERALA
     confidence = d["raw_conf"] if kerala else d["cal_conf"]
     status = "Regional estimate" if kerala else ("Accepted estimate" if d["verdict"] == "ACCEPT" else "Uncertain estimate · abstained")
+    calibrated = not kerala and d.get("temperature_fitted", False)
     note = ("Raw model score · uncalibrated; this is not a measured probability of correctness."
-            if kerala else "Calibrated model score · the model abstains below 50% confidence.")
+            if not calibrated else "Calibrated model score · the model abstains below 50% confidence.")
     return (
         f'<div class="eyebrow" style="color:#146f76">{status.upper()}</div>'
         f'<h2>{"Kerala" if kerala else "Global"} · predicted cell {d["cell_id"]}</h2>'
         '<div class="result-grid">'
         f'<div><span>Latitude</span><strong>{d["lat"]:.4f}°</strong></div>'
         f'<div><span>Longitude</span><strong>{d["lon"]:.4f}°</strong></div>'
-        f'<div><span>{"Raw model score" if kerala else "Calibrated confidence"}</span><strong>{confidence:.1%}</strong></div>'
+        f'<div><span>{"Calibrated confidence" if calibrated else "Raw model score"}</span><strong>{confidence:.1%}</strong></div>'
         f'</div><p class="result-note">{note} The marker represents a cell centroid.</p>'
     )
 

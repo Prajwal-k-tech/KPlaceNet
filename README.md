@@ -1,10 +1,16 @@
 # KPlaceNet / GeoNet
 
-Evolutionary, layer-by-layer — PlaNet-style coarse geolocation on RTX 4050 (6GB VRAM).
+PlaNet-inspired coarse image geolocation with a ResNet-50 classifier over geographic cells. The original experiments use an RTX 4050; Prajwal's bounded follow-up CUDA experiments use an RTX 3050 laptop GPU (6GB VRAM); KPlaceNet is not a reproduction of PlaNet's model, data scale, or benchmark results.
 
-> Locked plan: `docs/implementation_plan.md` — L0→L4, solo + 4050 constraints. Do not add new datasets/backbones without re-plan.
+## Integrated contributions and measured results
 
-## Setup (RTX 4050, Windows + Python 3.10+, torch 2.x)
+Prajwal Kumar K contributes strict checkpoint/evaluation validation, hash-bound training and evaluation manifests, paired geographic metrics, and a finite-sample conformal order-statistic correction. Its real-data evidence is deliberately bounded: on one exploratory OSV-5M test sample, training with 20k rather than 10k images reduced mean geodesic error by 456 km and increased within-200-km accuracy by 1.54 percentage points across three paired seeds. The 20k model still averages 5,522 km error, and the training pool uses only four of 98 train archives. The [data-scale report](docs/results/l2_data_scale_osv_test_20261009.md) and [L3 calibration report](docs/results/l3_uncertainty_osv_test_20261009.md) separate these measured results from inherited upstream results and document their limits. See [fork status](docs/FORK_STATUS.md) for the exact scope and validation.
+
+## Classroom submission
+
+The [project report](docs/classroom/report.md) follows the CSE 311 structure. The [presentation and viva guide](docs/classroom/presentation-guide.md) explains the procedure, methodology, contribution, and likely questions. See [integration validation](docs/INTEGRATION_20261020.md) for compatibility checks.
+
+## Setup (Windows or Linux, Python 3.10+, PyTorch 2.x)
 
 ```powershell
 # 1. Create env (example with venv)
@@ -19,8 +25,6 @@ pip install -r requirements.txt
 python -c "import src.dataset, src.cells, src.model, src.train, src.eval, src.uncertainty; print('imports ok')"
 ```
 
-> No `pip install` is run by the scaffold — install manually when ready.
-
 ## Data Layout (gitignored subsets)
 
 ```
@@ -28,21 +32,31 @@ data/
   README.md          # explains gitignored subsets
   flickr_geo_tiny/   # 5-10k debug — via scripts/download_subset.py --dataset flickr_geo_tiny
   osv5m_subset_10k/  # train-split subset — via --dataset osv5m --split train (plan first, then --yes)
+  osv5m_subset_20k/  # bounded train pool used for the paired data-scale follow-up
   osv5m_test/        # official OSV test, eval-only — via --split test (never train)
+  osv5m_confirmatory_test/ # disjoint 3k official-test sample used for an exploratory follow-up
   im2gps3k/          # 3k eval only — never train — via --dataset im2gps3k
   kerala_osv5m/      # OSV-5M Kerala slice (bbox 8.0-12.8N, 74.5-77.5E) — L5 region model, via scripts/extract_kerala_osv5m.py
-  .gitkeep
   .gitkeep
 ```
 
 - CSV format expected by `src/dataset.py`: `image_path,lat,lon` (header required). Paths may be absolute or relative to CSV location.
 - OSV-5M spatial separation (1km) is respected by not mixing splits; IM2GPS3k is eval-only.
 - Large datasets are **not** committed — see `data/README.md`.
+- The exact IDs and metadata hash of the confirmatory test sample are recorded
+  in [`docs/results/osv5m_test_confirmatory_sample_20261008.json`](docs/results/osv5m_test_confirmatory_sample_20261008.json).
+- The bounded training pool's opaque row IDs and paired 10k subset indices are
+  recorded in [`docs/results/osv5m_train_pool_20k_manifest_20261008.json`](docs/results/osv5m_train_pool_20k_manifest_20261008.json).
+- OSV-5M data is available under [CC BY-SA 4.0](https://huggingface.co/datasets/osv5m/osv5m);
+  cite the [dataset paper](https://arxiv.org/abs/2404.18873) and credit the
+  [official dataset repository](https://github.com/gastruc/osv5m). Downloaded
+  images and metadata remain local and are not included in this fork.
 
 ## How to Run — Smoke Test (L0 exit gate)
 
 ```powershell
-# 1) Create a tiny dummy CSV (50 rows) for overfit check
+# 1) Create 50 synthetic images and coordinates for a software-path smoke test.
+#    These synthetic labels are not geolocation evidence.
 python scripts/download_subset.py --dataset flickr_geo_tiny --output-dir data/flickr_geo_tiny --max-samples 50 --dry-run
 
 # 2) Real OSV-5M subset — SAFE downloader (never fetches the ~259GB repo).
@@ -66,11 +80,25 @@ python -m src.eval --csv data/im2gps3k/metadata.csv --checkpoint checkpoints/las
 - `src/cells.py` provides `build_cells` / `assign_cells` (quad-tree K~300 in L1; k-means/DBSCAN in L4).
 - `src/uncertainty.py` provides L3 uncertainty: `TemperatureScaler`, `expected_calibration_error`, `conformal_prediction_set`, `abstention_mask`.
 
+### Local Tests
+
+Run `python -m unittest discover -s tests -v` in an environment with the project
+dependencies installed. The CPU-only pipeline test trains for one epoch on
+generated images, loads the resulting checkpoint, and evaluates it on a
+separate generated fixture. It verifies the software path only; synthetic
+coordinates and random initialization are not geolocation results.
+
+Each training run also writes `run_manifest.json` beside its checkpoints and
+metrics. The manifest records the source CSV hash, selected row positions and
+opaque sample IDs, cell-definition hash, initialization source (including a
+hash for Places365 weights), seed, training arguments, and runtime versions.
+The checkpoint and metrics file carry the manifest hash so artifacts can be
+checked against the exact run provenance.
+
 ## Repo Layout
 
 ```
 KPlaceNet/
-  docs/implementation_plan.md
   src/dataset.py  cells.py  model.py  train.py  eval.py  uncertainty.py
   scripts/download_subset.py
   notebooks/01_data_explore.ipynb
@@ -83,6 +111,8 @@ KPlaceNet/
 - Windows paths safe — uses `pathlib.Path`, no hardcoded absolute paths.
 - Imports use `src.*` absolute form; `src` is a package (`src/__init__.py`).
 - L0-L5 are complete. Results are recorded in `docs/results/` (l1 through l5); generated datasets/checkpoints remain gitignored.
+
+- Historical upstream L0–L4 results are not results of this fork's changes. Fork-specific real-data reports and their sample manifests are linked above; generated datasets/checkpoints remain gitignored.
 
 ## L2 — Data-Efficient Training (Gap 4)
 
@@ -124,6 +154,12 @@ python scripts/run_l2_experiments.py --run --epochs 10
 python scripts/run_l2_experiments.py --run --fractions 0.01 0.10 --inits imagenet places365 --regimes frozen layer4 --skip-existing
 ```
 
+The runner writes a `.manifest.json` sidecar for generated subset CSVs and cell
+definitions. It reuses these artifacts only when the source CSV hash, settings,
+generator source hash, and generated-file hash still match; otherwise it
+regenerates them. Fraction CSVs preserve source columns so training provenance
+can identify the selected examples.
+
 ### L2 Checkpoint Structure
 
 Each run saves to `checkpoints/l2_<init>_<fraction>_<regime>/`:
@@ -134,11 +170,80 @@ Each run saves to `checkpoints/l2_<init>_<fraction>_<regime>/`:
 
 All data fractions in an L2 experiment use the same cells (built once from the full 10k CSV, saved as JSON). This ensures the classifier head has identical architecture across fractions — the only variable is training data size. Pass `--cells-json` to train.py to load fixed cells; otherwise cells are built from the CSV.
 
+### Cell-Balanced Sampling Comparison
+
+Training remains uniform by default. To compare that baseline with inverse-
+frequency cell sampling on the same data fractions, model setup, and seed:
+
+```powershell
+# Print the paired commands without downloading data or starting training
+python scripts/run_l2_experiments.py --plan-only --fractions 1.0 --inits imagenet --regimes frozen --sampling-modes uniform cell-balanced
+
+# Execute both runs once the training subset and dependencies are available
+python scripts/run_l2_experiments.py --run --fractions 1.0 --inits imagenet --regimes frozen --sampling-modes uniform cell-balanced --epochs 10
+
+# Evaluate both checkpoints on the same untouched OSV-5M test subset
+python -m src.eval --csv data/osv5m_test/metadata.csv --checkpoint checkpoints/l2_imagenet_1.0_frozen/last.pt
+python -m src.eval --csv data/osv5m_test/metadata.csv --checkpoint checkpoints/l2_imagenet_1.0_frozen_cell-balanced/last.pt
+
+# Repeat the paired experiment with three training seeds (separate checkpoint dirs)
+python scripts/run_l2_experiments.py --run --fractions 1.0 --inits imagenet --regimes frozen --sampling-modes uniform cell-balanced --seeds 42 43 44 --epochs 10
+
+# Evaluate every paired checkpoint and write a hash/provenance-bearing JSON report
+python scripts/evaluate_sampling_comparison.py --csv data/osv5m_test/metadata.csv --seeds 42 43 44
+```
+
+`--sampling-power` controls the inverse-frequency exponent: 0 gives each
+example equal probability under replacement, while 1 gives each observed
+training cell equal expected sampling mass. Both weighted modes sample with
+replacement, so some examples repeat and others may be skipped within an
+epoch for any weighted-sampling power, including 0. Use `--sampling-mode
+uniform` for the original shuffled, no-replacement baseline. This intentionally
+changes the training distribution; compare the
+untouched test set and report both overall and geographic-stratum metrics.
+Evaluation reports within-1/25/200-km accuracy and mean/median geodesic error
+globally and by occupied cell in a 6-by-12 equal-area latitude/longitude grid.
+Cells below 20 examples are retained with null metrics; regional within-km
+rates use percentages, and the paired report includes percentage-point deltas
+where both samplers have enough examples.
+These are descriptive slices, not conditional accuracy guarantees, and do not
+adjust for spatial dependence. Use multiple seeds before treating a difference
+as a robust performance claim. The comparison script records per-checkpoint
+metrics and hashes, the fixed test-CSV hash, verified training-manifest hashes
+and configuration, runtime versions, and balanced-minus-uniform deltas for
+each shared seed.
+
 ## L3 — Uncertainty-Aware Geolocation (Gap 3)
 
 L3 adds post-hoc uncertainty calibration to the L2 winner (`l2_imagenet_1.0_layer4`):
 temperature scaling (Guo et al. 2017), split-conformal prediction sets, and
 confidence-based abstention.
+
+### Fork contribution
+
+This fork corrects the finite-sample conformal cutoff to use the discrete
+order statistic `k = ceil((n + 1) * (1 - alpha))`; when `k > n`, the
+conservative threshold is infinity. L3 now uses three disjoint seeded
+partitions: temperature fitting, conformal calibration, and evaluation. Its
+JSON artifact records split indices and sample IDs, CSV/checkpoint hashes,
+all inference configuration, relevant software versions, repository
+revision, and dirty-tree status. Empty abstention subsets are represented as
+missing distances rather than nonstandard JSON `NaN`. These changes make the
+protocol auditable; they do not establish exchangeability or regional
+coverage under geographic shift. The upstream L3 numbers below remain
+historical and are not measurements of this fork's changes.
+
+### Evaluation integrity
+
+`src.eval` requires a trained checkpoint containing both `model_state` and the
+cell centroids used by its classifier. It rejects missing or inconsistent
+checkpoint metadata, loads weights strictly, and never builds classes from the
+evaluation CSV or reports scores from random weights. This keeps evaluation
+labels out of model/class construction; use a training checkpoint produced by
+`src.train`.
+
+See [`docs/FORK_STATUS.md`](docs/FORK_STATUS.md) for the fork's current
+contribution scope, validation evidence, and real-data reproduction status.
 
 ### Quick Start — Plan-Only (no GPU, no images loaded)
 
@@ -154,22 +259,35 @@ python scripts/run_l3_uncertainty.py --calibration-size 500 --alpha 0.05
 
 ```powershell
 # Run L3 on the selected checkpoint with default settings
-#   - Calibration: first 1000 rows of OSV test (withheld from eval)
-#   - Evaluation:  remaining 2000 rows
+#   - Temperature fit: 500 seeded random OSV-test rows
+#   - Conformal calibration: separate 1000 seeded random rows
+#   - Evaluation: remaining 1500 rows
 #   - Temperature scaling + conformal + abstention analysis
 python scripts/run_l3_uncertainty.py --run
 
-# Custom settings
-python scripts/run_l3_uncertainty.py --run --alpha 0.05 --threshold 0.3 0.5 0.7
+# Custom settings and a separate results artifact
+python scripts/run_l3_uncertainty.py --run --alpha 0.05 --threshold 0.3 0.5 0.7 --output docs/results/l3-custom.json
 ```
 
-> **Calibration caveat:** The first 1000 examples of the official OSV test subset
-> (`data/osv5m_test/metadata.csv`) are used as the calibration split for both
-> temperature scaling and conformal threshold fitting.  These 1000 examples are
-> **withheld** from all final L3 evaluation metrics (ECE, coverage, abstention,
-> distance).  Only the remaining 2000 examples are used for final evaluation.
-> This is a deterministic split (rows 0–999 = calibration, 1000–2999 = eval)
-> controlled by `--seed`.
+> **Calibration caveat:** The L3 run uses three disjoint seeded partitions of
+> the official OSV test subset (`data/osv5m_test/metadata.csv`): 500 rows fit
+> temperature, a separate 1000 rows fit the conformal threshold, and the
+> remaining 1500 rows are evaluation-only. The generated results JSON records
+> exact indices, stable sample IDs, CSV and checkpoint SHA-256 hashes, library
+> versions, and a split hash. The finite-sample conformal statement is marginal
+> and requires calibration and future examples to be exchangeable. Random row
+> splitting does not establish geographic exchangeability, guarantee regional
+> coverage, or provide a guarantee under geographic distribution shift.
+
+The run also reports empirical coverage, mean prediction-set size, top-1
+accuracy, and geodesic-distance thresholds by occupied equal-area grid region.
+Latitude bands are uniform in `sin(latitude)` and longitude bands are uniform,
+so grid cells have approximately equal spherical area. Regions below the
+minimum count remain in the JSON artifact with `metrics: null`; reported
+coverage includes a 95% Wilson interval. These are descriptive diagnostics,
+not conditional coverage guarantees, and the intervals do not correct for
+spatial dependence. Configure the grid with `--region-lat-bands`,
+`--region-lon-bands`, and `--region-min-count`.
 
 ## L4 — Adaptive Cell Construction (Gap 1)
 
@@ -272,8 +390,38 @@ Quick interactive Gradio demo with two modes (`demo/app.py`, single file). Lazy,
 - **World · global model** — L2 winner (`l2_imagenet_1.0_layer4`) with L3 calibration (temperature + conformal + abstention at 0.5).
 - **Kerala · regional model** — L5 (`l5_kerala_kmeans300`), raw softmax confidence (no calibration was fitted for this checkpoint), zoomed Kerala map.
 
+The Gradio demo accepts an image and displays the checkpoint's coarse cell
+centroid on a map. It uses the default L2 checkpoint path unless overridden;
+the optional calibration artifact is shown as absent when it is missing, and
+invalid calibration files fail clearly instead of silently reverting to
+uncalibrated predictions. When the calibration artifact includes a checkpoint
+SHA-256 (as the L3 runner does), the demo checks it against the selected model
+and rejects a mismatch.
+
+```sh
+# Optional: point the demo at any trained checkpoint and matching L3 artifact
+export KPLACENET_CHECKPOINT=checkpoints/data_scale_20k/l2_imagenet_1.0_layer4/last.pt
+export KPLACENET_CALIBRATION=docs/results/l3_uncertainty_osv_test_20261009.json
+python demo/app.py
+```
+
+If no calibration file is available, the UI labels the output as uncalibrated
+softmax confidence with top-1 only; it does not imply a conformal guarantee.
+
+The dependency-free checks run with Python 3.11 and the standard library:
+
+```sh
+python -m unittest discover -s tests -p 'test_eval_contract.py' -v
+python -m unittest discover -s tests -p 'test_regional_eval.py' -v
+python -m unittest discover -s tests -p 'test_demo_config.py' -v
+python -m unittest discover -s tests -p 'test_sampling*.py' -v
+```
+
+GitHub Actions runs these checks on pushes and pull requests. The full test
+suite still needs the ML dependencies listed in `requirements.txt`.
+
 ```powershell
-# Launch (no commit, demo only)
+# Launch from the repository root
 python demo/app.py
 # or: python -m demo.app
 ```
