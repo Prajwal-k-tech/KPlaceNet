@@ -1,0 +1,30 @@
+{
+  "date": "2026-10-20",
+  "gpu_tests": {
+    "run": 82,
+    "passed": 82
+  },
+  "cpu_tests": {
+    "run": 82,
+    "skipped_cuda_only": 1,
+    "failed": 0
+  },
+  "presentation_slides": 15,
+  "presentation_native_charts": 5,
+  "presentation_native_tables": 1,
+  "report_pages": 17,
+  "study_guide_pages": 13,
+  "viewport_overflow_checks": {
+    "1920x1080": false,
+    "390x844": false
+  },
+  "gallery_transport": "Lossless PNG; source RGB pixels verified equal after Gradio postprocessing",
+  "browser_hybrid": {
+    "cell": 196,
+    "lat": 9.67606339,
+    "lon": 76.40408516,
+    "displayed_score_pct": 59.3,
+    "maps_coordinate_verified": true
+  },
+  "original_main_status": "Maintainer merge required; PR 1 open"
+}
