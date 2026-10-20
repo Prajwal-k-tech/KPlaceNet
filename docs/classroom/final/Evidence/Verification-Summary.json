@@ -13,7 +13,7 @@
   "presentation_native_charts": 5,
   "presentation_native_tables": 1,
   "report_pages": 17,
-  "study_guide_pages": 13,
+  "study_guide_pages": 24,
   "viewport_overflow_checks": {
     "1920x1080": false,
     "390x844": false
@@ -26,5 +26,7 @@
     "displayed_score_pct": 59.3,
     "maps_coordinate_verified": true
   },
-  "original_main_status": "Maintainer merge required; PR 1 open"
+  "original_main_status": "Maintainer merge required; PR 1 open",
+  "demo_playbook_pages": 8,
+  "guide_revision": "Definition-first course, worked examples, checkpoint answers and Kerala-first timed demo"
 }

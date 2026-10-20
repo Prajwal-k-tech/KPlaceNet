@@ -20,3 +20,7 @@ Do not claim GPS precision, 90% top-1 accuracy, that KNN can detect any foreign 
 Model release: https://github.com/Prajwal-k-tech/KPlaceNet/releases/tag/kerala-l6-20261020-verified
 
 Matching neighbor-bank release: https://github.com/Prajwal-k-tech/KPlaceNet/releases/tag/kerala-l7-hybrid-20261020
+
+
+## Revised learning guides
+The Study Guide has been rewritten as a 24-page course with definitions, numerical examples, chapter checkpoints and an answer key. Chapters 1-14 cover the regional core; later chapters cover global work, sources and viva practice. The 8-page Demo Playbook gives a Kerala-first five-minute action/speaking route, expected outputs, KNN comparison, a measured failure and recovery procedures. Use these revised versions instead of earlier copies.
