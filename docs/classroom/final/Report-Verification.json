@@ -1,7 +1,6 @@
 {
   "date": "2026-10-22",
-  "scope": "Kerala regional system",
-  "pages": 17,
+  "pages": 13,
   "sections": [
     "1 Abstract",
     "2 Introduction",
@@ -17,17 +16,21 @@
     "12 Conclusion",
     "13 References"
   ],
-  "figures": 4,
-  "tables_including_cover": 6,
-  "word_count_approx": 5231,
+  "figures": 3,
+  "tables_including_cover": 4,
+  "word_count_approx": 3435,
+  "all_pages_visually_reviewed": true,
   "title_details_confirmed": true,
-  "contents_page_numbers_verified": true,
-  "all_17_pages_visually_reviewed": true,
-  "final_revision_only_page_14_changed": "All other page PNG hashes match the reviewed render",
-  "source_code_revision": "a45a0d89beba92cd0a07cc0dbef267ffbd525654",
+  "references": 8,
+  "all_references_cited": true,
+  "primary_paper_metadata_checked": true,
+  "pinned_code_results_dataset_links_http_status": 200,
+  "result_arithmetic_verified": true,
+  "scope": "Implemented Kerala methods only",
+  "removed": "Undeployed experiments, demo-specific examples, repeated qualifications, redundant tables, contents page and implementation-history notes",
   "study_guide_and_demo_playbook_unchanged": true,
   "files": {
-    "Project-Report.docx": "d9ca70647a7a52d8a930070b53b03fe037352d1f31ea624e942e95d29feae58c",
-    "Project-Report.pdf": "021a21a303355213fb098e01d20797c341d08266ea5935cfca423abd6710bbae"
+    "Project-Report.pdf": "43c9e2c53b25e5759ca84a72aa6a71d967017343bda05645f904ca53af0e3bc5",
+    "Project-Report.docx": "66c960bd2492da19869de8c71700a3d9bdc836d5f3b941827e07319551cf7eeb"
   }
 }
