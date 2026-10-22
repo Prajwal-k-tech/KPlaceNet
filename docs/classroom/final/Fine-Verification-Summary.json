@@ -27,7 +27,7 @@
   "pdf_pages": {
     "Study-Guide": 17,
     "Demo-Playbook": 5,
-    "Project-Report": 19,
+    "Project-Report": 17,
     "Last-Minute-Cheat-Sheet": 1,
     "Experiment-and-Data-Notes": 4,
     "Fine-Retrieval-Update": 2
@@ -48,5 +48,6 @@
     "deployed": false,
     "reason": "Within5km regression exceeds.5pp guard",
     "evidence": "docs/results/eth_ground_prototypes_20261021.md"
-  }
+  },
+  "report_updated": "2026-10-22"
 }
