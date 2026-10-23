@@ -469,3 +469,7 @@ python demo/geoguessr.py
 ```
 
 Headless full probe (no server): `python -c "from demo.geoguessr import selftest; selftest()"` — covers no-leakage pre-reveal, scoring math, idempotent reveal, invalid/corrupt inputs.
+
+## Offload recovery
+
+See [RECOVERY.md](RECOVERY.md) for source snapshots, exact model downloads, dataset sources and reproduction instructions.
