@@ -382,3 +382,7 @@ python demo/app.py
 ```
 
 Upload a photo → global + zoomed (+/-5 deg) matplotlib map of the predicted cell, plus calibrated vs raw confidence, temperature T, conformal set size, and an ACCEPT / ABSTAIN verdict. Haversine distance is only measurable on the labeled test set (no ground truth for uploads).
+
+## Offload recovery
+
+See [RECOVERY.md](RECOVERY.md) for source snapshots, exact model downloads, dataset sources and reproduction instructions.
