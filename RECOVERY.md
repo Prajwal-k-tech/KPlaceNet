@@ -69,3 +69,12 @@ Before offloading, all 306 additional unique objects were decompressed and check
 Official test data is evaluation-only. Recreate training/test selections with the committed manifests; do not mix test photos into training. IM2GPS3k is manual-only through its authors, as described in the data guide. Panoramax candidate manifests retain source URLs, authors, licenses, coordinates and hashes; the rejected expansion was not deployed and its raw photos were not kept. See [Experiment-and-Data-Notes.md](https://github.com/Prajwal-k-tech/KPlaceNet/blob/recovery/20261023/integrated/integrate-prajwal-contributions/docs/classroom/final/Experiment-and-Data-Notes.md).
 
 Checkpoint recovery avoids retraining when the exact previous weights are needed. Re-running CUDA training from seeds/manifests can produce numerical differences and is not a promise of byte-identical new checkpoints. The recorded exploratory/reused test results are not a claim of global, metre-level, or independently confirmed accuracy.
+
+## Exact dataset-selection metadata
+
+The recovery release also retains selection CSVs, provenance manifests and the rejected Panoramax expansion descriptors separately from dataset photographs. These small metadata archives were checked file-by-file before upload. Extract into a separate review directory; original CSVs may include old machine paths, so use the pinned downloaders/manifests to regenerate usable local paths.
+
+- `evaluation`: [kplacenet-selection-evaluation.tar.zst](https://github.com/Prajwal-k-tech/KPlaceNet/releases/download/offload-recovery-20261023/kplacenet-selection-evaluation.tar.zst), SHA256 `1436c1037b65fbbc30b33a8ffcdcdb5457e45f6d368f4a59533344369fea8e21`.
+- `integrated`: [kplacenet-selection-integrated.tar.zst](https://github.com/Prajwal-k-tech/KPlaceNet/releases/download/offload-recovery-20261023/kplacenet-selection-integrated.tar.zst), SHA256 `9ad01b7fb27b9b651d0736cdca20c6836121a44aebba7919476b2a8380e8164c`.
+
+For example, download the integrated metadata, verify its SHA256 above, then use `mkdir -p recovery-data && tar --zstd -xf kplacenet-selection-integrated.tar.zst -C recovery-data --keep-old-files`. This restores metadata, not the original photos. The download locations, licenses and revision pins are listed above.
